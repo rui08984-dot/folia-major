@@ -444,19 +444,19 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [canUseOnlineRadio, activeUser]);
 
-    // 相似歌曲跟着切歌自动补：正在播放的这首变了，而发现页还没有相似段（或种子已换），
-    // 就后台补拉那一段合进去。已有内容不动，不挡页面；只补不重排。
+    // 相似段只补一次：发现页还没有相似段、而用户开始播放时，后台补拉那一段合进来。
+    // 但绝不跟着切歌替换——用户点进一张卡换一首在播，整排相似卡全变，这正是「队列被自动
+    // 刷新」的体感来源。列表的更换只属于「换一批」。
     const similarSeedId = currentTrack ? String(currentTrack.id) : undefined;
     useEffect(() => {
         if (homeViewTab !== 'discover' || !canUseOnlineRadio || !similarSeedId) return;
-        if (discoverSections.some(section => section.id === 'similar'
-            && section.songs.some(song => String(song.sourceRef?.mediaId) === similarSeedId
-                || String(song.id) === similarSeedId))) return;
+        if (discoverSections.some(section => section.id === 'similar')) return;
         let cancelled = false;
         omni.getRecommendationRowSongs('similar', { seedSongId: similarSeedId })
             .then(songs => {
                 if (cancelled || songs.length === 0) return;
                 setDiscoverSections(prev => {
+                    if (prev.some(section => section.id === 'similar')) return prev;
                     const label = currentTrack?.name
                         ? t('home.discoverSimilarSeed', { song: currentTrack.name })
                         : undefined;
@@ -466,14 +466,13 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                         ...(label ? { subtitle: label } : {}),
                         songs,
                     };
-                    // 已有就原位替换（切歌=换一批相似），没有就按规范顺序插入，
-                    // 不然「相似」会掉到队尾，段的先后是承诺过的语义。
+                    // 按规范顺序插入，不然「相似」会掉到队尾，段的先后是承诺过的语义。
                     const canonicalOrder: DiscoverSectionId[] = ['personal-fm', 'similar', 'radar', 'new-songs'];
-                    if (prev.some(section => section.id === 'similar')) {
-                        return prev.map(section => section.id === 'similar' ? nextSection : section);
-                    }
-                    return [...prev, nextSection]
+                    const merged = [...prev, nextSection]
                         .sort((a, b) => canonicalOrder.indexOf(a.id) - canonicalOrder.indexOf(b.id));
+                    // 回写缓存：下次重挂载直接拿到含相似段的同一批，不再触发补拉。
+                    writeDiscoverCache(merged);
+                    return merged;
                 });
             })
             .catch((error: unknown) => {
