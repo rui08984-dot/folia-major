@@ -729,15 +729,23 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     similarSeedLabel: t('home.discoverSimilarSeed', { song: currentTrack.name }),
                 } : {}),
             });
-            setDiscoverSections(sections);
-            writeDiscoverCache(sections);
+            // 空结果（上游全挂了）绝不覆盖已有内容、也绝不写缓存——否则一次 500 风暴就能
+            // 把缓存污染成空，之后每次回来都绕开缓存重拉，列表永远在变、还越拉越卡。
+            if (sections.length > 0) {
+                setDiscoverSections(sections);
+                writeDiscoverCache(sections);
+            } else if (discoverSections.length === 0) {
+                setDiscoverError(t('home.discoverUnavailable'));
+            }
             setLoadingDiscover(false);
             return;
         } catch (e) {
             console.error(`[Grid3D] Failed to fetch discover items`, e);
         }
-        // 走到这里说明两轮尝试都失败了：给一句能看懂的原因，而不是留一个空白页。
-        setDiscoverError(t('home.discoverUnavailable'));
+        // 拉取失败：有内容就留着让用户继续听同一批，彻底空白才给一句能看懂的原因。
+        if (discoverSections.length === 0) {
+            setDiscoverError(t('home.discoverUnavailable'));
+        }
         setLoadingDiscover(false);
     };
 
