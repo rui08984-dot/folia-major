@@ -213,8 +213,19 @@ export class OnlineProviderError extends Error {
     }
 }
 
+/** 搜索框联想的单条建议：value 是选中后填进搜索框的文本，detail 是副行（如歌手名）。 */
+export type OnlineSearchSuggestion = {
+    kind: 'song' | 'singer';
+    value: string;
+    detail?: string;
+};
+
 export interface OnlineSearchProvider {
     searchSongs(query: string, limit: number, offset: number): Promise<ProviderPage<UnifiedSong>>;
+    /** 输入联想（QQ smartbox）。没实现就没有联想，调用方按空数组处理。 */
+    getSmartboxSuggestions?(query: string): Promise<OnlineSearchSuggestion[]>;
+    /** 专辑/歌单类型搜索，返回集合卡；点卡片走现有集合详情，不新做 UI。 */
+    searchCollections?(query: string, limit: number, offset: number): Promise<ProviderPage<ProviderCollection>>;
 }
 
 export interface OnlinePlaybackProvider {
@@ -359,6 +370,8 @@ export interface OnlineMutationProvider {
         playlist: MediaId | ProviderCollection,
         tracks: Array<MediaId | SongResult>,
     ): Promise<void>;
+    /** Create an owned playlist in the user's account and return it normalized. */
+    createPlaylist?(dirName: string): Promise<ProviderCollection>;
     subscribePlaylist?(playlist: MediaId | ProviderCollection, subscribed: boolean): Promise<void>;
     subscribeAlbum?(id: MediaId, subscribed: boolean): Promise<void>;
 }

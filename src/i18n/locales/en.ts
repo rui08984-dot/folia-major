@@ -919,7 +919,11 @@ export default {
     "playTrack": "Play track",
     "error": "Search failed. Please try again.",
     "retry": "Retry",
-    "catalogUnavailable": "This album or artist cannot be opened because the provider did not return a valid catalog ID."
+    "catalogUnavailable": "This album or artist cannot be opened because the provider did not return a valid catalog ID.",
+    "history": "Search history",
+    "clearHistory": "Clear",
+    "album": "Album",
+    "playlist": "Playlist"
   },
   "personalFmMode": {
     "openPicker": "Switch the Personal FM mode",

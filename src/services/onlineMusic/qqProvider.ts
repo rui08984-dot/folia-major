@@ -3,6 +3,7 @@ import type {
     AudioQualityPreference,
     MediaId,
     OnlineMusicProvider,
+    OnlineSearchSuggestion,
     ProviderCollection,
     ProviderLyricsResult,
     ProviderPage,
@@ -13,7 +14,7 @@ import type {
 import { OnlineProviderError } from '../../types/onlineMusic';
 import { createProviderSongMetadata } from '../../utils/songMetadata';
 import { toSafePlaybackUrl } from '../../utils/appPlaybackHelpers';
-import { fetchQQLyrics, searchQQLyrics } from '../../utils/lyrics/providers/qqLyricProvider';
+import { QQ_SEARCH_TYPE, fetchQQLyrics, searchQQLyrics, searchQQByType } from '../../utils/lyrics/providers/qqLyricProvider';
 import { writeProviderSessionValue } from './providerStorage';
 import { normalizeQqCollection, normalizeQqSong, normalizeQqUser } from './qqNormalize';
 import { clearQqSession, getQqTransportAvailability, hasQqSession, requestQq } from './qqTransport';
@@ -30,6 +31,55 @@ const searchSongs = async (query: string, limit: number, offset: number) => {
     const results = await searchQQLyrics(query, Math.floor(offset / Math.max(1, limit)) + 1, limit);
     const items = results.map(normalizeQqSong);
     return { items, hasMore: items.length === limit, nextOffset: offset + items.length };
+};
+
+// smartbox 联想：后端 controller 读 query 里的 `key`，回包是 `{ response: { data: { song/singer/... } } }`。
+// 单曲给 name + 歌手，歌手给 name（选中即搜歌手名）；MV 与专辑联想不进搜索框。
+const getSmartboxSuggestions = async (query: string): Promise<OnlineSearchSuggestion[]> => {
+    const trimmed = query.trim();
+    if (!trimmed) return [];
+    const response = await requestQq<any>('smartbox', { key: trimmed });
+    const data = response?.response?.data;
+    if (!data) return [];
+    const songItems = Array.isArray(data?.song?.itemlist) ? data.song.itemlist : [];
+    const singerItems = Array.isArray(data?.singer?.itemlist) ? data.singer.itemlist : [];
+    const readName = (item: unknown): string => {
+        const name = (item as { name?: unknown })?.name;
+        return typeof name === 'string' ? name.trim() : '';
+    };
+    const readSinger = (item: unknown): string => {
+        const singer = (item as { singer?: unknown })?.singer;
+        return typeof singer === 'string' ? singer.trim() : '';
+    };
+    return [
+        ...songItems.slice(0, 6).map((item: unknown) => ({
+            kind: 'song' as const,
+            value: readName(item),
+            ...(readSinger(item) ? { detail: readSinger(item) } : {}),
+        })),
+        ...singerItems.slice(0, 3).map((item: unknown) => ({
+            kind: 'singer' as const,
+            value: readName(item),
+        })),
+    ].filter(suggestion => suggestion.value.length > 0);
+};
+
+// 类型搜索：2=专辑（item_album）、3=歌单（item_songlist），一次各取一页。歌单卡不可写
+//（搜索到的是别人的歌单，normalizeQqCollection 认不出 owned），点卡片只导航。
+const searchCollections = async (query: string, limit: number, offset: number) => {
+    const trimmed = query.trim();
+    const page = Math.floor(offset / Math.max(1, limit)) + 1;
+    const [albums, playlists] = trimmed
+        ? await Promise.all([
+            searchQQByType(trimmed, page, limit, QQ_SEARCH_TYPE.album),
+            searchQQByType(trimmed, page, limit, QQ_SEARCH_TYPE.playlist),
+        ])
+        : [[], []];
+    const items = [
+        ...albums.map((item: unknown) => normalizeQqCollection(item, 'album')),
+        ...playlists.map((item: unknown) => normalizeQqCollection(item, 'playlist')),
+    ];
+    return { items, hasMore: false, nextOffset: offset + items.length };
 };
 
 const QQ_QUALITY_FALLBACKS: Record<
@@ -856,7 +906,7 @@ export const qqProvider: OnlineMusicProvider = {
             return createProviderSongMetadata(song);
         },
     },
-    search: { searchSongs },
+    search: { searchSongs, searchCollections, getSmartboxSuggestions },
     playback: { getSongDetail, getAudioSource },
     lyrics: { getLyrics },
     auth: {
@@ -1000,6 +1050,23 @@ export const qqProvider: OnlineMusicProvider = {
                 dirid: String(dirId),
                 songids: songIds.join(','),
             });
+        },
+        // 后端 AddPlaylist 的回包形状不稳定（不带 dirId），所以建完重拉自建歌单按名字认领；
+        // 认领不到就报错，让上层把「建了但不知道建到哪」如实交给用户，而不是返回一个空壳集合。
+        async createPlaylist(dirName) {
+            const trimmed = dirName.trim();
+            if (!trimmed) {
+                throw new OnlineProviderError('unsupported', 'QQ playlist create requires a non-empty name', 'qq');
+            }
+            await requestQq('playlist_create', { dirname: trimmed });
+            const page = await getUserPlaylists('' as MediaId, 100, 0);
+            const created = page.items.find(
+                item => item.name === trimmed && Boolean(item.providerData?.owned),
+            );
+            if (!created) {
+                throw new OnlineProviderError('invalid-response', 'QQ playlist create was accepted but the playlist was not found afterwards', 'qq');
+            }
+            return created;
         },
     },
     library: { getUserPlaylists, getUserAlbums, getLikedSongIds },

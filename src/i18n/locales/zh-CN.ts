@@ -918,7 +918,11 @@ export default {
     "playTrack": "播放歌曲",
     "error": "搜索失败，请重试。",
     "retry": "重试",
-    "catalogUnavailable": "无法打开该专辑或歌手：在线平台未返回有效的目录 ID。"
+    "catalogUnavailable": "无法打开该专辑或歌手：在线平台未返回有效的目录 ID。",
+    "history": "搜索历史",
+    "clearHistory": "清空",
+    "album": "专辑",
+    "playlist": "歌单"
   },
   "personalFmMode": {
     "openPicker": "切换私人 FM 模式",

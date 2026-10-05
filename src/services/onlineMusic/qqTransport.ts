@@ -9,6 +9,7 @@ export const QQ_OPERATIONS = [
     'user_detail', 'user_playlist', 'user_albums', 'user_liked_songs', 'user_playlist_detail',
     'music_play', 'song_list_detail', 'song_info',
     'album_info', 'artist_albums', 'artist_songs',
+    'smartbox',
     'recommend_radio', 'recommend_feed', 'recommend_radar', 'recommend_playlists', 'recommend_new_songs',
     'recommend_similar',
     'like_song', 'unlike_song', 'playlist_songs', 'playlist_create',
@@ -41,6 +42,9 @@ const ENDPOINTS: Record<QqOperation, string> = {
     album_info: '/getAlbumInfo',
     artist_albums: '/getSingerAlbum',
     artist_songs: '/getSingerHotsong',
+    // 搜索联想（上游 splcloud 的 smartbox_new.fcg，匿名可调）。后端控制器读的是 query 里的
+    // `key`，虽然路由声明了可选路径参数 —— 传 key 必须走 query string，路径里塞会得到 response: null。
+    smartbox: '/getSmartbox',
     // 推荐面向的五路。这五条只存在于打过 recommend 补丁的后端；旧后端一律 404，调用方要按
     // 「这个后端没有推荐能力」降级，而不是当错误抛给用户。
     recommend_radio: '/recommend/radio',

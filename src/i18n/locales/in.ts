@@ -914,7 +914,11 @@ export default {
     "playTrack": "Putar trek",
     "error": "Pencarian gagal. Silakan coba lagi.",
     "retry": "Coba Lagi",
-    "catalogUnavailable": "Album atau artis ini tidak dapat dibuka karena penyedia tidak mengembalikan ID katalog yang valid."
+    "catalogUnavailable": "Album atau artis ini tidak dapat dibuka karena penyedia tidak mengembalikan ID katalog yang valid.",
+    "history": "Riwayat pencarian",
+    "clearHistory": "Hapus",
+    "album": "Album",
+    "playlist": "Daftar putar"
   },
   "personalFmMode": {
     "openPicker": "Ganti mode FM Pribadi",

@@ -938,6 +938,7 @@ export default function App() {
         addCurrentSongToLocalPlaylist,
         createCurrentLocalPlaylist,
         addCurrentSongToOnlinePlaylist,
+        createCurrentOnlinePlaylist,
         addCurrentSongToNavidromePlaylist,
         createCurrentNavidromePlaylist,
         loadCurrentSongLyricPreview,
@@ -1119,6 +1120,11 @@ export default function App() {
         }
         setStatusMsg({ type: 'error', text: t('search.catalogUnavailable') });
     }, [navigateToCollection, setStatusMsg, t]);
+    // 类型搜索（专辑/歌单）的集合卡：卡片已经是完整的 descriptor，直接走现有集合详情。
+    const handleSearchCollectionOpen = useCallback(
+        (collection: GridViewCollectionDescriptor) => navigateToCollection(collection, 'search'),
+        [navigateToCollection],
+    );
 
     usePlaybackUiEffects({
         statusMsg,
@@ -2205,9 +2211,18 @@ export default function App() {
     const playerDisplayQueue = useMemo(() => (
         playQueue.map(song => applyLocalLibraryEntityDisplay(song, localLibraryCatalog, playerDisplayCatalogIndex))
     ), [localLibraryCatalog, playQueue, playerDisplayCatalogIndex]);
+    const onlineSongProviderId = playerDisplayCurrentSong
+        ? getOnlineProviderIdForSong(playerDisplayCurrentSong)
+        : null;
+    // The account store owns the playlist lists (library refreshes and post-mutation refreshes both
+    // write it), so the picker's lists must subscribe to it — a plain memo over the song would keep
+    // showing the pre-create list until the song changed.
+    const songAccountCollections = useOnlineProviderAccountStore(state => (
+        onlineSongProviderId ? state.accounts[onlineSongProviderId]?.collections : undefined
+    ));
     const onlinePlaylists = useMemo(() => {
         return playerDisplayCurrentSong ? omni.getPlaylistsForSong(playerDisplayCurrentSong) : [];
-    }, [onlineProviderPlatform.providers, playerDisplayCurrentSong]);
+    }, [onlineProviderPlatform.providers, playerDisplayCurrentSong, songAccountCollections]);
 
     const playerPanelModel = usePlayerPanelModel({
         navigateToHome,
@@ -2281,6 +2296,7 @@ export default function App() {
         handleSearchResultAddToQueue,
         handleSearchResultArtistOpen,
         handleSearchResultAlbumOpen,
+        handleSearchCollectionOpen,
         devDebugSnapshot,
         effectiveLoopMode,
         canToggleCurrentPlayback,
@@ -2805,6 +2821,7 @@ export default function App() {
                 onAddCurrentSongToLocalPlaylist={addCurrentSongToLocalPlaylist}
                 onCreateCurrentLocalPlaylist={createCurrentLocalPlaylist}
                 onAddCurrentSongToOnlinePlaylist={addCurrentSongToOnlinePlaylist}
+                onCreateCurrentOnlinePlaylist={createCurrentOnlinePlaylist}
                 onAddCurrentSongToNavidromePlaylist={addCurrentSongToNavidromePlaylist}
                 onCreateCurrentNavidromePlaylist={createCurrentNavidromePlaylist}
             />

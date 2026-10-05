@@ -7,6 +7,7 @@ const clearSessionMock = vi.hoisted(() => vi.fn());
 const writeSessionValueMock = vi.hoisted(() => vi.fn());
 const searchQQLyricsMock = vi.hoisted(() => vi.fn());
 const fetchQQLyricsMock = vi.hoisted(() => vi.fn());
+const searchQQByTypeMock = vi.hoisted(() => vi.fn());
 const transportState = vi.hoisted(() => ({ hasSession: true }));
 
 vi.mock('@/services/onlineMusic/qqTransport', () => ({
@@ -23,6 +24,8 @@ vi.mock('@/services/onlineMusic/providerStorage', () => ({
 vi.mock('@/utils/lyrics/providers/qqLyricProvider', () => ({
     searchQQLyrics: searchQQLyricsMock,
     fetchQQLyrics: fetchQQLyricsMock,
+    searchQQByType: searchQQByTypeMock,
+    QQ_SEARCH_TYPE: { song: 0, album: 2, playlist: 3 },
 }));
 
 import { qqProvider, resetQqProviderRuntimeCache } from '@/services/onlineMusic/qqProvider';
@@ -182,6 +185,7 @@ describe('qqProvider', () => {
         writeSessionValueMock.mockReset();
         searchQQLyricsMock.mockReset();
         fetchQQLyricsMock.mockReset();
+        searchQQByTypeMock.mockReset();
         transportState.hasSession = true;
         resetQqProviderRuntimeCache();
     });
@@ -218,6 +222,131 @@ describe('qqProvider', () => {
 
         await qqProvider.mutations?.likeSong?.(5105918, false);
         expect(requestMock).toHaveBeenCalledWith('unlike_song', { songid: '5105918' });
+    });
+
+    // 新建歌单：后端 AddPlaylist 的回包不带 dirId，所以建完重拉自建歌单按名字认领。
+    // 后端控制器读的是小写 `dirname` 查询参数，传错大小写会被 400 拒收。
+    it('creates a playlist and claims it back by name from the owned list', async () => {
+        requestMock
+            .mockImplementation(async (operation: string) => {
+                if (operation === 'playlist_create') return { code: 200, data: {} };
+                if (operation === 'user_playlist') {
+                    return {
+                        total: 1,
+                        playlist: [{ ...PLAYLIST_ITEM, tid: 8, dirId: 202, dirName: '我的测试歌单', songNum: 0 }],
+                    };
+                }
+                return { code: 200 };
+            });
+
+        const created = await qqProvider.mutations?.createPlaylist?.('我的测试歌单');
+
+        expect(requestMock).toHaveBeenCalledWith('playlist_create', { dirname: '我的测试歌单' });
+        expect(created).toMatchObject({
+            name: '我的测试歌单',
+            providerId: 'qq',
+            type: 'playlist',
+        });
+        expect(created?.providerData).toMatchObject({ owned: true, dirId: 202 });
+    });
+
+    it('refuses an empty playlist name without calling the write route', async () => {
+        await expect(qqProvider.mutations?.createPlaylist?.('   ')).rejects.toMatchObject({
+            code: 'unsupported',
+        });
+        expect(requestMock).not.toHaveBeenCalled();
+    });
+
+    it('reports an invalid response when a created playlist cannot be claimed afterwards', async () => {
+        requestMock
+            .mockImplementation(async (operation: string) => {
+                if (operation === 'playlist_create') return { code: 200, data: {} };
+                if (operation === 'user_playlist') return { total: 0, playlist: [] };
+                return { code: 200 };
+            });
+
+        await expect(qqProvider.mutations?.createPlaylist?.('我的测试歌单')).rejects.toMatchObject({
+            code: 'invalid-response',
+        });
+    });
+
+    // smartbox 联想：后端回包是 `{ response: { data: { song, singer } } }`；单曲带歌手作副行，
+    // 歌手项选中即搜歌手名；MV/专辑联想不进搜索框，空查询直接短路。
+    it('reads smartbox suggestions out of the wrapped response and drops empty ones', async () => {
+        requestMock.mockImplementation(async (operation: string) => {
+            if (operation === 'smartbox') {
+                return {
+                    response: {
+                        code: 0,
+                        data: {
+                            song: {
+                                itemlist: [
+                                    { id: 4835784, mid: '001yS0N33yPm1B', name: '海阔天空', singer: 'BEYOND' },
+                                    { id: 453246231, mid: '001FNg1I3mmdsP', name: '海阔天空', singer: 'G.E.M.邓紫棋' },
+                                    { id: 106643901, mid: '002rZjwv4ddzKt', name: '', singer: '' },
+                                ],
+                            },
+                            singer: {
+                                itemlist: [{ id: 38603, mid: '003yKo3P1yilYs', name: '海阔天空', singer: '海阔天空' }],
+                            },
+                            album: { itemlist: [{ id: 8561, mid: '002XWx9122oM17', name: '海阔天空', singer: '信乐团' }] },
+                            mv: { itemlist: [{ id: 134009, mid: '0024jbha2gPk27', name: '海阔天空', singer: 'BEYOND' }] },
+                        },
+                    },
+                };
+            }
+            return { code: 200 };
+        });
+
+        const suggestions = await qqProvider.search?.getSmartboxSuggestions?.('海阔天空');
+
+        expect(requestMock).toHaveBeenCalledWith('smartbox', { key: '海阔天空' });
+        expect(suggestions).toEqual([
+            { kind: 'song', value: '海阔天空', detail: 'BEYOND' },
+            { kind: 'song', value: '海阔天空', detail: 'G.E.M.邓紫棋' },
+            { kind: 'singer', value: '海阔天空' },
+        ]);
+    });
+
+    it('short-circuits smartbox suggestions on an empty query', async () => {
+        expect(await qqProvider.search?.getSmartboxSuggestions?.('  ')).toEqual([]);
+        expect(requestMock).not.toHaveBeenCalled();
+    });
+
+    // 类型搜索：专辑（item_album）与歌单（item_songlist）各取一页；搜索到的歌单认不出
+    // owned，所以集合卡天然不可写 —— 点卡片只导航。
+    it('searches collections of both types and keeps them unwritable', async () => {
+        searchQQByTypeMock.mockImplementation(async (_keyword: string, _page: number, _size: number, searchType: number) => {
+            if (searchType === 2) {
+                return [{
+                    albummid: '002STRxZ3ptE8B',
+                    id: 30060997,
+                    name: '测试专辑',
+                    pic: 'https://img.example.test/album.jpg',
+                    singer: 'stowic',
+                    song_num: 3,
+                    publish_date: '2022-08-21',
+                }];
+            }
+            return [{
+                dissid: '7279275468',
+                dissname: '华语| 默写青春',
+                songnum: '35',
+                nickname: 'QQ音乐官方歌单',
+                logo: 'https://img.example.test/list.jpg',
+            }];
+        });
+
+        const page = await qqProvider.search?.searchCollections?.('华语', 12, 0);
+
+        expect(searchQQByTypeMock).toHaveBeenCalledWith('华语', 1, 12, 2);
+        expect(searchQQByTypeMock).toHaveBeenCalledWith('华语', 1, 12, 3);
+        expect(page?.items).toHaveLength(2);
+        expect(page?.items?.[0]).toMatchObject({ type: 'album', name: '测试专辑', providerId: 'qq' });
+        expect(page?.items?.[0]?.providerData).toMatchObject({ albumMid: '002STRxZ3ptE8B' });
+        expect(page?.items?.[1]).toMatchObject({ type: 'playlist', name: '华语| 默写青春' });
+        // 搜索到的歌单是别人的：没有 owned 标记，歌单写判定天然拒收。
+        expect(page?.items?.[1]?.providerData?.owned).toBeUndefined();
     });
 
     // ── 推荐面向 ────────────────────────────────────────────────────────────

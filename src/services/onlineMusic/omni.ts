@@ -16,6 +16,7 @@ import type {
     OmniSongReplacement,
     OmniUser,
     OnlineMusicProvider,
+    OnlineSearchSuggestion,
     PersonalFmRequestOptions,
     ProviderCatalogEntityKind,
     QrLoginMethod,
@@ -206,6 +207,20 @@ export const omni = {
         return provider.search.searchSongs(query, page.limit, page.offset);
     },
 
+    /** 搜索框输入联想；provider 没实现就返回空，调用方按「没有联想」处理。 */
+    async searchSmartboxSuggestions(providerId: OmniProviderId, query: string): Promise<OnlineSearchSuggestion[]> {
+        const provider = requireOnlineMusicProvider(providerId);
+        if (!providerSupports(provider, 'search') || !provider.search?.getSmartboxSuggestions) return [];
+        return provider.search.getSmartboxSuggestions(query);
+    },
+
+    /** 专辑/歌单类型搜索，返回集合卡；provider 没实现就返回空页。 */
+    async searchProviderCollections(providerId: OmniProviderId, query: string, page: PageInput): Promise<OmniPage<OmniCollection>> {
+        const provider = requireOnlineMusicProvider(providerId);
+        if (!providerSupports(provider, 'search') || !provider.search?.searchCollections) return emptyPage(page.offset);
+        return provider.search.searchCollections(query, page.limit, page.offset);
+    },
+
     async getLoginStatus(providerId: OmniProviderId): Promise<OmniUser | null> {
         const provider = requireOnlineMusicProvider(providerId);
         if (!provider.auth) return unsupported(providerId, 'auth');
@@ -346,6 +361,13 @@ export const omni = {
         return providerSupports(provider, 'mutations')
             && providerSupports(provider, 'playlistTrackMutations')
             && Boolean(provider?.mutations?.updatePlaylistTracks);
+    },
+
+    /** Whether the provider can create an owned playlist in the account at all. */
+    canCreatePlaylist(providerId: OmniProviderId): boolean {
+        const provider = getOnlineMusicProvider(providerId);
+        return providerSupports(provider, 'mutations')
+            && Boolean(provider?.mutations?.createPlaylist);
     },
 
     canLikeSong(song: SongResult): boolean {
@@ -628,6 +650,24 @@ export const omni = {
                 name: error instanceof Error ? error.name : 'Error',
             });
         }
+    },
+
+    /** Creates an owned playlist in the given provider's account and returns it normalized. */
+    async createPlaylist(providerId: OmniProviderId, dirName: string): Promise<OmniCollection> {
+        const provider = requireOnlineMusicProvider(providerId);
+        if (!providerSupports(provider, 'mutations') || !provider.mutations?.createPlaylist) {
+            return unsupported(providerId, 'playlist-create');
+        }
+        const created = await provider.mutations.createPlaylist(dirName);
+        try {
+            await this.refreshProviderPlaylists(providerId);
+        } catch (error) {
+            console.warn('[Omni] Failed to refresh provider playlists after create', {
+                providerId,
+                name: error instanceof Error ? error.name : 'Error',
+            });
+        }
+        return created;
     },
 
     async likeSong(song: SongResult, liked: boolean): Promise<void> {
