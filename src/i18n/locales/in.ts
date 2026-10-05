@@ -1116,6 +1116,7 @@ export default {
     "discover": "Jelajahi",
     "discoverUnavailable": "Rekomendasi gagal dimuat. Beralih tab lalu kembali untuk mencoba lagi.",
     "discoverRefresh": "Ganti batch",
+    "swapBatch": "Ganti batch",
     "discoverSimilar": "Mirip lagu ini",
     "discoverSimilarSeed": "Berdasarkan {{song}}",
     "discoverRadar": "Radar",

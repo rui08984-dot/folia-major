@@ -970,7 +970,7 @@ export const qqProvider: OnlineMusicProvider = {
             // 四路各自独立，一条挂了不该让整行消失，所以逐个兜底而不是 Promise.all 一锅端。
             const [playlistResponse, ...rows] = await Promise.all([
                 wantEditorial
-                    ? requestQq<any>('recommend_playlists', { from: 0, size: wanted })
+                    ? requestQq<any>('recommend_playlists', { from: Math.max(0, Math.floor(context?.from ?? 0)), size: wanted })
                     .catch((error: unknown) => {
                         console.warn('[QQProvider] recommend:playlists-failed', errorFields(error));
                         return null;

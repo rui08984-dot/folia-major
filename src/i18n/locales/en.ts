@@ -1123,6 +1123,7 @@ export default {
     "discover": "Discover",
     "discoverUnavailable": "Recommendations could not be loaded. Switch tabs and back to retry.",
     "discoverRefresh": "Shuffle",
+    "swapBatch": "Shuffle",
     "discoverSimilar": "Similar to this song",
     "discoverSimilarSeed": "Based on {{song}}",
     "discoverRadar": "Radar",

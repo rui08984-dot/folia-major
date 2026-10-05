@@ -400,6 +400,8 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     const [loadingAlbums, setLoadingAlbums] = useState(false);
     const [radioItems, setRadioItems] = useState<any[]>([]);
     const [loadingRadio, setLoadingRadio] = useState(false);
+    // 「换一批」的批次偏移：只在 radio tab 的 actions 里递增，回首页不重置（保持这一轮的进度）。
+    const [radioFrom, setRadioFrom] = useState(0);
     const [discoverSections, setDiscoverSections] = useState<DiscoverSection[]>([]);
     const [discoverError, setDiscoverError] = useState<string | null>(null);
     const [loadingDiscover, setLoadingDiscover] = useState(false);
@@ -532,10 +534,14 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         return () => window.removeEventListener('folia-refresh-favorite-albums', handleRefreshAlbums);
     }, []);
 
-    const fetchRadioItems = async (isRetry = false) => {
+    // 广场一屏的批次量；「换一批」按这个步长推进偏移。
+    const RADIO_PAGE_SIZE = 35;
+    // `from` 是广场的批次偏移（「换一批」递增），首屏与预热都是 0。返回本次拿到的条数，
+    // 换批的调用方要靠它判断上游是不是翻到头了（0 条就回卷到 0 再来一轮）。
+    const fetchRadioItems = async (from = 0, isRetry = false): Promise<number> => {
         if (!canUseOnlineRadio) {
             setRadioItems([]);
-            return;
+            return 0;
         }
         // 先上缓存秒开，再拉新的覆盖（与发现页同一套 stale-while-revalidate）。
         if (radioItems.length === 0) {
@@ -545,7 +551,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         setLoadingRadio(true);
         try {
             // 电台页要的是「大家都在听的」那一半；发现页要的是「给你的」那一半（见 fetchDiscoverItems）。
-            const { personalFm: fmSongs, dailySongs, recommendedCollections } = await omni.getHomeFeed(35, { scope: 'editorial' });
+            const { personalFm: fmSongs, dailySongs, recommendedCollections } = await omni.getHomeFeed(RADIO_PAGE_SIZE, { scope: 'editorial', from });
             const fmCoverUrl = getSongCoverUrl(fmSongs[0], activeProviderId);
 
 
@@ -577,12 +583,14 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                 : recommendedItems;
             setRadioItems(nextRadioItems);
             writeRadioCache(nextRadioItems);
+            return nextRadioItems.length;
         } catch (e) {
             console.error(`[Grid3D] Failed to fetch radio items${isRetry ? ' (after retry)' : ''}`, e);
             if (!isRetry) {
                 await new Promise(resolve => setTimeout(resolve, 1200));
-                return fetchRadioItems(true);
+                return fetchRadioItems(from, true);
             }
+            return 0;
         } finally {
             if (!isRetry) setLoadingRadio(false);
         }
@@ -810,6 +818,30 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             title: t('home.discoverRefresh'),
         },
     ], [loadingDiscover, t]);
+
+    // 广场的「换一批」：偏移按批次推进；拉到 0 条说明上游翻到头，回卷到 0 再来一轮，
+    // 绝不让广场被换成空白。与发现页的刷新按钮同用 surface 原生 actions 槽。
+    const radioActions = useMemo<DesktopGrid3DAction[]>(() => [
+        {
+            id: 'swap-radio-batch',
+            label: loadingRadio ? t('options.scanning') : t('home.swapBatch'),
+            icon: loadingRadio ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />,
+            disabled: loadingRadio,
+            onClick: () => {
+                void (async () => {
+                    const nextFrom = radioFrom + RADIO_PAGE_SIZE;
+                    const count = await fetchRadioItems(nextFrom);
+                    if (count === 0) {
+                        await fetchRadioItems(0);
+                        setRadioFrom(0);
+                    } else {
+                        setRadioFrom(nextFrom);
+                    }
+                })();
+            },
+            title: t('home.swapBatch'),
+        },
+    ], [loadingRadio, radioFrom, t]);
 
     // Active tab list items mapping
     const currentDesktopItems = useMemo(() => {
@@ -1207,7 +1239,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                         focusedIndex={focusedIndex}
                         onFocusedIndexChange={setFocusedIndex}
                         onSelect={handleSelectCollectionCard}
-                        actions={homeViewTab === 'discover' ? discoverActions : undefined}
+                        actions={homeViewTab === 'discover' ? discoverActions : homeViewTab === 'radio' ? radioActions : undefined}
                         isLoading={isLoading}
                         emptyMessage={currentOnlineTabUnavailableReason || t('home.loadingLibrary')}
                         theme={theme}

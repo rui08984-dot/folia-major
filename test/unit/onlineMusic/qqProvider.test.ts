@@ -25,7 +25,7 @@ vi.mock('@/utils/lyrics/providers/qqLyricProvider', () => ({
     searchQQLyrics: searchQQLyricsMock,
     fetchQQLyrics: fetchQQLyricsMock,
     searchQQByType: searchQQByTypeMock,
-    QQ_SEARCH_TYPE: { song: 0, album: 2, playlist: 3 },
+    QQ_SEARCH_TYPE: { song: 7, album: 2, playlist: 3 },
 }));
 
 import { qqProvider, resetQqProviderRuntimeCache } from '@/services/onlineMusic/qqProvider';
@@ -449,6 +449,15 @@ const RECOMMEND_PLAYLIST = {
 
         // 雷达与新歌没有上游歌单，只能作为虚拟歌单存在；雷达那条顺带证明 Track 包装被拆开了
         expect(virtualRows.map(row => row.id)).toEqual(['qq-recommend-radar', 'qq-recommend-new-songs']);
+    });
+
+    // 「换一批」的批次偏移必须原样打到后端：context.from 传什么，请求里就是什么。
+    it('forwards the batch offset to the recommend_playlists route', async () => {
+        withRecommendationTransport();
+
+        await qqProvider.recommendations?.getRecommendedCollections?.(25, { scope: 'editorial', from: 35 });
+
+        expect(requestMock).toHaveBeenCalledWith('recommend_playlists', { from: 35, size: 25 });
     });
 
     it('re-fetches a virtual recommendation row instead of asking for a playlist that does not exist', async () => {

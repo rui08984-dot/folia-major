@@ -89,11 +89,11 @@ function detectIsQrc(content: string): boolean {
 
 /**
  * `music.search.SearchCgiService` 的 search_type 实测值（2026-10-06 逐个探测确认）：
- * 0=单曲（item_song）、2=专辑（item_album）、3=歌单（item_songlist）、4=MV、7/10=单曲。
- * 这里只登记搜索结果里真正用得到的三个。
+ * 0 上游已拒收（内层 code 2001、零结果——就是「搜索无结果」的根因），
+ * 7/10=单曲（item_song，形状与 0 时代一致）、2=专辑（item_album）、3=歌单（item_songlist）、4=MV。
  */
 export const QQ_SEARCH_TYPE = {
-  song: 0,
+  song: 7,
   album: 2,
   playlist: 3,
 } as const;

@@ -332,10 +332,11 @@ export interface OnlineRecommendationProvider {
      * 'editorial' 只要编辑选出来的歌单广场，'all'（默认）都要。
      * 两个首页入口是两个语义不同的面：发现是「给你的」，电台是「大家都在听的」。
      * 不分开的话两个 tab 会长得一模一样，用户无从判断该点哪个。
+     * `context.from` 是歌单广场的批次偏移（换一批用）；provider 不支持就当 0，不支持换批不算错。
      */
     getRecommendedCollections?(
         limit: number,
-        context?: { seedSongId?: MediaId; scope?: 'personalized' | 'editorial' | 'all' },
+        context?: { seedSongId?: MediaId; from?: number; scope?: 'personalized' | 'editorial' | 'all' },
     ): Promise<ProviderCollection[]>;
     /**
      * 按一首种子歌推同类。与 getPersonalFm 的差别：前者按账号画像给，后者按「此刻在听什么」给，

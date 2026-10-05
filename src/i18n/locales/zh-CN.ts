@@ -1122,6 +1122,7 @@ export default {
     "discover": "发现",
     "discoverUnavailable": "推荐没能加载出来。切换一下页签再回来会重试。",
     "discoverRefresh": "换一批",
+    "swapBatch": "换一批",
     "discoverSimilar": "相似歌曲",
     "discoverSimilarSeed": "根据 {{song}}",
     "discoverRadar": "雷达",
