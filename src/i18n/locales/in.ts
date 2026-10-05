@@ -918,7 +918,8 @@ export default {
     "history": "Riwayat pencarian",
     "clearHistory": "Hapus",
     "album": "Album",
-    "playlist": "Daftar putar"
+    "playlist": "Daftar putar",
+    "songs": "Lagu"
   },
   "personalFmMode": {
     "openPicker": "Ganti mode FM Pribadi",

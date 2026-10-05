@@ -13,15 +13,12 @@ import { useCollectionNavigationStore } from '../../../stores/useCollectionNavig
 import { useOnlineProviderAccountStore } from '../../../stores/useOnlineProviderAccountStore';
 import { omni } from '../../../services/onlineMusic/omni';
 import { getSongCoverUrl } from '../../../services/onlineMusic/songMetadata';
-import DesktopGrid3DSurface from '../../folia-grid/DesktopGrid3DSurface';
-import type { Grid3DSliderItem } from '../../folia-grid/Grid3DSlider';
 import { collectionKey, createOnlineGridViewCollection, type GridViewCollectionDescriptor } from '../home/gridViewCollectionAdapters';
 
 // src/components/app/search/SearchWorkspace.tsx
-// 搜索工作台。结果的呈现与首页同一套语言：拍立得卡走官方 DesktopGrid3DSurface
-//（发现页同款），点卡直接播整批队列；焦点走到尾部自动续页。
+// 搜索工作台。结果按渠道分行（单曲/歌单/专辑），查询词做标题——官方音乐 App 的搜索页结构。
 // 三件细化都在这一个文件里：smartbox 输入联想（下拉）、搜索历史（localStorage）、
-// 专辑/歌单类型搜索的集合卡行。联想与集合卡都走 omni（在线数据只走 omni 的铁律），
+// 类型搜索的集合卡。联想与集合卡都走 omni（在线数据只走 omni 的铁律），
 // provider 没实现对应方法就静默降级为没有那一件。
 
 const SEARCH_HISTORY_KEY = 'folia.search-history';
@@ -116,31 +113,11 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
 
     const isOnlineTab = searchSourceTab !== 'local' && searchSourceTab !== 'navidrome';
 
-    // 结果拍立得化：与首页/发现页同一套 surface，点卡直接播，焦点近尾自动续页。
-    const [focusedSongIndex, setFocusedSongIndex] = useState(0);
-    const songCards = useMemo(() => results.map(song => ({
-        id: `search-song-${String(song.sourceRef?.mediaId ?? song.id)}`,
-        name: song.name,
-        coverUrl: getSongCoverUrl(song, activeOnlineProviderId) || '',
-        description: song.artists?.map(a => a.name).join(', ') || '',
-        summary: '',
-        type: 'song' as const,
-        raw: { song },
-    })), [results, activeOnlineProviderId]);
-    useEffect(() => {
-        setFocusedSongIndex(0);
-    }, [searchQuery, searchSourceTab]);
-    const handleFocusedIndexChange = useCallback((index: number) => {
-        setFocusedSongIndex(index);
-        if (index >= songCards.length - 5 && hasMore && !isLoadingMore) {
-            onLoadMore();
-        }
-    }, [songCards.length, hasMore, isLoadingMore, onLoadMore]);
-    const handleSelectSongCard = useCallback((item: Grid3DSliderItem) => {
-        // 卡片是 songCards memo 造的，raw.song 恒在；surface 的 item 类型不带 raw，读时收窄。
-        const song = (item as unknown as { raw?: { song?: UnifiedSong } }).raw?.song;
-        if (song) onPlayTrack(song);
-    }, [onPlayTrack]);
+    // 渠道式结果：查询标题 + 单曲/歌单/专辑三行横滑卡（官方音乐 App 搜索页的结构）。
+    // 上一版整屏拍立得 surface 被用户否了（多个网格混在一起像万花筒），分行 + 标签才看得清「搜了什么」。
+    const songResults = results;
+    const playlistResults = useMemo(() => collections.filter(c => c.type === 'playlist'), [collections]);
+    const albumResults = useMemo(() => collections.filter(c => c.type === 'album'), [collections]);
 
     useEffect(() => {
         if (!isSearchOpen || hasCollection) return;
@@ -377,42 +354,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                         </nav>
                     </header>
 
-                    {collections.length > 0 && (
-                        <div className="mx-auto mt-3 w-full max-w-5xl shrink-0">
-                            <div className="flex gap-3 overflow-x-auto pb-2">
-                                {collections.map(collection => (
-                                    <button
-                                        key={collectionKey(collection)}
-                                        type="button"
-                                        onClick={() => onOpenCollection(collection)}
-                                        className={`w-28 shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
-                                            isDaylight ? 'border-black/10 bg-black/[0.04] hover:bg-black/[0.08]' : 'border-white/10 bg-white/[0.05] hover:bg-white/[0.09]'
-                                        }`}
-                                    >
-                                        {collection.coverUrl ? (
-                                            <img
-                                                src={collection.coverUrl}
-                                                alt=""
-                                                loading="lazy"
-                                                className="aspect-square w-full rounded-xl object-cover"
-                                            />
-                                        ) : (
-                                            <div className={`aspect-square w-full rounded-xl ${
-                                                isDaylight ? 'bg-black/10' : 'bg-white/10'
-                                            }`} />
-                                        )}
-                                        <p className="mt-2 truncate text-xs font-medium">{collection.name}</p>
-                                        <p className="truncate text-[11px] opacity-50">
-                                            {collection.type === 'album' ? t('search.album') : t('search.playlist')}
-                                            {collection.trackCount ? ` · ${collection.trackCount}` : ''}
-                                        </p>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="mx-auto mt-3 min-h-0 w-full max-w-5xl flex-1 flex flex-col items-center justify-center relative">
+                    <div className="mx-auto mt-3 min-h-0 w-full max-w-5xl flex-1 overflow-y-auto">
                         {searchError && results.length === 0 && !isSearching ? (
                             <div className="flex h-full flex-col items-center justify-center gap-3 text-center opacity-65">
                                 <AlertCircle size={32} />
@@ -426,20 +368,144 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                 </button>
                             </div>
                         ) : (
-                            <DesktopGrid3DSurface
-                                focusMemoryScope={`search:${searchSourceTab}`}
-                                title={searchQuery.trim() || t('search.placeholder')}
-                                mapButtonLabel={t('home.allSongs')}
-                                items={songCards}
-                                focusedIndex={focusedSongIndex}
-                                onFocusedIndexChange={handleFocusedIndexChange}
-                                onSelect={handleSelectSongCard}
-                                isLoading={isSearching}
-                                emptyMessage={searchError ? t('search.error') : t('home.noResults')}
-                                theme={theme}
-                                isDaylight={isDaylight}
-                                isInteractive
-                            />
+                            <div className="flex flex-col gap-6 pb-8">
+                                <h2 className="truncate text-lg font-semibold">
+                                    {searchQuery.trim() || t('search.placeholder')}
+                                </h2>
+                                {isSearching && results.length === 0 ? (
+                                    <div className="flex items-center justify-center py-16">
+                                        <Loader2 className="h-8 w-8 animate-spin opacity-45" />
+                                    </div>
+                                ) : (
+                                    <>
+                                        {songResults.length > 0 && (
+                                            <section>
+                                                <h3 className="mb-2 text-sm font-medium opacity-60">{t('search.songs')}</h3>
+                                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                                    {songResults.map(song => (
+                                                        <button
+                                                            key={`song-${String(song.sourceRef?.mediaId ?? song.id)}`}
+                                                            type="button"
+                                                            onClick={() => onPlayTrack(song)}
+                                                            className={`w-32 shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
+                                                                isDaylight ? 'border-black/10 bg-black/[0.04] hover:bg-black/[0.08]' : 'border-white/10 bg-white/[0.05] hover:bg-white/[0.09]'
+                                                            }`}
+                                                        >
+                                                            {getSongCoverUrl(song, activeOnlineProviderId) ? (
+                                                                <img
+                                                                    src={getSongCoverUrl(song, activeOnlineProviderId)}
+                                                                    alt=""
+                                                                    loading="lazy"
+                                                                    className="aspect-square w-full rounded-xl object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className={`flex aspect-square w-full items-center justify-center rounded-xl ${
+                                                                    isDaylight ? 'bg-black/10' : 'bg-white/10'
+                                                                }`}>
+                                                                    <Music size={22} className="opacity-40" />
+                                                                </div>
+                                                            )}
+                                                            <p className="mt-2 truncate text-xs font-medium">{song.name}</p>
+                                                            <p className="truncate text-[11px] opacity-50">
+                                                                {song.artists?.map(a => a.name).join(', ') || ''}
+                                                            </p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                {hasMore && (
+                                                    <div className="flex justify-center pt-1">
+                                                        <button
+                                                            type="button"
+                                                            disabled={isLoadingMore}
+                                                            onClick={onLoadMore}
+                                                            className={`rounded-full border px-5 py-2 text-sm disabled:opacity-50 ${
+                                                                isDaylight
+                                                                    ? 'border-black/10 bg-black/5 hover:bg-black/10'
+                                                                    : 'border-white/10 bg-white/5 hover:bg-white/10'
+                                                            }`}
+                                                        >
+                                                            {isLoadingMore ? t('localMusic.searching') : t('home.loadMore')}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </section>
+                                        )}
+                                        {playlistResults.length > 0 && (
+                                            <section>
+                                                <h3 className="mb-2 text-sm font-medium opacity-60">{t('search.playlist')}</h3>
+                                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                                    {playlistResults.map(collection => (
+                                                        <button
+                                                            key={collectionKey(collection)}
+                                                            type="button"
+                                                            onClick={() => onOpenCollection(collection)}
+                                                            className={`w-32 shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
+                                                                isDaylight ? 'border-black/10 bg-black/[0.04] hover:bg-black/[0.08]' : 'border-white/10 bg-white/[0.05] hover:bg-white/[0.09]'
+                                                            }`}
+                                                        >
+                                                            {collection.coverUrl ? (
+                                                                <img
+                                                                    src={collection.coverUrl}
+                                                                    alt=""
+                                                                    loading="lazy"
+                                                                    className="aspect-square w-full rounded-xl object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className={`aspect-square w-full rounded-xl ${
+                                                                    isDaylight ? 'bg-black/10' : 'bg-white/10'
+                                                                }`} />
+                                                            )}
+                                                            <p className="mt-2 truncate text-xs font-medium">{collection.name}</p>
+                                                            <p className="truncate text-[11px] opacity-50">
+                                                                {collection.trackCount ? `${collection.trackCount} ${t('playlist.tracks')}` : ''}
+                                                            </p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </section>
+                                        )}
+                                        {albumResults.length > 0 && (
+                                            <section>
+                                                <h3 className="mb-2 text-sm font-medium opacity-60">{t('search.album')}</h3>
+                                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                                    {albumResults.map(collection => (
+                                                        <button
+                                                            key={collectionKey(collection)}
+                                                            type="button"
+                                                            onClick={() => onOpenCollection(collection)}
+                                                            className={`w-32 shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
+                                                                isDaylight ? 'border-black/10 bg-black/[0.04] hover:bg-black/[0.08]' : 'border-white/10 bg-white/[0.05] hover:bg-white/[0.09]'
+                                                            }`}
+                                                        >
+                                                            {collection.coverUrl ? (
+                                                                <img
+                                                                    src={collection.coverUrl}
+                                                                    alt=""
+                                                                    loading="lazy"
+                                                                    className="aspect-square w-full rounded-xl object-cover"
+                                                                />
+                                                            ) : (
+                                                                <div className={`aspect-square w-full rounded-xl ${
+                                                                    isDaylight ? 'bg-black/10' : 'bg-white/10'
+                                                                }`} />
+                                                            )}
+                                                            <p className="mt-2 truncate text-xs font-medium">{collection.name}</p>
+                                                            <p className="truncate text-[11px] opacity-50">
+                                                                {collection.description || collection.artists?.map(a => a.name).join(', ') || ''}
+                                                            </p>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </section>
+                                        )}
+                                        {songResults.length === 0 && playlistResults.length === 0 && albumResults.length === 0 && (
+                                            <div className="flex items-center justify-center py-16 text-sm opacity-50">
+                                                {searchError ? t('search.error') : t('home.noResults')}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
                         )}
                     </div>
                 </motion.section>

@@ -923,7 +923,8 @@ export default {
     "history": "Search history",
     "clearHistory": "Clear",
     "album": "Album",
-    "playlist": "Playlist"
+    "playlist": "Playlist",
+    "songs": "Songs"
   },
   "personalFmMode": {
     "openPicker": "Switch the Personal FM mode",

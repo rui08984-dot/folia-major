@@ -922,7 +922,8 @@ export default {
     "history": "搜索历史",
     "clearHistory": "清空",
     "album": "专辑",
-    "playlist": "歌单"
+    "playlist": "歌单",
+    "songs": "单曲"
   },
   "personalFmMode": {
     "openPicker": "切换私人 FM 模式",
