@@ -9,14 +9,18 @@ import {
     type SearchSource,
     useSearchNavigationStore,
 } from '../../../stores/useSearchNavigationStore';
-import SearchResultsList from './SearchResultsList';
 import { useCollectionNavigationStore } from '../../../stores/useCollectionNavigationStore';
 import { useOnlineProviderAccountStore } from '../../../stores/useOnlineProviderAccountStore';
 import { omni } from '../../../services/onlineMusic/omni';
+import { getSongCoverUrl } from '../../../services/onlineMusic/songMetadata';
+import DesktopGrid3DSurface from '../../folia-grid/DesktopGrid3DSurface';
+import type { Grid3DSliderItem } from '../../folia-grid/Grid3DSlider';
 import { collectionKey, createOnlineGridViewCollection, type GridViewCollectionDescriptor } from '../home/gridViewCollectionAdapters';
 
 // src/components/app/search/SearchWorkspace.tsx
-// 搜索框的三件细化都在这一个文件里：smartbox 输入联想（下拉）、搜索历史（localStorage）、
+// 搜索工作台。结果的呈现与首页同一套语言：拍立得卡走官方 DesktopGrid3DSurface
+//（发现页同款），点卡直接播整批队列；焦点走到尾部自动续页。
+// 三件细化都在这一个文件里：smartbox 输入联想（下拉）、搜索历史（localStorage）、
 // 专辑/歌单类型搜索的集合卡行。联想与集合卡都走 omni（在线数据只走 omni 的铁律），
 // provider 没实现对应方法就静默降级为没有那一件。
 
@@ -82,9 +86,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
         isLoadingMore,
         searchError,
         hasMore,
-        scrollTop,
         setSearchQuery,
-        setSearchScrollTop,
     } = useSearchNavigationStore(useShallow(state => ({
         searchQuery: state.searchQuery,
         searchSourceTab: state.searchSourceTab,
@@ -94,9 +96,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
         isLoadingMore: state.isLoadingMore,
         searchError: state.searchError,
         hasMore: state.hasMore,
-        scrollTop: state.scrollTop,
         setSearchQuery: state.setSearchQuery,
-        setSearchScrollTop: state.setSearchScrollTop,
     })));
     const results = searchResults || [];
     const activeOnlineProviderId = useOnlineProviderAccountStore(state => state.activeProviderId);
@@ -115,6 +115,32 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
     const [isHistoryVisible, setIsHistoryVisible] = useState(false);
 
     const isOnlineTab = searchSourceTab !== 'local' && searchSourceTab !== 'navidrome';
+
+    // 结果拍立得化：与首页/发现页同一套 surface，点卡直接播，焦点近尾自动续页。
+    const [focusedSongIndex, setFocusedSongIndex] = useState(0);
+    const songCards = useMemo(() => results.map(song => ({
+        id: `search-song-${String(song.sourceRef?.mediaId ?? song.id)}`,
+        name: song.name,
+        coverUrl: getSongCoverUrl(song, activeOnlineProviderId) || '',
+        description: song.artists?.map(a => a.name).join(', ') || '',
+        summary: '',
+        type: 'song' as const,
+        raw: { song },
+    })), [results, activeOnlineProviderId]);
+    useEffect(() => {
+        setFocusedSongIndex(0);
+    }, [searchQuery, searchSourceTab]);
+    const handleFocusedIndexChange = useCallback((index: number) => {
+        setFocusedSongIndex(index);
+        if (index >= songCards.length - 5 && hasMore && !isLoadingMore) {
+            onLoadMore();
+        }
+    }, [songCards.length, hasMore, isLoadingMore, onLoadMore]);
+    const handleSelectSongCard = useCallback((item: Grid3DSliderItem) => {
+        // 卡片是 songCards memo 造的，raw.song 恒在；surface 的 item 类型不带 raw，读时收窄。
+        const song = (item as unknown as { raw?: { song?: UnifiedSong } }).raw?.song;
+        if (song) onPlayTrack(song);
+    }, [onPlayTrack]);
 
     useEffect(() => {
         if (!isSearchOpen || hasCollection) return;
@@ -386,12 +412,8 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                         </div>
                     )}
 
-                    <div className="mx-auto mt-3 min-h-0 w-full max-w-5xl flex-1">
-                        {isSearching ? (
-                            <div className="flex h-full items-center justify-center">
-                                <Loader2 className="h-9 w-9 animate-spin opacity-45" />
-                            </div>
-                        ) : searchError && results.length === 0 ? (
+                    <div className="mx-auto mt-3 min-h-0 w-full max-w-5xl flex-1 flex flex-col items-center justify-center relative">
+                        {searchError && results.length === 0 && !isSearching ? (
                             <div className="flex h-full flex-col items-center justify-center gap-3 text-center opacity-65">
                                 <AlertCircle size={32} />
                                 <p>{t('search.error')}</p>
@@ -403,53 +425,21 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                     {t('search.retry')}
                                 </button>
                             </div>
-                        ) : results.length === 0 ? (
-                            <div className="flex h-full items-center justify-center text-sm opacity-50">
-                                {t('home.noResults')}
-                            </div>
                         ) : (
-                            <div className="flex h-full flex-col">
-                                <div className="min-h-0 flex-1">
-                                    <SearchResultsList
-                                        tracks={results}
-                                        scrollTop={scrollTop}
-                                        isDaylight={isDaylight}
-                                        onScrollTopChange={setSearchScrollTop}
-                                        onPlayTrack={onPlayTrack}
-                                        onAddTrackToQueue={onAddTrackToQueue}
-                                        onOpenArtist={onOpenArtist}
-                                        onOpenAlbum={onOpenAlbum}
-                                    />
-                                </div>
-                                {searchError ? (
-                                    <div className="flex shrink-0 items-center justify-center gap-3 py-3 text-sm">
-                                        <span className="opacity-60">{t('search.error')}</span>
-                                        <button
-                                            type="button"
-                                            disabled={isLoadingMore}
-                                            onClick={onLoadMore}
-                                            className="rounded-full border border-current/15 px-4 py-2 disabled:opacity-50"
-                                        >
-                                            {t('search.retry')}
-                                        </button>
-                                    </div>
-                                ) : hasMore && (
-                                    <div className="flex shrink-0 justify-center py-3">
-                                        <button
-                                            type="button"
-                                            disabled={isLoadingMore}
-                                            onClick={onLoadMore}
-                                            className={`rounded-full border px-5 py-2 text-sm disabled:opacity-50 ${
-                                                isDaylight
-                                                    ? 'border-black/10 bg-black/5 hover:bg-black/10'
-                                                    : 'border-white/10 bg-white/5 hover:bg-white/10'
-                                            }`}
-                                        >
-                                            {isLoadingMore ? t('localMusic.searching') : t('home.loadMore')}
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
+                            <DesktopGrid3DSurface
+                                focusMemoryScope={`search:${searchSourceTab}`}
+                                title={searchQuery.trim() || t('search.placeholder')}
+                                mapButtonLabel={t('home.allSongs')}
+                                items={songCards}
+                                focusedIndex={focusedSongIndex}
+                                onFocusedIndexChange={handleFocusedIndexChange}
+                                onSelect={handleSelectSongCard}
+                                isLoading={isSearching}
+                                emptyMessage={searchError ? t('search.error') : t('home.noResults')}
+                                theme={theme}
+                                isDaylight={isDaylight}
+                                isInteractive
+                            />
                         )}
                     </div>
                 </motion.section>

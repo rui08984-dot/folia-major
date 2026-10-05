@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Loader2, Settings, PanelsTopLeft, RefreshCw } from 'lucide-react';
+import { Search, Loader2, Settings, PanelsTopLeft, RefreshCw, Music, User } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { resolveSearchSource, useSearchNavigationStore } from '../stores/useSearchNavigationStore';
 import type { LocalLibraryCatalogSnapshot } from '../hooks/useLocalLibraryCatalog';
@@ -30,7 +30,7 @@ import OnlineProviderAccountlessPanel from './app/home/OnlineProviderAccountless
 import OnlineProviderLoginModal from './app/home/OnlineProviderLoginModal';
 import { buildQrLoginDiagnosticsProps } from './app/home/buildQrLoginDiagnosticsProps';
 import { canSwitchToProviderDirectly, resolveOnlineProviderAccountView } from './app/home/onlineProviderAccountView';
-import type { MediaId, OmniProviderCapabilities, ProviderAccountSummary, ProviderCollection, ProviderUser } from '../types/onlineMusic';
+import type { MediaId, OnlineSearchSuggestion, OmniProviderCapabilities, ProviderAccountSummary, ProviderCollection, ProviderUser } from '../types/onlineMusic';
 import qqIcon from '../assets/providers/qq.svg';
 import wechatIcon from '../assets/providers/wechat.svg';
 import { useHomeLayoutSettingsStore } from '../stores/useHomeLayoutSettingsStore';
@@ -959,9 +959,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     };
 
     // Search committed callback
-    const handleSearch = async (e?: React.FormEvent) => {
+    const handleSearch = async (e?: React.FormEvent, overrideQuery?: string) => {
         e?.preventDefault();
-        const query = searchQuery.trim();
+        const query = (overrideQuery ?? searchQuery).trim();
         if (!query) return;
 
         const searchSource = isOnlineTab ? activeProviderId : resolveSearchSource(homeViewTab);
@@ -981,6 +981,41 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     };
 
     const isSearchingActive = isSearching;
+
+    // 顶部搜索框的 smartbox 联想：只在在线 tab、有输入、且框聚焦时拉。
+    // 点单曲直接播（provider 已把联想正规化成可播歌曲），点歌手填词走搜索——
+    // 这是用户要的路径：打字即联想，常用查询根本不用进搜索页。
+    const [headerSuggestions, setHeaderSuggestions] = useState<OnlineSearchSuggestion[]>([]);
+    const [headerSuggestionIndex, setHeaderSuggestionIndex] = useState(-1);
+    const [headerSuggestOpen, setHeaderSuggestOpen] = useState(false);
+    useEffect(() => {
+        if (!headerSuggestOpen || !isOnlineTab || searchQuery.trim().length === 0) {
+            setHeaderSuggestions([]);
+            setHeaderSuggestionIndex(-1);
+            return;
+        }
+        const timer = window.setTimeout(() => {
+            void omni.searchSmartboxSuggestions(activeProviderId, searchQuery.trim())
+                .then(items => {
+                    setHeaderSuggestions(items);
+                    setHeaderSuggestionIndex(-1);
+                })
+                .catch(() => setHeaderSuggestions([]));
+        }, 250);
+        return () => window.clearTimeout(timer);
+    }, [activeProviderId, headerSuggestOpen, isOnlineTab, searchQuery]);
+
+    const pickHeaderSuggestion = (suggestion: OnlineSearchSuggestion) => {
+        setHeaderSuggestOpen(false);
+        setHeaderSuggestions([]);
+        setHeaderSuggestionIndex(-1);
+        if (suggestion.kind === 'song' && suggestion.song) {
+            onPlaySong(suggestion.song);
+            return;
+        }
+        setSearchQuery(suggestion.value);
+        void handleSearch(undefined, suggestion.value);
+    };
 
     // Background style mappings
     const mainBg = isDaylight ? 'bg-white/40' : 'bg-black/20';
@@ -1187,9 +1222,59 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                 placeholder={homeViewTab === 'local' ? t('home.searchLocal') : homeViewTab === 'navidrome' ? t('home.searchNavidrome') : t('home.searchDatabase')}
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (headerSuggestions.length === 0) return;
+                                    if (e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        setHeaderSuggestionIndex(prev => (prev + 1) % headerSuggestions.length);
+                                        return;
+                                    }
+                                    if (e.key === 'ArrowUp') {
+                                        e.preventDefault();
+                                        setHeaderSuggestionIndex(prev => (prev <= 0 ? headerSuggestions.length - 1 : prev - 1));
+                                        return;
+                                    }
+                                    if (e.key === 'Enter' && headerSuggestionIndex >= 0) {
+                                        e.preventDefault();
+                                        pickHeaderSuggestion(headerSuggestions[headerSuggestionIndex]);
+                                    }
+                                }}
+                                onFocus={() => setHeaderSuggestOpen(true)}
+                                onBlur={() => window.setTimeout(() => setHeaderSuggestOpen(false), 120)}
                                 className={`w-full ${inputBg} border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-white/20 transition-all placeholder:text-current placeholder:opacity-40 select-text`}
                                 style={{ color: 'var(--text-primary)' }}
                             />
+
+                            {isOnlineTab && headerSuggestions.length > 0 && (
+                                <div
+                                    className={`absolute left-0 right-0 top-full z-50 mt-2 rounded-2xl border p-2 ${
+                                        isDaylight ? 'border-black/10 bg-white shadow-lg' : 'border-white/10 bg-[#141418] shadow-xl'
+                                    }`}
+                                >
+                                    <div className="flex flex-col">
+                                        {headerSuggestions.map((suggestion, index) => (
+                                            <button
+                                                key={`${suggestion.kind}:${suggestion.value}:${index}`}
+                                                type="button"
+                                                onMouseDown={event => event.preventDefault()}
+                                                onMouseEnter={() => setHeaderSuggestionIndex(index)}
+                                                onClick={() => pickHeaderSuggestion(suggestion)}
+                                                className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm transition-colors ${
+                                                    index === headerSuggestionIndex ? (isDaylight ? 'bg-black/10' : 'bg-white/10') : (isDaylight ? 'hover:bg-black/5' : 'hover:bg-white/5')
+                                                }`}
+                                            >
+                                                {suggestion.kind === 'singer'
+                                                    ? <User size={15} className="shrink-0 opacity-55" />
+                                                    : <Music size={15} className="shrink-0 opacity-55" />}
+                                                <span className="truncate">{suggestion.value}</span>
+                                                {suggestion.detail && (
+                                                    <span className="truncate text-xs opacity-50">{suggestion.detail}</span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </form>
                     </div>
                 </div>

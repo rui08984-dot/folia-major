@@ -301,11 +301,18 @@ describe('qqProvider', () => {
         const suggestions = await qqProvider.search?.getSmartboxSuggestions?.('海阔天空');
 
         expect(requestMock).toHaveBeenCalledWith('smartbox', { key: '海阔天空' });
-        expect(suggestions).toEqual([
-            { kind: 'song', value: '海阔天空', detail: 'BEYOND' },
-            { kind: 'song', value: '海阔天空', detail: 'G.E.M.邓紫棋' },
-            { kind: 'singer', value: '海阔天空' },
-        ]);
+        expect(suggestions).toHaveLength(3);
+        expect(suggestions?.[0]).toMatchObject({ kind: 'song', value: '海阔天空', detail: 'BEYOND' });
+        // 单曲联想必须带可播歌曲：mid 进 qqMid，平铺的 singer 字符串要映射成数组歌手
+        expect(suggestions?.[0]?.song).toMatchObject({
+            qqMid: '001yS0N33yPm1B',
+            name: '海阔天空',
+            artists: [{ name: 'BEYOND' }],
+        });
+        expect(suggestions?.[0]?.song?.sourceRef).toMatchObject({ kind: 'online', providerId: 'qq' });
+        expect(suggestions?.[1]).toMatchObject({ kind: 'song', value: '海阔天空', detail: 'G.E.M.邓紫棋' });
+        expect(suggestions?.[2]).toMatchObject({ kind: 'singer', value: '海阔天空' });
+        expect(suggestions?.[2]?.song).toBeUndefined();
     });
 
     it('short-circuits smartbox suggestions on an empty query', async () => {

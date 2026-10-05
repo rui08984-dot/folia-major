@@ -35,6 +35,8 @@ const searchSongs = async (query: string, limit: number, offset: number) => {
 
 // smartbox 联想：后端 controller 读 query 里的 `key`，回包是 `{ response: { data: { song/singer/... } } }`。
 // 单曲给 name + 歌手，歌手给 name（选中即搜歌手名）；MV 与专辑联想不进搜索框。
+// 单曲项额外带一份正规化好的可播歌曲：smartbox 的 singer 是平铺字符串，先映射成
+// normalizeQqSong 认的数组形状再正规化，点联想就能直接播，不必绕结果页。
 const getSmartboxSuggestions = async (query: string): Promise<OnlineSearchSuggestion[]> => {
     const trimmed = query.trim();
     if (!trimmed) return [];
@@ -51,12 +53,21 @@ const getSmartboxSuggestions = async (query: string): Promise<OnlineSearchSugges
         const singer = (item as { singer?: unknown })?.singer;
         return typeof singer === 'string' ? singer.trim() : '';
     };
+    const toPlayableShape = (item: Record<string, unknown>) => (
+        typeof item.singer === 'string'
+            ? { ...item, singer: [{ name: item.singer }] }
+            : item
+    );
     return [
-        ...songItems.slice(0, 6).map((item: unknown) => ({
-            kind: 'song' as const,
-            value: readName(item),
-            ...(readSinger(item) ? { detail: readSinger(item) } : {}),
-        })),
+        ...songItems.slice(0, 6).map((raw: unknown) => {
+            const item = (raw ?? {}) as Record<string, unknown>;
+            return {
+                kind: 'song' as const,
+                value: readName(item),
+                ...(readSinger(item) ? { detail: readSinger(item) } : {}),
+                song: normalizeQqSong(toPlayableShape(item)),
+            };
+        }),
         ...singerItems.slice(0, 3).map((item: unknown) => ({
             kind: 'singer' as const,
             value: readName(item),

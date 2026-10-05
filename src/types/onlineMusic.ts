@@ -218,6 +218,8 @@ export type OnlineSearchSuggestion = {
     kind: 'song' | 'singer';
     value: string;
     detail?: string;
+    /** 单曲联想带一份正规化好的可播歌曲：点联想直接播，不经过结果页。 */
+    song?: UnifiedSong;
 };
 
 export interface OnlineSearchProvider {
