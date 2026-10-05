@@ -5158,6 +5158,15 @@ function createWindow(options = {}) {
   // itself is no longer rendered in wallpaper mode.
   setMainWindowClickThroughEnabled(mainWindowClickThroughEnabled);
   updateWindowThumbarButtons();
+  // 开发版与已安装的官方版共用同一个 productName 与同一份 index.html，标题不区分的话任务栏、
+  // Alt+Tab、截图工具里全是两个 "Folia"，很容易开错那一个。BrowserWindow 的 `title` 选项会被
+  // 页面 <title> 覆盖，所以要在这里拦住 `page-title-updated` 才钉得住。打包产物不带这段。
+  if (process.env.ELECTRON_DEV === 'true') {
+    win.on('page-title-updated', (event) => {
+      event.preventDefault();
+    });
+    win.setTitle('Folia (dev)');
+  }
   win.on('resize', () => {
     saveWindowState(win, { deferred: true });
   });

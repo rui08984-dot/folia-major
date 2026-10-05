@@ -313,7 +313,34 @@ export interface PersonalFmRequestOptions {
 export interface OnlineRecommendationProvider {
     getDailySongs?(refresh?: boolean): Promise<UnifiedSong[]>;
     getPersonalFm?(options?: PersonalFmRequestOptions): Promise<UnifiedSong[]>;
-    getRecommendedCollections?(limit: number): Promise<ProviderCollection[]>;
+    /**
+     * `context.seedSongId` 让 provider 能补一段「与当前这首相关」的内容。没有种子就只给
+     * 账号级的推荐 —— 传不传都必须能用，所以它是可选参数而不是另开一个方法。
+     *
+     * `context.scope` 选要哪一半：'personalized' 只要「跟这个账号有关」的（猜你喜欢/相似/雷达/新歌），
+     * 'editorial' 只要编辑选出来的歌单广场，'all'（默认）都要。
+     * 两个首页入口是两个语义不同的面：发现是「给你的」，电台是「大家都在听的」。
+     * 不分开的话两个 tab 会长得一模一样，用户无从判断该点哪个。
+     */
+    getRecommendedCollections?(
+        limit: number,
+        context?: { seedSongId?: MediaId; scope?: 'personalized' | 'editorial' | 'all' },
+    ): Promise<ProviderCollection[]>;
+    /**
+     * 按一首种子歌推同类。与 getPersonalFm 的差别：前者按账号画像给，后者按「此刻在听什么」给，
+     * 两者不能互相替代 —— 猜你喜欢换一百次也是那个口味，相似歌曲才会跟着当前这首走。
+     */
+    getSimilarSongs?(seed: MediaId, limit?: number): Promise<UnifiedSong[]>;
+    /**
+     * 取某一段推荐的具体歌曲，`section` 由 provider 自己定义（如 QQ 的 'radar' / 'new-songs'）。
+     * 与 `getRecommendedCollections` 的虚拟行是同一批数据的两种视图：那边给的是「一列歌」的壳子，
+     * 这边给的是壳子里的歌本身 —— 首页要平铺歌曲而不是让人点进去才看到，就要靠它。
+     * 与酷狗的推荐 cardId 是同一个约定。
+     */
+    getRecommendationRowSongs?(
+        section: string,
+        options?: { seedSongId?: MediaId; limit?: number },
+    ): Promise<UnifiedSong[]>;
     getHistoryEntries?(): Promise<ProviderHistoryEntry[]>;
     getHistoryDates?(): Promise<string[]>;
     getHistorySongs?(entry: ProviderHistoryEntry | string): Promise<UnifiedSong[]>;

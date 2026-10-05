@@ -41,6 +41,27 @@ const SEARCH_ITEM = {
     interval: 326,
 };
 
+// `/getSongInfo`（`music.pf_song_detail_svr` 同族）响应：红心/歌单写操作要的数字 songId
+// 就从这里补齐 —— 对外身份是 songmid，写接口只认数字 id。
+const SONG_INFO_RESPONSE = {
+    response: {
+        code: 0,
+        songinfo: {
+            data: {
+                track_info: {
+                    id: 5105918,
+                    mid: '003rJSwm3TechU',
+                    name: '海阔天空',
+                    singer: [{ id: 4558, mid: '0025NhlN2yWrP4', name: 'Beyond' }],
+                    album: { id: 8112, mid: '0016l2F430zMux', name: '乐与怒' },
+                    file: { media_mid: '001MediaMidFixture' },
+                    interval: 326,
+                },
+            },
+        },
+    },
+};
+
 // Sanitized GetPlaylistByUin shape captured during account acceptance testing.
 const PLAYLIST_ITEM = {
     tid: 7,
@@ -165,17 +186,156 @@ describe('qqProvider', () => {
         resetQqProviderRuntimeCache();
     });
 
-    it('declares readable library features without exposing unsupported mutations or recommendations', () => {
+    it('declares library features, recommendations and mutations', () => {
         expect(qqProvider.capabilities).toMatchObject({
             userLibrary: true,
             playlists: true,
             userAlbums: true,
             likes: true,
-            recommendations: false,
-            mutations: false,
+            recommendations: true,
+            mutations: true,
+            playlistTrackMutations: true,
         });
-        expect(qqProvider.mutations).toBeUndefined();
-        expect(qqProvider.recommendations).toBeUndefined();
+        expect(qqProvider.mutations).toBeDefined();
+        expect(qqProvider.recommendations).toBeDefined();
+    });
+
+    // 红心 = 写进「我喜欢」目录（dirid 201）。数字 id 来自歌曲对象本身；
+    // 只有一个 mid 时应先补详情换数字 id，不能拿 mid 去打写接口。
+    it('likes a song through the numeric id and unlikes through the same route', async () => {
+        requestMock
+            .mockImplementation(async (operation: string) => {
+                if (operation === 'song_info') return SONG_INFO_RESPONSE;
+                return { code: 200 };
+            });
+
+        await qqProvider.mutations?.likeSong?.({
+            id: '003rJSwm3TechU',
+            name: '海阔天空',
+            sourceRef: { kind: 'online', providerId: 'qq', mediaId: '003rJSwm3TechU' },
+        } as never, true);
+        expect(requestMock).toHaveBeenCalledWith('like_song', { songid: '5105918' });
+
+        await qqProvider.mutations?.likeSong?.(5105918, false);
+        expect(requestMock).toHaveBeenCalledWith('unlike_song', { songid: '5105918' });
+    });
+
+    // ── 推荐面向 ────────────────────────────────────────────────────────────
+    // 下面三个用例固定三件事：请求打到了哪条路由、上游裹的那一层有没有被拆开、以及没有
+    // songmid 的条目会不会被丢掉。前两个是接口契约，第三个是数据可靠性 —— 一首播不了的歌混进
+    // 刷歌流里，用户点下去只会看到一次无解释的失败。
+
+    const RADIO_TRACK = {
+        mid: 'radio-mid-1',
+        id: 9001,
+        name: 'Radio Song',
+        title: 'Radio Song',
+        singer: [{ mid: '0025NhlN2yWrP4', name: 'Beyond' }],
+        album: { mid: '0016l2F430zMux', name: '乐与怒' },
+        interval: 240,
+    };
+
+    // 雷达条目裹在 `VecSongs[].Track` 里，比刷歌那条多一层。
+    const RADAR_TRACK = {
+        Track: {
+            ...RADIO_TRACK,
+            mid: 'radar-mid-1',
+            name: 'Radar Song',
+            title: 'Radar Song',
+        },
+    };
+
+    const NEW_SONG = {
+        ...RADIO_TRACK,
+        mid: 'newsong-mid-1',
+        name: 'New Song',
+        title: 'New Song',
+    };
+
+    // 没有 mid 的条目：既拿不到播放链接，也点不开专辑，必须在正规化阶段就丢掉。
+    const MIDLESS_TRACK = { id: 9002, name: 'No Mid', title: 'No Mid', interval: 200 };
+
+// 推荐歌单广场 `GetRecommendFeed` 的 `List[].Playlist.basic` 条目，形状取自 2026-10-05 的实测响应。
+// 与用户歌单那一族不同：封面在 `cover` 对象里（`mid` 为空串），曲数是 `song_cnt`。
+const RECOMMEND_PLAYLIST = {
+    creator: { uin: '1791747120', nick: 'someone' },
+    tid: 42,
+    dirid: 50,
+    title: '广场歌单',
+    desc: '歌单简介',
+    cover: {
+        id: 0,
+        mid: '',
+        small_url: 'https://music-file.example.test/small.jpg',
+        big_url: 'https://music-file.example.test/big.jpg',
+        default_url: 'https://music-file.example.test/big.jpg',
+    },
+    fav_cnt: 100,
+    play_cnt: 200,
+    song_cnt: 30,
+    dirshow: 1,
+};
+
+    const withRecommendationTransport = () => requestMock.mockImplementation(async (operation: string) => {
+        switch (operation) {
+            case 'recommend_radio':
+                return { code: 200, tracks: [RADIO_TRACK, MIDLESS_TRACK] };
+            case 'recommend_playlists':
+                return { code: 200, playlists: [{ Playlist: { basic: RECOMMEND_PLAYLIST } }], more: false };
+            case 'recommend_radar':
+                return { code: 200, tracks: [RADAR_TRACK], hasMore: false };
+            case 'recommend_new_songs':
+                return { code: 200, songs: [NEW_SONG] };
+            default:
+                return { code: 200 };
+        }
+    });
+
+    it('normalizes Personal FM tracks and drops the ones without a songmid', async () => {
+        withRecommendationTransport();
+
+        const songs = await qqProvider.recommendations?.getPersonalFm?.();
+
+        expect(requestMock).toHaveBeenCalledWith('recommend_radio', { num: 30 });
+        expect(songs).toHaveLength(1);
+        expect(songs?.[0]).toMatchObject({
+            id: 9001,
+            name: 'Radio Song',
+            qqMid: 'radio-mid-1',
+            durationMs: 240_000,
+        });
+    });
+
+    it('flattens wrapped recommendation rows and keeps virtual rows out of the playlist route', async () => {
+        withRecommendationTransport();
+
+        const collections = await qqProvider.recommendations?.getRecommendedCollections?.(25);
+        const playlists = collections?.filter(c => c.providerData?.virtualRecommendation !== true) ?? [];
+        const virtualRows = collections?.filter(c => c.providerData?.virtualRecommendation === true) ?? [];
+
+        expect(requestMock).toHaveBeenCalledWith('recommend_playlists', { from: 0, size: 25 });
+        // 真实歌单走脱壳后的 basic，id 必须是 tid 而不是外层的 Playlist 对象
+        expect(playlists).toHaveLength(1);
+        expect(playlists[0]).toMatchObject({ id: 42, name: '广场歌单', coverUrl: 'https://music-file.example.test/big.jpg' });
+
+        // 雷达与新歌没有上游歌单，只能作为虚拟歌单存在；雷达那条顺带证明 Track 包装被拆开了
+        expect(virtualRows.map(row => row.id)).toEqual(['qq-recommend-radar', 'qq-recommend-new-songs']);
+    });
+
+    it('re-fetches a virtual recommendation row instead of asking for a playlist that does not exist', async () => {
+        withRecommendationTransport();
+
+        const [radarRow] = (await qqProvider.recommendations?.getRecommendedCollections?.(25))
+            ?.filter(c => c.providerData?.virtualRecommendation === true) ?? [];
+        expect(radarRow).toBeDefined();
+
+        const page = await qqProvider.catalog?.getPlaylistTracks?.(radarRow!.id, 30, 0, radarRow);
+
+        expect(requestMock).toHaveBeenCalledWith('recommend_radar', { page: 0 });
+        expect(requestMock).not.toHaveBeenCalledWith('song_list_detail', expect.anything());
+        expect(page?.items[0]).toMatchObject({ qqMid: 'radar-mid-1' });
+        expect(page?.total).toBe(1);
+        expect(page?.hasMore).toBe(false);
     });
 
     it('normalizes a song onto songmid identity and keeps the numeric id in provider data', () => {
@@ -287,6 +447,17 @@ describe('qqProvider', () => {
             coverUrl: 'https://img.example.test/fav.jpg',
             trackCount: 3,
             providerData: { dissid: 8 },
+        });
+        // 推荐歌单广场（`GetRecommendFeed` 的 `List[].Playlist.basic`）是另一套拼法：封面在 `cover`
+        // 对象里而不是 `picurl`，曲数字段是 `song_cnt` 而不是 `songnum`。实测形状，别再退化回去。
+        expect(normalizeQqCollection(RECOMMEND_PLAYLIST)).toEqual({
+            providerId: 'qq',
+            id: 42,
+            name: '广场歌单',
+            type: 'playlist',
+            coverUrl: 'https://music-file.example.test/big.jpg',
+            trackCount: 30,
+            providerData: { tid: 42, dirId: 50 },
         });
 
         expect(normalizeQqUser({ data: { profile: { musicid: 123, nickname: '我的 QQ 账号' } } })).toEqual({
@@ -1043,7 +1214,8 @@ describe('qqProvider', () => {
             wordByWordLyrics: true,
             playback: true,
             likes: true,
-            mutations: false,
+            mutations: true,
+            playlistTrackMutations: true,
         });
         expect(qqProvider.playback).toBeDefined();
         expect(qqProvider.catalog?.getPlaylistTracks).toBeTypeOf('function');

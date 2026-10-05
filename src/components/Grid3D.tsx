@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Loader2, Settings, PanelsTopLeft } from 'lucide-react';
+import { Search, Loader2, Settings, PanelsTopLeft, RefreshCw } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { resolveSearchSource, useSearchNavigationStore } from '../stores/useSearchNavigationStore';
 import type { LocalLibraryCatalogSnapshot } from '../hooks/useLocalLibraryCatalog';
 import { useShallow } from 'zustand/react/shallow';
-import { SongResult, LocalSong, LocalPlaylist, LocalLibraryGroup, Theme, PlayerState, type StatusMessage } from '../types';
+import { SongResult, LocalSong, LocalPlaylist, LocalLibraryGroup, Theme, PlayerState, type StatusMessage, type UnifiedSong } from '../types';
 import { getNavidromeConfig, navidromeApi } from '../services/navidromeService';
 import LocalGrid3DView from './app/home/LocalGrid3DView';
 import NavidromeGrid3DView from './app/home/NavidromeGrid3DView';
-import DesktopGrid3DSurface from './folia-grid/DesktopGrid3DSurface';
+import DesktopGrid3DSurface, { type DesktopGrid3DAction } from './folia-grid/DesktopGrid3DSurface';
 import {
     createOnlineGridViewCollection,
     getProviderCollectionArtistLabel,
@@ -21,6 +21,7 @@ import { useOnlineProviderQrLogin } from '../hooks/useOnlineProviderQrLogin';
 import type { OnlineProviderPlatformState } from '../hooks/useOnlineProviderPlatform';
 import { omni } from '../services/onlineMusic/omni';
 import { getPersonalFmSelectionLabel } from '../services/onlineMusic/fmModes';
+import { PERSONAL_FM_CARD_ID, buildDiscoverSections, type DiscoverSection, type DiscoverSectionId } from './app/home/buildDiscoverSections';
 import { usePersonalFmModeStore } from '../stores/usePersonalFmModeStore';
 import { getSongCoverUrl } from '../services/onlineMusic/songMetadata';
 import OnlineProviderSwitcher from './app/home/OnlineProviderSwitcher';
@@ -175,11 +176,13 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     const {
         showHomeTabPlaylist,
         showHomeTabRadio,
+        showHomeTabDiscover,
         showHomeTabAlbums,
         showHomeTabLocal,
     } = useHomeLayoutSettingsStore(useShallow(state => ({
         showHomeTabPlaylist: state.showHomeTabPlaylist,
         showHomeTabRadio: state.showHomeTabRadio,
+        showHomeTabDiscover: state.showHomeTabDiscover,
         showHomeTabAlbums: state.showHomeTabAlbums,
         showHomeTabLocal: state.showHomeTabLocal,
     })));
@@ -199,7 +202,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         submitSearch: state.submitSearch,
     })));
 
-    const isOnlineTab = homeViewTab === 'playlist' || homeViewTab === 'albums' || homeViewTab === 'radio';
+    const isOnlineTab = homeViewTab === 'playlist' || homeViewTab === 'albums' || homeViewTab === 'radio' || homeViewTab === 'discover';
     const activeProviderId = onlineProviderPlatform?.activeProviderId || 'netease';
     const activeProviderSummary = onlineProviderPlatform?.activeProvider;
     const activeProviderCapabilities = readProviderCapabilities(activeProviderId);
@@ -397,11 +400,15 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     const [loadingAlbums, setLoadingAlbums] = useState(false);
     const [radioItems, setRadioItems] = useState<any[]>([]);
     const [loadingRadio, setLoadingRadio] = useState(false);
+    const [discoverSections, setDiscoverSections] = useState<DiscoverSection[]>([]);
+    const [discoverError, setDiscoverError] = useState<string | null>(null);
+    const [loadingDiscover, setLoadingDiscover] = useState(false);
 
     const isLoading =
         (homeViewTab === 'playlist' && canUseOnlinePlaylists && activeCollections.length === 0 && activeUser !== null) ||
         (homeViewTab === 'albums' && canUseOnlineAlbums && loadingAlbums) ||
-        (homeViewTab === 'radio' && canUseOnlineRadio && loadingRadio);
+        (homeViewTab === 'radio' && canUseOnlineRadio && loadingRadio) ||
+        (homeViewTab === 'discover' && canUseOnlineRadio && loadingDiscover);
 
     // Load favorite albums and recommendations
     useEffect(() => {
@@ -411,11 +418,74 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         if (homeViewTab === 'radio' && canUseOnlineRadio && radioItems.length === 0 && activeUser) {
             fetchRadioItems();
         }
+        if (homeViewTab === 'discover' && canUseOnlineRadio && discoverSections.length === 0 && activeUser) {
+            fetchDiscoverItems();
+        }
     }, [activeProviderId, activeUser, canUseOnlineAlbums, canUseOnlineRadio, homeViewTab]);
+
+    // 启动预热：不等你点进发现页，登录后 2.5s 就在后台把数据备好（写入缓存）。
+    // 会话内每个「音源+账号」只预热一次；用户若先一步进过发现页（已有内容）也不再预热，
+    // 免得和进页拉取撞成双倍请求。
+    const discoverCountRef = useRef(0);
+    discoverCountRef.current = discoverSections.length;
+    const prefetchedKeyRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!canUseOnlineRadio || !activeUser) return;
+        const prefetchKey = `${activeProviderId}:${activeUser?.id ?? ''}`;
+        if (prefetchedKeyRef.current === prefetchKey) return;
+        prefetchedKeyRef.current = prefetchKey;
+        const timer = setTimeout(() => {
+            if (discoverCountRef.current > 0) return;
+            void fetchDiscoverItems();
+        }, 2500);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [canUseOnlineRadio, activeUser]);
+
+    // 相似歌曲跟着切歌自动补：正在播放的这首变了，而发现页还没有相似段（或种子已换），
+    // 就后台补拉那一段合进去。已有内容不动，不挡页面；只补不重排。
+    const similarSeedId = currentTrack ? String(currentTrack.id) : undefined;
+    useEffect(() => {
+        if (homeViewTab !== 'discover' || !canUseOnlineRadio || !similarSeedId) return;
+        if (discoverSections.some(section => section.id === 'similar'
+            && section.songs.some(song => String(song.sourceRef?.mediaId) === similarSeedId
+                || String(song.id) === similarSeedId))) return;
+        let cancelled = false;
+        omni.getRecommendationRowSongs('similar', { seedSongId: similarSeedId })
+            .then(songs => {
+                if (cancelled || songs.length === 0) return;
+                setDiscoverSections(prev => {
+                    const label = currentTrack?.name
+                        ? t('home.discoverSimilarSeed', { song: currentTrack.name })
+                        : undefined;
+                    const nextSection: DiscoverSection = {
+                        id: 'similar',
+                        title: t('home.discoverSimilar'),
+                        ...(label ? { subtitle: label } : {}),
+                        songs,
+                    };
+                    // 已有就原位替换（切歌=换一批相似），没有就按规范顺序插入，
+                    // 不然「相似」会掉到队尾，段的先后是承诺过的语义。
+                    const canonicalOrder: DiscoverSectionId[] = ['personal-fm', 'similar', 'radar', 'new-songs'];
+                    if (prev.some(section => section.id === 'similar')) {
+                        return prev.map(section => section.id === 'similar' ? nextSection : section);
+                    }
+                    return [...prev, nextSection]
+                        .sort((a, b) => canonicalOrder.indexOf(a.id) - canonicalOrder.indexOf(b.id));
+                });
+            })
+            .catch((error: unknown) => {
+                console.warn('[Grid3D] discover similar top-up failed', error);
+            });
+        return () => { cancelled = true; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [homeViewTab, canUseOnlineRadio, similarSeedId]);
 
     useEffect(() => {
         setFavoriteAlbums([]);
         setRadioItems([]);
+        setDiscoverSections([]);
+        setDiscoverError(null);
         setFocusedIndex(0);
     }, [activeProviderId, activeUser?.id]);
 
@@ -462,23 +532,22 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         return () => window.removeEventListener('folia-refresh-favorite-albums', handleRefreshAlbums);
     }, []);
 
-    const fetchRadioItems = async () => {
+    const fetchRadioItems = async (isRetry = false) => {
         if (!canUseOnlineRadio) {
             setRadioItems([]);
             return;
         }
+        // 先上缓存秒开，再拉新的覆盖（与发现页同一套 stale-while-revalidate）。
+        if (radioItems.length === 0) {
+            const cached = readRadioCache();
+            if (cached && cached.length > 0) setRadioItems(cached);
+        }
         setLoadingRadio(true);
         try {
-            const { personalFm: fmSongs, dailySongs, recommendedCollections } = await omni.getHomeFeed(35);
+            // 电台页要的是「大家都在听的」那一半；发现页要的是「给你的」那一半（见 fetchDiscoverItems）。
+            const { personalFm: fmSongs, dailySongs, recommendedCollections } = await omni.getHomeFeed(35, { scope: 'editorial' });
             const fmCoverUrl = getSongCoverUrl(fmSongs[0], activeProviderId);
 
-            const fmItem = {
-                id: 'personal_fm',
-                name: t('home.personalFm'),
-                coverUrl: fmCoverUrl,
-                description: t('home.personalFm'),
-                isFm: true,
-            };
 
             const dailyItem = {
                 id: 'daily_recommendations',
@@ -499,12 +568,163 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     summary: description,
                 };
             });
-            setRadioItems([fmItem, dailyItem, ...recommendedItems]);
+            // 每日推荐只有部分 provider 实现（QQ 没有 getDailySongs）。无条件塞一张 0 首、空封面的卡，
+            // 用户点进去只会看到一片空白，还以为是坏了 —— 没有歌就不出这张卡。
+            // FM 卡只在发现页出现：那边是「点一下就持续放」的主入口，两边都放只会让人
+            // 分不清两个 tab 的分工。电台页留给编辑选出来的歌单广场。
+            const nextRadioItems = dailySongs.length > 0
+                ? [dailyItem, ...recommendedItems]
+                : recommendedItems;
+            setRadioItems(nextRadioItems);
+            writeRadioCache(nextRadioItems);
         } catch (e) {
-            console.error('[Grid3D] Failed to fetch radio items', e);
+            console.error(`[Grid3D] Failed to fetch radio items${isRetry ? ' (after retry)' : ''}`, e);
+            if (!isRetry) {
+                await new Promise(resolve => setTimeout(resolve, 1200));
+                return fetchRadioItems(true);
+            }
         } finally {
-            setLoadingRadio(false);
+            if (!isRetry) setLoadingRadio(false);
         }
+    };
+
+    // 「发现」与「电台」拿的是同一批上游数据，区别只在排序与去重：
+    // 电台是 QQ/网易云/酷狗各自的推荐入口混排，发现把「猜你喜欢」提到第一位并去掉每日推荐卡
+    // （每日推荐只有部分 provider 有，混进来会让同一个位置的含义随音源变化）。
+    // FM 卡的 type/id 是有契约的：GridView 认 `type === 'radio' && id === 'personal_fm'` 才切 FM 模式。
+    // 猜你喜欢聚合的拉取次数与目标首数。5 首不够「扫」，20 首差不多是一屏列表的量。
+    const DISCOVER_FM_CALLS = 4;
+    const DISCOVER_FM_TARGET = 20;
+
+    // 上次的发现页/广场内容缓存（同 provider 隔离，24h 过期，localStorage 跨会话保留）。
+    // 首次进入先渲染缓存再后台刷新（stale-while-revalidate）：重启应用后第一次点开也是秒开，
+    // 而不是对着骨架屏等两秒。
+    // UnifiedSong / ProviderCollection 都是 JSON-safe 的，播放链路只认 qqMid 与 sourceRef，
+    // 序列化往返不丢关键字段。
+    const DISCOVER_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+    const readDiscoverCache = (): DiscoverSection[] | null => {
+        try {
+            const raw = localStorage.getItem(`folia.discoverCache.${activeProviderId}`);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw) as { savedAt: number; sections: DiscoverSection[] };
+            if (Date.now() - parsed.savedAt > DISCOVER_CACHE_TTL_MS) return null;
+            if (!Array.isArray(parsed.sections)) return null;
+            return parsed.sections.filter(section => Array.isArray(section.songs));
+        } catch {
+            return null;
+        }
+    };
+
+    const writeDiscoverCache = (sections: DiscoverSection[]): void => {
+        try {
+            localStorage.setItem(
+                `folia.discoverCache.${activeProviderId}`,
+                JSON.stringify({ savedAt: Date.now(), sections }),
+            );
+        } catch {
+            // 存不进去就算了（隐私模式/配额），缓存只是加速不是正确性依赖
+        }
+    };
+
+    const readRadioCache = (): any[] | null => {
+        try {
+            const raw = localStorage.getItem(`folia.radioCache.${activeProviderId}`);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw) as { savedAt: number; items: any[] };
+            if (Date.now() - parsed.savedAt > DISCOVER_CACHE_TTL_MS) return null;
+            if (!Array.isArray(parsed.items)) return null;
+            return parsed.items;
+        } catch {
+            return null;
+        }
+    };
+
+    const writeRadioCache = (items: any[]): void => {
+        try {
+            localStorage.setItem(
+                `folia.radioCache.${activeProviderId}`,
+                JSON.stringify({ savedAt: Date.now(), items }),
+            );
+        } catch {
+            // 同上：失败静默
+        }
+    };
+
+    const fetchDiscoverItems = async () => {
+        if (!canUseOnlineRadio) {
+            setDiscoverSections([]);
+            return;
+        }
+        // 先上缓存（有就秒开），再拉新的覆盖。缓存渲染走的字段与在线一致，播放链路不受影响。
+        if (discoverSections.length === 0) {
+            const cached = readDiscoverCache();
+            if (cached && cached.length > 0) setDiscoverSections(cached);
+        }
+        setLoadingDiscover(true);
+        setDiscoverError(null);
+        // 相似歌曲跟着此刻在听的这首走；没有在播放就不请求，那一段整段不出。
+        const seedSongId = currentTrack ? String(currentTrack.id) : undefined;
+        // 猜你喜欢单次上游硬顶 5 首，但每次调用返回的歌曲不同（实测 6 次 30 首零重复），
+        // 所以并行拉 4 次按 mid 去重凑一份够「扫」的列表 —— 串行要 3.4s，并行只要一段往返。
+        const collectFmSongs = async (): Promise<UnifiedSong[]> => {
+            const calls = Array.from({ length: DISCOVER_FM_CALLS }, () =>
+                omni.getPersonalFm().catch((error: unknown) => {
+                    console.warn('[Grid3D] discover fm call failed', error);
+                    return [] as UnifiedSong[];
+                }),
+            );
+            const collected: UnifiedSong[] = [];
+            const seen = new Set<string>();
+            for (const batch of await Promise.all(calls)) {
+                for (const song of batch) {
+                    const key = String(song.sourceRef?.mediaId ?? song.id);
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    collected.push(song);
+                }
+            }
+            return collected;
+        };
+        try {
+            const swallow = (label: string) => (error: unknown) => {
+                console.warn(`[Grid3D] discover ${label} failed`, error);
+                return [] as UnifiedSong[];
+            };
+            const [fmSongs, similarSongs, radarSongs, newSongs] = await Promise.all([
+                collectFmSongs(),
+                seedSongId
+                    ? omni.getRecommendationRowSongs('similar', { seedSongId }).catch(swallow('similar'))
+                    : Promise.resolve([] as UnifiedSong[]),
+                omni.getRecommendationRowSongs('radar').catch(swallow('radar')),
+                omni.getRecommendationRowSongs('new-songs').catch(swallow('new-songs')),
+            ]);
+            const sections = buildDiscoverSections({
+                fmSongs,
+                similarSongs,
+                radarSongs,
+                newSongs,
+                hasSeed: Boolean(seedSongId),
+                titles: {
+                    personalFm: t('home.personalFm'),
+                    similar: t('home.discoverSimilar'),
+                    radar: t('home.discoverRadar'),
+                    newSongs: t('home.discoverNewSongs'),
+                },
+                ...(currentTrack?.name ? {
+                    similarSeedLabel: t('home.discoverSimilarSeed', { song: currentTrack.name }),
+                } : {}),
+            });
+            setDiscoverSections(sections);
+            writeDiscoverCache(sections);
+            setLoadingDiscover(false);
+            return;
+        } catch (e) {
+            console.error(`[Grid3D] Failed to fetch discover items`, e);
+        }
+        // 走到这里说明两轮尝试都失败了：给一句能看懂的原因，而不是留一个空白页。
+        setDiscoverError(t('home.discoverUnavailable'));
+        setLoadingDiscover(false);
     };
 
     // Filter cloud and local playlists
@@ -551,20 +771,68 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         }));
     }, [personalFmModeLabel, radioItems, t]);
 
+    // 各段拍平成歌曲拍立得卡。三行文字「歌名 / 歌手 / 来源」与集合卡同构：
+    // 卡面直接标注这首歌来自哪一段（猜你喜欢/相似/雷达/新歌），这就是频道分类信息。
+    const discoverSongCards = useMemo(() => {
+        const labelBySection: Record<string, string> = {
+            'personal-fm': t('home.personalFm'),
+            similar: t('home.discoverSimilar'),
+            radar: t('home.discoverRadar'),
+            'new-songs': t('home.discoverNewSongs'),
+        };
+        return discoverSections.flatMap(section => section.songs.map(song => ({
+            id: `discover-song-${String(song.sourceRef?.mediaId ?? song.id)}`,
+            name: song.name,
+            coverUrl: getSongCoverUrl(song, activeProviderId) || '',
+            description: song.artists?.map(a => a.name).join(', ') || '',
+            summary: labelBySection[section.id] || '',
+            type: 'song' as const,
+            raw: {
+                song,
+                queue: [...section.songs],
+                isFmCall: section.id === 'personal-fm',
+            },
+        })));
+    }, [discoverSections, activeProviderId, t]);
+
+    // 换一批走 surface 原生 actions 槽（与本地库「刷新文件夹」同款位置与写法）
+    const discoverActions = useMemo<DesktopGrid3DAction[]>(() => [
+        {
+            id: 'refresh-discover',
+            label: loadingDiscover ? t('options.scanning') : t('home.discoverRefresh'),
+            icon: loadingDiscover ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />,
+            disabled: loadingDiscover,
+            onClick: () => {
+                setDiscoverSections([]);
+                setDiscoverError(null);
+                void fetchDiscoverItems();
+            },
+            title: t('home.discoverRefresh'),
+        },
+    ], [loadingDiscover, t]);
+
     // Active tab list items mapping
     const currentDesktopItems = useMemo(() => {
         if (homeViewTab === 'playlist') return playlistCards;
         if (homeViewTab === 'albums') return albumCards;
         if (homeViewTab === 'radio') return radioCards;
+        if (homeViewTab === 'discover') return discoverSongCards;
         return [];
-    }, [homeViewTab, playlistCards, albumCards, radioCards]);
+    }, [homeViewTab, playlistCards, albumCards, radioCards, discoverSongCards]);
     const currentOnlineTabUnavailableReason = homeViewTab === 'playlist'
         ? playlistUnavailableReason
-        : (homeViewTab === 'albums' ? albumsUnavailableReason : radioUnavailableReason);
+        : (homeViewTab === 'albums'
+            ? albumsUnavailableReason
+            : (homeViewTab === 'discover' ? (discoverError || radioUnavailableReason) : radioUnavailableReason));
 
     // Delegate GridView opening to the app-level host so Grid3D remains only the home surface.
     // If Personal FM is clicked, it plays Personal FM directly instead of opening GridView.
     const handleSelectCollectionCard = async (card: any) => {
+        // 歌曲卡：点卡即播，队列用所在段的那一批；猜你喜欢段带 isFmCall 进 FM 模式连续放。
+        if (card.type === 'song' && card.raw?.song) {
+            onPlaySong(card.raw.song, card.raw.queue, card.raw.isFmCall);
+            return;
+        }
         if (card.id === 'personal_fm' || card.raw?.id === 'personal_fm') {
             try {
                 const fmSongs = await omni.getPersonalFm();
@@ -795,6 +1063,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                 {[
                                     ...(showHomeTabPlaylist ? [{ key: 'playlist', label: t('home.playlists'), disabledReason: playlistUnavailableReason }] : []),
                                     ...(showHomeTabRadio ? [{ key: 'radio', label: t('home.radio'), disabledReason: radioUnavailableReason }] : []),
+                                    ...(showHomeTabDiscover ? [{ key: 'discover', label: t('home.discover'), disabledReason: radioUnavailableReason }] : []),
                                     ...(showHomeTabAlbums ? [{ key: 'albums', label: t('home.albums'), disabledReason: albumsUnavailableReason }] : []),
                                     ...(showHomeTabLocal ? [{
                                         key: 'local',
@@ -929,13 +1198,16 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                 ? t('home.playlists')
                                 : homeViewTab === 'albums'
                                     ? t('home.albums')
-                                    : t('home.radio')
+                                    : homeViewTab === 'discover'
+                                        ? t('home.discover')
+                                        : t('home.radio')
                         }
-                        mapButtonLabel={t('home.allAlbums')}
+                        mapButtonLabel={homeViewTab === 'discover' ? t('home.allSongs') : t('home.allAlbums')}
                         items={currentDesktopItems}
                         focusedIndex={focusedIndex}
                         onFocusedIndexChange={setFocusedIndex}
                         onSelect={handleSelectCollectionCard}
+                        actions={homeViewTab === 'discover' ? discoverActions : undefined}
                         isLoading={isLoading}
                         emptyMessage={currentOnlineTabUnavailableReason || t('home.loadingLibrary')}
                         theme={theme}

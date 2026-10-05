@@ -310,8 +310,15 @@ export const normalizeQqCollection = (raw: unknown, type = 'playlist'): Provider
         ?? (tid === undefined && dirId === undefined && Object.keys(existing).length === 0 ? rawId : undefined);
     const name = text(pick(item, 'dirName', 'dirname', 'dissname', 'title', 'name'));
     // GetPlaylistByUin exposes both cover sizes and songNum; cached normalized keys remain fallbacks.
-    const coverUrl = normalizeQqCoverUrl(pick(item, 'bigpicUrl', 'picUrl', 'picurl', 'coverUrl'));
-    const trackCount = Number(pick(item, 'songNum', 'songnum', 'trackCount'));
+    // `/getSongListCategories` 与 `/user/playlist` 那一族把封面给成 `picurl` / `picUrl` / `bigpicUrl`
+    // 这样的平铺字符串，而推荐歌单广场（`GetRecommendFeed`）给的是 `cover` 对象
+    //（`{ big_url, medium_url, small_url, ... }`，其中 `mid` 是空串）。两种形状都要认，
+    // 否则推荐歌单会整片没有封面。
+    const cover = record(item.cover);
+    const coverUrl = normalizeQqCoverUrl(pick(item, 'bigpicUrl', 'picUrl', 'picurl', 'coverUrl'))
+        || normalizeQqCoverUrl(pick(cover, 'big_url', 'medium_url', 'default_url', 'small_url'));
+    // 曲数同样是两套拼法：推荐广场给 `song_cnt`，用户歌单给 `songNum` / `songnum`。
+    const trackCount = Number(pick(item, 'songNum', 'songnum', 'song_cnt', 'trackCount'));
 
     return {
         providerId: 'qq',

@@ -422,17 +422,20 @@ export const omni = {
         return requireOnlineMusicProvider(providerId).normalizeCollection?.(raw, type) ?? null;
     },
 
-    async getHomeFeed(limit = 35): Promise<{
+    async getHomeFeed(limit = 35, context?: { seedSongId?: MediaId; scope?: 'personalized' | 'editorial' | 'all' }): Promise<{
         personalFm: UnifiedSong[];
         dailySongs: UnifiedSong[];
         recommendedCollections: OmniCollection[];
     }> {
         return withActiveProvider(async provider => {
             const recommendations = provider.recommendations;
+            // editorial 槽位只消费歌单广场，personalFm 那 862ms 的调用是纯浪费 —— 跳过它，
+            // 电台页的进入时间就从「最慢的一段」降到「歌单广场本身」。
+            const wantPersonalFm = context?.scope !== 'editorial';
             const [personalFm, dailySongs, recommendedCollections] = await Promise.all([
-                recommendations?.getPersonalFm?.() ?? [],
+                wantPersonalFm ? recommendations?.getPersonalFm?.() ?? [] : Promise.resolve([]),
                 recommendations?.getDailySongs?.() ?? [],
-                recommendations?.getRecommendedCollections?.(limit) ?? [],
+                recommendations?.getRecommendedCollections?.(limit, context) ?? [],
             ]);
             return { personalFm, dailySongs, recommendedCollections };
         });
@@ -444,6 +447,26 @@ export const omni = {
 
     async getDailySongs(refresh?: boolean): Promise<UnifiedSong[]> {
         return withActiveProvider(async provider => provider.recommendations?.getDailySongs?.(refresh) ?? []);
+    },
+
+    /** 取某一段推荐的具体歌曲，`section` 的取值由各 provider 自己定义。 */
+    async getRecommendationRowSongs(
+        section: string,
+        options?: { seedSongId?: MediaId; limit?: number },
+    ): Promise<UnifiedSong[]> {
+        return withActiveProvider(async provider => (
+            provider.recommendations?.getRecommendationRowSongs?.(section, options) ?? []
+        ));
+    },
+
+    /**
+     * 按当前这首推同类。走 song-aware 的方式，与 dislikeSong 同一套身份判定：
+     * 种子用的是 `song.id`（provider 自己认的那个 id），不是跨 provider 可比的裸数字。
+     */
+    async getSimilarSongs(song: SongResult, limit = 20): Promise<UnifiedSong[]> {
+        return withActiveProvider(async provider => (
+            provider.recommendations?.getSimilarSongs?.(song.id, limit) ?? []
+        ));
     },
 
     async getRecommendationHistory(): Promise<OmniHistoryEntry[]> {

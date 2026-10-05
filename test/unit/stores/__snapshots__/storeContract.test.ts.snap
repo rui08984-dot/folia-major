@@ -110,6 +110,7 @@ exports[`store contract > keeps every localStorage key the stores read or write 
   "remote_control_skip_taskbar",
   "show_harmony_subtitle",
   "show_home_tab_albums",
+  "show_home_tab_discover",
   "show_home_tab_local",
   "show_home_tab_playlist",
   "show_home_tab_radio",

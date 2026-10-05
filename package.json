@@ -201,7 +201,7 @@
     "@google/genai": "^2.24.0",
     "@neteasecloudmusicapienhanced/api": "^4.40.1",
     "@xhayper/discord-rpc": "^1.5.1",
-    "@yakult-green-tea/qq-music-api": "3.1.2",
+    "@yakult-green-tea/qq-music-api": "file:../qq-music-api-fork",
     "axios": "^1.20.0",
     "busboy": "^1.6.0",
     "electron-store": "^11.0.2",
