@@ -659,15 +659,21 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         }
     };
 
-    const fetchDiscoverItems = async () => {
+    const fetchDiscoverItems = async (force = false) => {
         if (!canUseOnlineRadio) {
             setDiscoverSections([]);
             return;
         }
-        // 先上缓存（有就秒开），再拉新的覆盖。缓存渲染走的字段与在线一致，播放链路不受影响。
-        if (discoverSections.length === 0) {
+        // 队列要稳定：有缓存就直接用这一批，绝不后台重拉——用户点进歌再退回来、
+        // 或者听着听着切回来，看到的都该是同一批歌。只有「换一批」（force）才去
+        // 上游取新批次并回写缓存。无缓存时照常拉一次。
+        if (!force) {
             const cached = readDiscoverCache();
-            if (cached && cached.length > 0) setDiscoverSections(cached);
+            if (cached && cached.length > 0) {
+                setDiscoverSections(cached);
+                return;
+            }
+            if (discoverSections.length > 0) return;
         }
         setLoadingDiscover(true);
         setDiscoverError(null);
@@ -813,7 +819,8 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             onClick: () => {
                 setDiscoverSections([]);
                 setDiscoverError(null);
-                void fetchDiscoverItems();
+                // force：换一批必须绕开缓存去上游取新批次，否则会被旧缓存原样填回。
+                void fetchDiscoverItems(true);
             },
             title: t('home.discoverRefresh'),
         },
