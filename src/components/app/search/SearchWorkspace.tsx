@@ -386,7 +386,12 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                                         <button
                                                             key={`song-${String(song.sourceRef?.mediaId ?? song.id)}`}
                                                             type="button"
-                                                            onClick={() => onPlayTrack(song)}
+                                                            onClick={() => {
+                                                                // playSong 会把视图切到播放器页，但工作台是盖在视图上的
+                                                                // overlay——不关掉它，看到的还停在搜索页。播放+关层=落地歌词页。
+                                                                onPlayTrack(song);
+                                                                onClose();
+                                                            }}
                                                             className={`w-32 shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
                                                                 isDaylight ? 'border-black/10 bg-black/[0.04] hover:bg-black/[0.08]' : 'border-white/10 bg-white/[0.05] hover:bg-white/[0.09]'
                                                             }`}
