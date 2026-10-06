@@ -451,7 +451,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     // 只在「真的切换了 provider/账号」时清空缓存态。挂载首跑不清；账号从「未就绪」水合
     // 成「已登录」也不算切换——否则它会把发现页刚同步填好的缓存批次抹掉，用户点歌退回
     // 来就是一片「暂无内容」（以前走异步网络没暴露：网络结果回来得晚，正好落在清空之后）。
-    const prevAccountKeyRef = useRef<{ provider: string; user: string | null } | null>(null);
+    const prevAccountKeyRef = useRef<{ provider: string; user: MediaId | null } | null>(null);
     useEffect(() => {
         const current = { provider: activeProviderId, user: activeUser?.id ?? null };
         const prev = prevAccountKeyRef.current;
