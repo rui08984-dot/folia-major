@@ -448,7 +448,19 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     // 轮播重排——用户的体感就是「点首歌退出来又刷新了」。列表的唯一变更入口是「换一批」：
     // 拉取那一刻在播歌，相似段就随批次进来；没在播就没有，绝不事后追加或替换。
 
+    // 只在「真的切换了 provider/账号」时清空缓存态。挂载首跑不清；账号从「未就绪」水合
+    // 成「已登录」也不算切换——否则它会把发现页刚同步填好的缓存批次抹掉，用户点歌退回
+    // 来就是一片「暂无内容」（以前走异步网络没暴露：网络结果回来得晚，正好落在清空之后）。
+    const prevAccountKeyRef = useRef<{ provider: string; user: string | null } | null>(null);
     useEffect(() => {
+        const current = { provider: activeProviderId, user: activeUser?.id ?? null };
+        const prev = prevAccountKeyRef.current;
+        prevAccountKeyRef.current = current;
+        if (!prev) return;
+        const providerChanged = prev.provider !== current.provider;
+        const accountSwitched = prev.user !== null && current.user !== null && prev.user !== current.user;
+        const loggedOut = prev.user !== null && current.user === null;
+        if (!providerChanged && !accountSwitched && !loggedOut) return;
         setFavoriteAlbums([]);
         setRadioItems([]);
         setDiscoverSections([]);
