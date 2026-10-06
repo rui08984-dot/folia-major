@@ -106,6 +106,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
     };
 
     const [suggestions, setSuggestions] = useState<OnlineSearchSuggestion[]>([]);
+    const [suggestionsVisible, setSuggestionsVisible] = useState(false);
     const [activeSuggestion, setActiveSuggestion] = useState(-1);
     const [collections, setCollections] = useState<GridViewCollectionDescriptor[]>([]);
     const [history, setHistory] = useState<string[]>(() => readSearchHistory());
@@ -240,8 +241,8 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                             pickSuggestion(suggestions[activeSuggestion]);
                                         }
                                     }}
-                                    onFocus={() => setIsHistoryVisible(true)}
-                                    onBlur={() => window.setTimeout(() => setIsHistoryVisible(false), HISTORY_BLUR_DELAY_MS)}
+                                    onFocus={() => { setIsHistoryVisible(true); setSuggestionsVisible(true); }}
+                                    onBlur={() => window.setTimeout(() => { setIsHistoryVisible(false); setSuggestionsVisible(false); }, HISTORY_BLUR_DELAY_MS)}
                                     placeholder={t('search.placeholder')}
                                     className="w-full bg-transparent py-3.5 pl-11 pr-4 text-sm outline-none"
                                     autoFocus
@@ -283,7 +284,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                     </div>
                                 )}
 
-                                {searchQuery.trim().length > 0 && suggestions.length > 0 && (
+                                {suggestionsVisible && searchQuery.trim().length > 0 && suggestions.length > 0 && (
                                     <div
                                         className={`absolute left-0 right-0 top-full z-10 mt-2 rounded-2xl border p-2 ${
                                             isDaylight ? 'border-black/10 bg-white shadow-lg' : 'border-white/10 bg-[#141418] shadow-xl'
