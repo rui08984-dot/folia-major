@@ -444,43 +444,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [canUseOnlineRadio, activeUser]);
 
-    // 相似段只补一次：发现页还没有相似段、而用户开始播放时，后台补拉那一段合进来。
-    // 但绝不跟着切歌替换——用户点进一张卡换一首在播，整排相似卡全变，这正是「队列被自动
-    // 刷新」的体感来源。列表的更换只属于「换一批」。
-    const similarSeedId = currentTrack ? String(currentTrack.id) : undefined;
-    useEffect(() => {
-        if (homeViewTab !== 'discover' || !canUseOnlineRadio || !similarSeedId) return;
-        if (discoverSections.some(section => section.id === 'similar')) return;
-        let cancelled = false;
-        omni.getRecommendationRowSongs('similar', { seedSongId: similarSeedId })
-            .then(songs => {
-                if (cancelled || songs.length === 0) return;
-                setDiscoverSections(prev => {
-                    if (prev.some(section => section.id === 'similar')) return prev;
-                    const label = currentTrack?.name
-                        ? t('home.discoverSimilarSeed', { song: currentTrack.name })
-                        : undefined;
-                    const nextSection: DiscoverSection = {
-                        id: 'similar',
-                        title: t('home.discoverSimilar'),
-                        ...(label ? { subtitle: label } : {}),
-                        songs,
-                    };
-                    // 按规范顺序插入，不然「相似」会掉到队尾，段的先后是承诺过的语义。
-                    const canonicalOrder: DiscoverSectionId[] = ['personal-fm', 'similar', 'radar', 'new-songs'];
-                    const merged = [...prev, nextSection]
-                        .sort((a, b) => canonicalOrder.indexOf(a.id) - canonicalOrder.indexOf(b.id));
-                    // 回写缓存：下次重挂载直接拿到含相似段的同一批，不再触发补拉。
-                    writeDiscoverCache(merged);
-                    return merged;
-                });
-            })
-            .catch((error: unknown) => {
-                console.warn('[Grid3D] discover similar top-up failed', error);
-            });
-        return () => { cancelled = true; };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [homeViewTab, canUseOnlineRadio, similarSeedId]);
+    // 相似段不再自动补拉：之前「开始播放就补一段相似」会让发现页凭空多出一整排相似卡、
+    // 轮播重排——用户的体感就是「点首歌退出来又刷新了」。列表的唯一变更入口是「换一批」：
+    // 拉取那一刻在播歌，相似段就随批次进来；没在播就没有，绝不事后追加或替换。
 
     useEffect(() => {
         setFavoriteAlbums([]);
