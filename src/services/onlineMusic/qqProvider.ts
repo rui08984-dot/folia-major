@@ -1106,13 +1106,14 @@ export const qqProvider: OnlineMusicProvider = {
         getArtistAlbums,
     },
     comments: {
-        // QQ 歌曲评论走 legacy h5 通道：匿名回空（探针 2026-10-08），带登录态才有内容。
+        // QQ 歌曲评论走 legacy h5 通道，匿名即可（探针 2026-10-08 判别：topid 必须是**数字 songid**，
+        // 传 mid 会 code:0 commenttotal:0 假空）。所以先像 likeSong 那样把 mid 解析成数字 id 再打。
         // 上游热评/普通评论分两栏（hot_comment / comment），这里热评置顶再拼普通评论。
         async getSongComments(song, limit, offset) {
-            const mid = getQqSongMid(song);
-            if (!mid) return { items: [], hasMore: false, nextOffset: offset };
+            const songId = await resolveQqNumericSongId(song);
+            if (!songId) return { items: [], hasMore: false, nextOffset: offset };
             const response = await requestQq<any>('get_comments', {
-                id: mid,
+                id: String(songId),
                 pagesize: limit,
                 pagenum: Math.floor(offset / Math.max(1, limit)),
             });

@@ -247,9 +247,10 @@ describe('qqProvider', () => {
         expect(requestMock).not.toHaveBeenCalledWith('recommend_radio_dislike', expect.anything());
     });
 
-    // QQ 歌曲评论：热评置顶再拼普通评论，匿名回空（需登录态）。
-    it('merges hot and normal comments for a song mid', async () => {
+    // QQ 歌曲评论：topid 必须是数字 songid（mid 会假空），先解析再打；热评置顶再拼普通评论。
+    it('merges hot and normal comments fetched by numeric songid', async () => {
         requestMock.mockImplementation(async (operation: string) => {
+            if (operation === 'song_info') return SONG_INFO_RESPONSE;
             if (operation === 'get_comments') {
                 return {
                     response: {
@@ -260,12 +261,13 @@ describe('qqProvider', () => {
             }
             return { code: 200 };
         });
-        const commentSong = { id: '0039MnYb0qxYhV', name: '晴天', sourceRef: { kind: 'online', providerId: 'qq', mediaId: '0039MnYb0qxYhV' } } as never;
+        const commentSong = { id: '003rJSwm3TechU', name: '海阔天空', sourceRef: { kind: 'online', providerId: 'qq', mediaId: '003rJSwm3TechU' } } as never;
         const page = await qqProvider.comments?.getSongComments?.(commentSong, 20, 0);
         expect(page?.items).toHaveLength(2);
         expect(page?.items[0]).toMatchObject({ id: 'h1', isHot: true, likedCount: 500, userName: 'A' });
         expect(page?.items[1]).toMatchObject({ id: 'c1', content: '普通' });
-        expect(requestMock).toHaveBeenCalledWith('get_comments', expect.objectContaining({ id: '0039MnYb0qxYhV' }));
+        // 关键：get_comments 的 topid 用的是解析出的数字 id，不是 mid
+        expect(requestMock).toHaveBeenCalledWith('get_comments', expect.objectContaining({ id: '5105918' }));
     });
 
     // 新建歌单：后端 AddPlaylist 的回包不带 dirId，所以建完重拉自建歌单按名字认领。
