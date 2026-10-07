@@ -2746,6 +2746,12 @@ export default function App() {
                                 onBack={navigateBackFromLattice}
                                 onOpenPlayer={navigateToPlayer}
                                 onPlaySong={(song, queue) => {
+                                    // 点的就是当前这首（用户反馈：正在播还点会从头再来）。
+                                    // 同曲不重加载：暂停中就续播，正在播则什么都不做。
+                                    if (currentSong && getPlaybackSongKey(song) === getPlaybackSongKey(currentSong)) {
+                                        if (playerState !== PlayerState.PLAYING) togglePlay();
+                                        return;
+                                    }
                                     void playSong(song, queue, false, { shouldNavigateToPlayer: false });
                                 }}
                                 onTogglePlayback={togglePlay}

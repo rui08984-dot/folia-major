@@ -1139,8 +1139,9 @@ export const qqProvider: OnlineMusicProvider = {
                 ...mapList(resp?.hot_comment?.commentlist, true),
                 ...mapList(resp?.comment?.commentlist, false),
             ];
-            const total = Number(resp?.comment?.commenttotal) || items.length;
-            return { items, total, hasMore: offset + items.length < total, nextOffset: offset + limit };
+            // 上游 h5 评论翻页用的是 lasthotcommentid 游标（上一页末条的 rootcommentid），
+            // 不是页码；我们没有线程化这个游标，所以只出首页，别给 UI 一个会 400 的「加载更多」。
+            return { items, total: items.length, hasMore: false, nextOffset: offset };
         },
     },
 };
