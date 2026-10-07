@@ -1,5 +1,6 @@
 import type { SongResult, UnifiedSong } from '../../types';
 import { OnlineProviderError } from '../../types/onlineMusic';
+import { normalizeCommentText } from './commentText';
 import type {
     AudioQualityPreference,
     MediaId,
@@ -114,7 +115,7 @@ const extractCloudLyricText = (response: any): string => (
 );
 
 const normalizeNeteaseComment = (raw: any, isHot = false): ProviderComment | null => {
-    const content = String(raw?.content || '').trim();
+    const content = normalizeCommentText(raw?.content);
     if (!content) return null;
     const likedCount = Number(raw?.likedCount);
     return {

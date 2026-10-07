@@ -14,6 +14,7 @@ import {
     type ProviderUser,
 } from '../../types/onlineMusic';
 import { getSizedCoverUrl } from '../../utils/coverUrl';
+import { normalizeCommentText } from './commentText';
 import { parseLyricsByFormat } from '../../utils/lyrics/parserCore';
 import { isPureMusicLyricText } from '../../utils/lyrics/pureMusic';
 import { hasRenderableLyrics } from '../../utils/lyrics/validity';
@@ -1638,7 +1639,7 @@ export const kugouProvider: OnlineMusicProvider = {
             const rawList = Array.isArray(body?.list) ? body.list : [];
             const items = rawList
                 .map((raw: any) => {
-                    const content = String(raw?.content || '').trim();
+                    const content = normalizeCommentText(raw?.content);
                     if (!content) return null;
                     const likedCount = Number(raw?.like ?? raw?.praise);
                     return {

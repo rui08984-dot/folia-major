@@ -13,6 +13,7 @@ import type {
     QrLoginState,
 } from '../../types/onlineMusic';
 import { OnlineProviderError } from '../../types/onlineMusic';
+import { normalizeCommentText } from './commentText';
 import { createProviderSongMetadata } from '../../utils/songMetadata';
 import { toSafePlaybackUrl } from '../../utils/appPlaybackHelpers';
 import { QQ_SEARCH_TYPE, fetchQQLyrics, searchQQLyrics, searchQQByType } from '../../utils/lyrics/providers/qqLyricProvider';
@@ -236,11 +237,9 @@ const toQqSongs = (raw: unknown): UnifiedSong[] => (
  * 主评论（hot/comment 两栏）与楼层回复共用这一份映射，别复制粘贴出第二套。
  */
 const mapQqCommentList = (list: any, isHot: boolean): ProviderComment[] => {
-    const cleanText = (value: unknown): string =>
-        String(value ?? '').replace(/\[em\][^[]*\[\/em\]/g, '').trim();
     return (Array.isArray(list) ? list : [])
         .map((raw: any): ProviderComment | null => {
-            const content = cleanText(raw?.rootcommentcontent ?? raw?.middlecommentcontent ?? raw?.content);
+            const content = normalizeCommentText(raw?.rootcommentcontent ?? raw?.middlecommentcontent ?? raw?.content);
             if (!content) return null;
             const likedCount = Number(raw?.praisenum ?? raw?.agree?.num);
             const timeSec = Number(raw?.time ?? raw?.addtime);

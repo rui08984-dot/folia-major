@@ -255,7 +255,7 @@ describe('qqProvider', () => {
                 return {
                     response: {
                         hot_comment: { commentlist: [{ rootcommentid: 'h1', rootcommentcontent: '热评[em]e1[/em]', nick: 'A', praisenum: 500, time: 1700000000, avatarurl: 'http://x/a.jpg', ispraise: 1 }] },
-                        comment: { commentlist: [{ rootcommentid: 'c1', rootcommentcontent: '普通', nick: 'B', praisenum: 2 }, { rootcommentid: 'c2', rootcommentcontent: '   ', nick: '空' }], commenttotal: 100 },
+                        comment: { commentlist: [{ rootcommentid: 'c1', rootcommentcontent: '普通\\n第二行\\/斜杠', nick: 'B', praisenum: 2 }, { rootcommentid: 'c2', rootcommentcontent: '   ', nick: '空' }], commenttotal: 100 },
                     },
                 };
             }
@@ -266,7 +266,7 @@ describe('qqProvider', () => {
         expect(page?.items).toHaveLength(2);
         // 正文取 rootcommentcontent 且剥掉 [em] 表情；点赞 praisenum、头像 avatarurl 升 https
         expect(page?.items[0]).toMatchObject({ id: 'h1', isHot: true, content: '热评', likedCount: 500, userName: 'A', avatarUrl: 'https://x/a.jpg', liked: true });
-        expect(page?.items[1]).toMatchObject({ id: 'c1', content: '普通' });
+        expect(page?.items[1]).toMatchObject({ id: 'c1', content: '普通\n第二行/斜杠' });
         expect(page?.items[1]).not.toHaveProperty('liked');
         // 关键：get_comments 的 topid 用的是解析出的数字 id，不是 mid
         expect(requestMock).toHaveBeenCalledWith('get_comments', expect.objectContaining({ id: '5105918' }));
