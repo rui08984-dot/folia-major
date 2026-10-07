@@ -1118,19 +1118,25 @@ export const qqProvider: OnlineMusicProvider = {
                 pagenum: Math.floor(offset / Math.max(1, limit)),
             });
             const resp = response?.response ?? {};
+            // QQ h5 评论字段拼法特殊（探针 2026-10-08 实测晴天）：正文是 rootcommentcontent
+            // （不是 content！读错会把每条评论当空过滤掉 → 热门歌也显示「还没有评论」）、
+            // 点赞 praisenum、时间 time（unix 秒）、头像 avatarurl。表情是 [em]xxxx[/em] 标记，剥掉只留文字。
+            const cleanText = (value: unknown): string =>
+                String(value ?? '').replace(/\[em\][^[]*\[\/em\]/g, '').trim();
             const mapList = (list: any, isHot: boolean): ProviderComment[] => (
                 (Array.isArray(list) ? list : [])
                     .map((raw: any): ProviderComment | null => {
-                        const content = String(raw?.content || '').trim();
+                        const content = cleanText(raw?.rootcommentcontent ?? raw?.middlecommentcontent ?? raw?.content);
                         if (!content) return null;
-                        const likedCount = Number(raw?.agree?.num ?? raw?.agree);
+                        const likedCount = Number(raw?.praisenum ?? raw?.agree?.num);
+                        const timeSec = Number(raw?.time ?? raw?.addtime);
                         return {
                             id: raw?.rootcommentid ?? raw?.commentid ?? 0,
                             content,
-                            userName: String(raw?.nick || raw?.username || '匿名'),
-                            avatarUrl: raw?.avatar ? String(raw.avatar).replace(/^http:/, 'https:') : undefined,
+                            userName: String(raw?.nick || raw?.rootcommentnick || raw?.username || '匿名'),
+                            avatarUrl: raw?.avatarurl ? String(raw.avatarurl).replace(/^http:/, 'https:') : undefined,
                             ...(Number.isFinite(likedCount) && likedCount >= 0 ? { likedCount } : {}),
-                            ...(raw?.addtime ? { timeStr: new Date(Number(raw.addtime) * 1000).toISOString().slice(0, 10) } : {}),
+                            ...(Number.isFinite(timeSec) && timeSec > 0 ? { timeStr: new Date(timeSec * 1000).toISOString().slice(0, 10) } : {}),
                             ...(isHot ? { isHot: true } : {}),
                         } satisfies ProviderComment;
                     })

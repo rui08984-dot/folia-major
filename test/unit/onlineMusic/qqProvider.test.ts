@@ -254,8 +254,8 @@ describe('qqProvider', () => {
             if (operation === 'get_comments') {
                 return {
                     response: {
-                        hot_comment: { commentlist: [{ rootcommentid: 'h1', content: '热评', nick: 'A', agree: { num: 500 }, addtime: 1700000000 }] },
-                        comment: { commentlist: [{ rootcommentid: 'c1', content: '普通', nick: 'B', agree: { num: 2 } }, { rootcommentid: 'c2', content: '  ', nick: '空' }], commenttotal: 100 },
+                        hot_comment: { commentlist: [{ rootcommentid: 'h1', rootcommentcontent: '热评[em]e1[/em]', nick: 'A', praisenum: 500, time: 1700000000, avatarurl: 'http://x/a.jpg' }] },
+                        comment: { commentlist: [{ rootcommentid: 'c1', rootcommentcontent: '普通', nick: 'B', praisenum: 2 }, { rootcommentid: 'c2', rootcommentcontent: '   ', nick: '空' }], commenttotal: 100 },
                     },
                 };
             }
@@ -264,7 +264,8 @@ describe('qqProvider', () => {
         const commentSong = { id: '003rJSwm3TechU', name: '海阔天空', sourceRef: { kind: 'online', providerId: 'qq', mediaId: '003rJSwm3TechU' } } as never;
         const page = await qqProvider.comments?.getSongComments?.(commentSong, 20, 0);
         expect(page?.items).toHaveLength(2);
-        expect(page?.items[0]).toMatchObject({ id: 'h1', isHot: true, likedCount: 500, userName: 'A' });
+        // 正文取 rootcommentcontent 且剥掉 [em] 表情；点赞 praisenum、头像 avatarurl 升 https
+        expect(page?.items[0]).toMatchObject({ id: 'h1', isHot: true, content: '热评', likedCount: 500, userName: 'A', avatarUrl: 'https://x/a.jpg' });
         expect(page?.items[1]).toMatchObject({ id: 'c1', content: '普通' });
         // 关键：get_comments 的 topid 用的是解析出的数字 id，不是 mid
         expect(requestMock).toHaveBeenCalledWith('get_comments', expect.objectContaining({ id: '5105918' }));
