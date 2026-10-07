@@ -864,6 +864,56 @@ export const neteaseApi = {
     return fetchWithCreds(`/personalized?limit=${limit}`);
   },
 
+  // --- Editor's playlist plaza with real paging (discover-page「换一批」for this provider) ---
+  // `/personalized` has no offset — its module comments the parameter out — so paging has to go
+  // through the category playlist endpoint instead, which does honor `offset` (probed 2026-10-08).
+  getTopPlaylists: async (limit = 35, offset = 0) => {
+    const res = await fetchWithCreds(`/top/playlist?limit=${limit}&offset=${offset}`);
+    if (Array.isArray(res?.playlists)) {
+      res.playlists.forEach((p: any) => {
+        p.coverImgUrl = toHttps(p.coverImgUrl);
+      });
+    }
+    return res;
+  },
+
+  // --- Similar songs (discover-page「相似歌曲」seed section; requires a signed-in account) ---
+  getSimilarSongs: async (id: number, limit = 20) => {
+    const res = await fetchWithCreds(`/simi/song?id=${id}&limit=${limit}`);
+    return {
+      ...res,
+      songs: mergeSongsWithPrivileges(res?.songs, res?.privileges),
+    };
+  },
+
+  // --- New song express (discover-page「新歌速递」section) ---
+  getPersonalizedNewSongs: async (limit = 20) => {
+    const res = await fetchWithCreds(`/personalized/newsong?limit=${limit}`);
+    const rawSongs = (res?.data || []).map((item: any) => item?.song ?? item);
+    return {
+      ...res,
+      songs: mergeSongsWithPrivileges(rawSongs, res?.privileges),
+    };
+  },
+
+  // --- Search suggestions (smartbox dropdown). The response groups by `order`, with each
+  // group's entries carrying enough fields to normalize a playable song directly (probed). ---
+  getSearchSuggest: async (keywords: string, limit = 8) => {
+    return fetchWithCreds(`/search/suggest?keywords=${encodeURIComponent(keywords)}&limit=${limit}`);
+  },
+
+  // --- Type-scoped search for the collection card rows (10 = album, 1000 = playlist) ---
+  searchByType: async (keywords: string, type: 10 | 1000, limit = 20, offset = 0) => {
+    return fetchWithCreds(`/search?keywords=${encodeURIComponent(keywords)}&type=${type}&limit=${limit}&offset=${offset}`);
+  },
+
+  // --- Playlist create (add-to-playlist picker's「新建歌单」). Upstream returns the created
+  // playlist in `playlist`; anonymous calls fail with code 301 (probed), so callers treat
+  // auth-required errors as the "please sign in first" signal. ---
+  createPlaylist: async (name: string) => {
+    return fetchWithCreds(`/playlist/create?name=${encodeURIComponent(name)}&timestamp=${Date.now()}`);
+  },
+
   fmTrash: async (songId: number) => {
     return fetchWithCreds(`/fm_trash?id=${songId}&timestamp=${Date.now()}`);
   },

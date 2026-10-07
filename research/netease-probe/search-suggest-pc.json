@@ -1,0 +1,10 @@
+{
+  "code": 200,
+  "data": {
+    "recTitle": null,
+    "suggests": [],
+    "recs": [],
+    "demote": false
+  },
+  "message": ""
+}

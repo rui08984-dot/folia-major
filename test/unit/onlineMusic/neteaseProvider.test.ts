@@ -21,6 +21,13 @@ vi.mock('@/services/netease', () => ({
         getLikedSongs: vi.fn(),
         checkQr: vi.fn(),
         scrobbleV1: vi.fn(),
+        getTopPlaylists: vi.fn(),
+        getSimilarSongs: vi.fn(),
+        getPersonalizedNewSongs: vi.fn(),
+        getDailyRecommendedSongs: vi.fn(),
+        getSearchSuggest: vi.fn(),
+        searchByType: vi.fn(),
+        createPlaylist: vi.fn(),
     },
 }));
 
@@ -211,6 +218,163 @@ describe('neteaseProvider', () => {
     it('keeps the backend code and message on an unmapped QR response', async () => {
         vi.mocked(neteaseApi.checkQr).mockResolvedValue({ code: 404, msg: 'Not Found' } as any);
         await expect(neteaseProvider.auth!.checkQr!('key')).resolves.toEqual({ state: 'error', message: 'code 404: Not Found' });
+    });
+});
+
+describe('neteaseProvider smartbox suggestions', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it('turns song and artist suggest groups into suggestions with a playable song', async () => {
+        vi.mocked(neteaseApi.getSearchSuggest).mockResolvedValue({
+            result: {
+                order: ['songs', 'artists'],
+                songs: [{ id: 42, name: '晴天', artists: [{ id: 1, name: '周杰伦' }], album: { id: 2, name: '叶惠美' }, duration: 269000 }],
+                artists: [{ id: 9, name: '周杰伦' }],
+                albums: [{ id: 3, name: '叶惠美' }],
+                playlists: [],
+            },
+        } as any);
+
+        const suggestions = await neteaseProvider.search!.getSmartboxSuggestions!('晴天');
+
+        expect(suggestions).toHaveLength(2);
+        expect(suggestions[0]).toMatchObject({
+            kind: 'song',
+            value: '晴天',
+            detail: '周杰伦',
+            song: { id: 42, sourceRef: { providerId: 'netease', mediaId: '42' } },
+        });
+        expect(suggestions[1]).toEqual({ kind: 'singer', value: '周杰伦' });
+    });
+
+    it('answers an empty query and a missing result body with no suggestions', async () => {
+        await expect(neteaseProvider.search!.getSmartboxSuggestions!('   ')).resolves.toEqual([]);
+        vi.mocked(neteaseApi.getSearchSuggest).mockResolvedValue({ code: 200 } as any);
+        await expect(neteaseProvider.search!.getSmartboxSuggestions!('晴天')).resolves.toEqual([]);
+    });
+});
+
+describe('neteaseProvider type-scoped collection search', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it('merges album and playlist search rows in that order', async () => {
+        vi.mocked(neteaseApi.searchByType).mockImplementation(async (_keywords, type) => ({
+            result: type === 10
+                ? { albums: [{ id: 7, name: 'Album', picUrl: 'https://example.test/a.jpg', artist: { id: 9, name: 'Artist' } }] }
+                : { playlists: [{ id: 8, name: 'Playlist', coverImgUrl: 'https://example.test/p.jpg', trackCount: 5 }] },
+        } as any));
+
+        const page = await neteaseProvider.search!.searchCollections!('周杰伦', 10, 0);
+
+        expect(page.items).toHaveLength(2);
+        expect(page.items[0]).toMatchObject({ id: 7, type: 'album' });
+        expect(page.items[1]).toMatchObject({ id: 8, type: 'playlist', trackCount: 5 });
+        expect(page).toMatchObject({ hasMore: false, nextOffset: 2 });
+        expect(neteaseApi.searchByType).toHaveBeenCalledWith('周杰伦', 10, 10, 0);
+        expect(neteaseApi.searchByType).toHaveBeenCalledWith('周杰伦', 1000, 10, 0);
+    });
+
+    it('skips the requests entirely for a blank query', async () => {
+        const page = await neteaseProvider.search!.searchCollections!('  ', 10, 0);
+        expect(page.items).toEqual([]);
+        expect(neteaseApi.searchByType).not.toHaveBeenCalled();
+    });
+});
+
+describe('neteaseProvider discover rows', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it('feeds the similar row from the seed song id', async () => {
+        vi.mocked(neteaseApi.getSimilarSongs).mockResolvedValue({ songs: [{ id: 5, name: 'Similar' }] } as any);
+        await expect(neteaseProvider.recommendations!.getRecommendationRowSongs!('similar', { seedSongId: '42' }))
+            .resolves.toMatchObject([{ id: 5, sourceRef: { providerId: 'netease', mediaId: '5' } }]);
+        expect(neteaseApi.getSimilarSongs).toHaveBeenCalledWith(42, 15);
+    });
+
+    it('gives the similar row nothing without a seed', async () => {
+        await expect(neteaseProvider.recommendations!.getRecommendationRowSongs!('similar', {})).resolves.toEqual([]);
+        expect(neteaseApi.getSimilarSongs).not.toHaveBeenCalled();
+    });
+
+    it('maps the radar row to taste-based daily recommendations', async () => {
+        vi.mocked(neteaseApi.getDailyRecommendedSongs).mockResolvedValue({ songs: [{ id: 6, name: 'Radar' }] } as any);
+        await expect(neteaseProvider.recommendations!.getRecommendationRowSongs!('radar'))
+            .resolves.toMatchObject([{ id: 6 }]);
+        expect(neteaseApi.getDailyRecommendedSongs).toHaveBeenCalledWith(false);
+    });
+
+    it('maps the new-songs row to the personalized new-song express', async () => {
+        vi.mocked(neteaseApi.getPersonalizedNewSongs).mockResolvedValue({ songs: [{ id: 7, name: 'New' }] } as any);
+        await expect(neteaseProvider.recommendations!.getRecommendationRowSongs!('new-songs', { limit: 8 }))
+            .resolves.toMatchObject([{ id: 7 }]);
+        expect(neteaseApi.getPersonalizedNewSongs).toHaveBeenCalledWith(8);
+    });
+
+    it('answers unknown sections with an empty list', async () => {
+        await expect(neteaseProvider.recommendations!.getRecommendationRowSongs!('mystery')).resolves.toEqual([]);
+    });
+
+    it('returns normalized similar songs through the standalone method', async () => {
+        vi.mocked(neteaseApi.getSimilarSongs).mockResolvedValue({ songs: [{ id: 5, name: 'Similar' }] } as any);
+        await expect(neteaseProvider.recommendations!.getSimilarSongs!('42', 10)).resolves.toMatchObject([{ id: 5 }]);
+    });
+});
+
+describe('neteaseProvider plaza paging', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it('serves the editorial scope from top playlists with the batch offset', async () => {
+        vi.mocked(neteaseApi.getTopPlaylists).mockResolvedValue({
+            playlists: [{ id: 9, name: 'Top Playlist', coverImgUrl: 'https://example.test/t.jpg' }],
+        } as any);
+
+        const collections = await neteaseProvider.recommendations!.getRecommendedCollections!(35, { scope: 'editorial', from: 35 });
+
+        expect(collections).toMatchObject([{ id: 9, type: 'playlist' }]);
+        expect(neteaseApi.getTopPlaylists).toHaveBeenCalledWith(35, 35);
+        expect(neteaseApi.getPersonalizedPlaylists).not.toHaveBeenCalled();
+    });
+
+    it('keeps the personalized scope on /personalized only', async () => {
+        vi.mocked(neteaseApi.getPersonalizedPlaylists).mockResolvedValue({
+            result: [{ id: 7, name: 'Recommended Playlist' }],
+        } as any);
+
+        const collections = await neteaseProvider.recommendations!.getRecommendedCollections!(10, { scope: 'personalized' });
+
+        expect(collections).toMatchObject([{ id: 7 }]);
+        expect(neteaseApi.getTopPlaylists).not.toHaveBeenCalled();
+    });
+});
+
+describe('neteaseProvider playlist creation', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it('normalizes the created playlist from the full playlist body', async () => {
+        vi.mocked(neteaseApi.createPlaylist).mockResolvedValue({
+            code: 200,
+            playlist: { id: 88, name: '新建歌单', userId: 1 },
+        } as any);
+        await expect(neteaseProvider.mutations!.createPlaylist!('新建歌单')).resolves.toMatchObject({
+            id: 88,
+            name: '新建歌单',
+            type: 'playlist',
+        });
+    });
+
+    it('falls back to the bare id when the playlist body is absent', async () => {
+        vi.mocked(neteaseApi.createPlaylist).mockResolvedValue({ code: 200, id: 89 } as any);
+        await expect(neteaseProvider.mutations!.createPlaylist!('My List')).resolves.toMatchObject({ id: 89, name: 'My List' });
+    });
+
+    it('rejects a signed-out creation as auth-required', async () => {
+        vi.mocked(neteaseApi.createPlaylist).mockResolvedValue({ code: 301, msg: '需要登录' } as any);
+        await expect(neteaseProvider.mutations!.createPlaylist!('新建歌单')).rejects.toMatchObject({ code: 'auth-required' });
+    });
+
+    it('rejects a success code without any created id as invalid-response', async () => {
+        vi.mocked(neteaseApi.createPlaylist).mockResolvedValue({ code: 200 } as any);
+        await expect(neteaseProvider.mutations!.createPlaylist!('新建歌单')).rejects.toMatchObject({ code: 'invalid-response' });
     });
 });
 

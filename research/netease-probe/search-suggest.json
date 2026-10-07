@@ -1,0 +1,349 @@
+{
+  "result": {
+    "albums": [
+      {
+        "id": 255723258,
+        "name": "晴天(深情版)",
+        "artist": {
+          "id": 96154669,
+          "name": "Lucky小爱",
+          "picUrl": "https://p4.music.126.net/6hVa1iyenpYK-wdfHLu_DQ==/109951173373255566.jpg",
+          "alias": [],
+          "albumSize": 2,
+          "musicSize": 2,
+          "picId": 109951173373255570,
+          "fansGroup": null,
+          "recommendText": null,
+          "appendRecText": null,
+          "fansSize": null,
+          "img1v1Url": "https://p4.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+          "img1v1": 0,
+          "trans": null
+        },
+        "publishTime": 1733068800000,
+        "size": 1,
+        "copyrightId": 743010,
+        "status": 1,
+        "picId": 109951173569626660,
+        "mark": 0
+      },
+      {
+        "id": 24838,
+        "name": "晴天娃娃",
+        "artist": {
+          "id": 8153,
+          "name": "江语晨",
+          "picUrl": "https://p3.music.126.net/Y7KLBUQn1vK-TyxDNpgWJQ==/193514046505736.jpg",
+          "alias": [
+            "小语"
+          ],
+          "albumSize": 2,
+          "musicSize": 31,
+          "picId": 193514046505736,
+          "fansGroup": null,
+          "recommendText": null,
+          "appendRecText": null,
+          "fansSize": null,
+          "img1v1Url": "https://p3.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+          "img1v1": 0,
+          "transNames": [
+            "Jessie Chiang"
+          ],
+          "alia": [
+            "小语"
+          ],
+          "trans": "Jessie Chiang"
+        },
+        "publishTime": 1227196800000,
+        "size": 10,
+        "copyrightId": 0,
+        "status": 1,
+        "picId": 109951167624359730,
+        "mark": 0
+      }
+    ],
+    "artists": [
+      {
+        "id": 95904730,
+        "name": "晴天",
+        "picUrl": "https://p4.music.126.net/VCxRdEtwWdLdhmfrOnathA==/109951170144471069.jpg",
+        "alias": [],
+        "albumSize": 4,
+        "musicSize": 10,
+        "picId": 109951170144471070,
+        "fansGroup": null,
+        "recommendText": null,
+        "appendRecText": null,
+        "fansSize": null,
+        "img1v1Url": "https://p3.music.126.net/stx8TiWT60h8Ppzq86BSvQ==/109951172668595891.jpg",
+        "accountId": 12672478610,
+        "img1v1": 109951172668595890,
+        "trans": null
+      }
+    ],
+    "songs": [
+      {
+        "id": 2652820720,
+        "name": "晴天(深情版)",
+        "artists": [
+          {
+            "id": 96154669,
+            "name": "Lucky小爱",
+            "picUrl": null,
+            "alias": [],
+            "albumSize": 0,
+            "musicSize": 0,
+            "picId": 0,
+            "fansGroup": null,
+            "recommendText": null,
+            "appendRecText": null,
+            "fansSize": null,
+            "img1v1Url": "https://p4.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+            "img1v1": 0,
+            "trans": null
+          }
+        ],
+        "album": {
+          "id": 255723258,
+          "name": "晴天(深情版)",
+          "artist": {
+            "id": 0,
+            "name": "",
+            "picUrl": null,
+            "alias": [],
+            "albumSize": 0,
+            "musicSize": 0,
+            "picId": 0,
+            "fansGroup": null,
+            "recommendText": null,
+            "appendRecText": null,
+            "fansSize": null,
+            "img1v1Url": "https://p4.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+            "img1v1": 0,
+            "trans": null
+          },
+          "publishTime": 1733068800000,
+          "size": 1,
+          "copyrightId": 743010,
+          "status": 1,
+          "picId": 109951173569626660,
+          "mark": 0
+        },
+        "duration": 278961,
+        "copyrightId": 743010,
+        "status": 0,
+        "alias": [],
+        "rtype": 0,
+        "ftype": 0,
+        "mvid": 0,
+        "fee": 8,
+        "rUrl": null,
+        "mark": 17180139648
+      },
+      {
+        "id": 1955651132,
+        "name": "晴天和猫",
+        "artists": [
+          {
+            "id": 8103,
+            "name": "花粥",
+            "picUrl": null,
+            "alias": [],
+            "albumSize": 0,
+            "musicSize": 0,
+            "picId": 0,
+            "fansGroup": null,
+            "recommendText": null,
+            "appendRecText": null,
+            "fansSize": null,
+            "img1v1Url": "https://p4.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+            "img1v1": 0,
+            "trans": null
+          }
+        ],
+        "album": {
+          "id": 146435967,
+          "name": "晴天和猫",
+          "artist": {
+            "id": 0,
+            "name": "",
+            "picUrl": null,
+            "alias": [],
+            "albumSize": 0,
+            "musicSize": 0,
+            "picId": 0,
+            "fansGroup": null,
+            "recommendText": null,
+            "appendRecText": null,
+            "fansSize": null,
+            "img1v1Url": "https://p3.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+            "img1v1": 0,
+            "trans": null
+          },
+          "publishTime": 1643040000000,
+          "size": 2,
+          "copyrightId": -1,
+          "status": 0,
+          "picId": 109951167547079570,
+          "mark": 0
+        },
+        "duration": 188501,
+        "copyrightId": 0,
+        "status": 0,
+        "alias": [],
+        "rtype": 0,
+        "ftype": 0,
+        "mvid": 0,
+        "fee": 8,
+        "rUrl": null,
+        "mark": 17179877376
+      },
+      {
+        "id": 2653714443,
+        "name": "晴天 (女声版))",
+        "artists": [
+          {
+            "id": 50759987,
+            "name": "GYBeat",
+            "picUrl": null,
+            "alias": [],
+            "albumSize": 0,
+            "musicSize": 0,
+            "picId": 0,
+            "fansGroup": null,
+            "recommendText": null,
+            "appendRecText": null,
+            "fansSize": null,
+            "img1v1Url": "https://p3.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+            "img1v1": 0,
+            "trans": null
+          }
+        ],
+        "album": {
+          "id": 256036533,
+          "name": "晴天 (女声版)",
+          "artist": {
+            "id": 0,
+            "name": "",
+            "picUrl": null,
+            "alias": [],
+            "albumSize": 0,
+            "musicSize": 0,
+            "picId": 0,
+            "fansGroup": null,
+            "recommendText": null,
+            "appendRecText": null,
+            "fansSize": null,
+            "img1v1Url": "https://p3.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+            "img1v1": 0,
+            "trans": null
+          },
+          "publishTime": 1733328000000,
+          "size": 1,
+          "copyrightId": 743010,
+          "status": 1,
+          "picId": 109951173212027330,
+          "mark": 0
+        },
+        "duration": 268750,
+        "copyrightId": 743010,
+        "status": 0,
+        "alias": [],
+        "rtype": 0,
+        "ftype": 0,
+        "mvid": 0,
+        "fee": 8,
+        "rUrl": null,
+        "mark": 17180139648
+      },
+      {
+        "id": 3319814367,
+        "name": "晴天四季",
+        "artists": [
+          {
+            "id": 35009085,
+            "name": "Vansdaddy",
+            "picUrl": null,
+            "alias": [],
+            "albumSize": 0,
+            "musicSize": 0,
+            "picId": 0,
+            "fansGroup": null,
+            "recommendText": null,
+            "appendRecText": null,
+            "fansSize": null,
+            "img1v1Url": "https://p3.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+            "img1v1": 0,
+            "trans": null
+          }
+        ],
+        "album": {
+          "id": 351117737,
+          "name": "都市醉漢",
+          "artist": {
+            "id": 0,
+            "name": "",
+            "picUrl": null,
+            "alias": [],
+            "albumSize": 0,
+            "musicSize": 0,
+            "picId": 0,
+            "fansGroup": null,
+            "recommendText": null,
+            "appendRecText": null,
+            "fansSize": null,
+            "img1v1Url": "https://p4.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg",
+            "img1v1": 0,
+            "trans": null
+          },
+          "publishTime": 1763740800000,
+          "size": 16,
+          "copyrightId": -1,
+          "status": 1,
+          "picId": 109951172314748750,
+          "mark": 0
+        },
+        "duration": 138075,
+        "copyrightId": 0,
+        "status": 0,
+        "alias": [],
+        "rtype": 0,
+        "ftype": 0,
+        "mvid": 0,
+        "fee": 8,
+        "rUrl": null,
+        "mark": 17716748288
+      }
+    ],
+    "playlists": [
+      {
+        "id": 464535304,
+        "name": "大提琴 | 如晴天，似雨天。",
+        "coverImgUrl": "http://p1.music.126.net/Nhq98f7uWUmTrX_XIRodLw==/19160089625686637.jpg",
+        "creator": null,
+        "subscribed": false,
+        "trackCount": 66,
+        "userId": 282702923,
+        "playCount": 3038785,
+        "bookCount": 52138,
+        "specialType": 300,
+        "officialTags": null,
+        "action": null,
+        "actionType": null,
+        "recommendText": null,
+        "score": null,
+        "officialPlaylistTitle": null,
+        "playlistType": "UGC",
+        "description": "Like Sunday,Like Rain.\n如晴天，似雨天；\n如爱情，似灵犀。\n当你邂逅了一部好的电影、好的音乐，你需要多久从中走出来？\n此刻，我不知道。\n期待有一天，我也可以拉着大提琴，享受自在的时光。",
+        "highQuality": false
+      }
+    ],
+    "order": [
+      "songs",
+      "artists",
+      "albums",
+      "playlists"
+    ]
+  },
+  "code": 200
+}

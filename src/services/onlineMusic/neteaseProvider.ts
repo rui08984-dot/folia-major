@@ -4,6 +4,7 @@ import type {
     AudioQualityPreference,
     MediaId,
     OnlineMusicProvider,
+    OnlineSearchSuggestion,
     ProviderCollection,
     ProviderLyricsResult,
     ProviderSongAvailability,
@@ -270,6 +271,50 @@ export const neteaseProvider: OnlineMusicProvider = {
             const total = Number(response.result?.songCount || items.length);
             return { items, total, hasMore: offset + items.length < total, nextOffset: offset + items.length };
         },
+        // 输入联想：上游 /search/suggest 的结果按 result.order 分组，songs 组的条目自带
+        // id/name/artists/album/duration（探针 2026-10-08），够 normalize 成可播歌曲直接播。
+        // albums/playlists 组不进联想框——它们有各自的集合卡行。
+        async getSmartboxSuggestions(query) {
+            const trimmed = query.trim();
+            if (!trimmed) return [];
+            const response = await neteaseApi.getSearchSuggest(trimmed);
+            const result = response?.result;
+            if (!result) return [];
+            const groups = Array.isArray(result.order) && result.order.length > 0
+                ? result.order
+                : ['songs', 'artists'];
+            const suggestions: OnlineSearchSuggestion[] = [];
+            for (const group of groups) {
+                const entries = Array.isArray(result[group]) ? result[group] : [];
+                for (const raw of entries) {
+                    const name = String(raw?.name || '');
+                    if (!name) continue;
+                    if (group === 'songs') {
+                        const song = normalizeNeteaseSong(raw);
+                        const detail = song.artists.map(artist => artist.name).filter(Boolean).join(' / ');
+                        suggestions.push({ kind: 'song', value: name, ...(detail ? { detail } : {}), song });
+                    } else if (group === 'artists') {
+                        suggestions.push({ kind: 'singer', value: name });
+                    }
+                }
+                if (suggestions.length >= 8) break;
+            }
+            return suggestions.slice(0, 8);
+        },
+        // 专辑/歌单类型搜索（10=专辑，1000=歌单，探针 2026-10-08），一次各取一页拼平。
+        async searchCollections(query, limit, offset) {
+            const trimmed = query.trim();
+            if (!trimmed) return { items: [], hasMore: false, nextOffset: offset };
+            const [albums, playlists] = await Promise.all([
+                neteaseApi.searchByType(trimmed, 10, limit, offset),
+                neteaseApi.searchByType(trimmed, 1000, limit, offset),
+            ]);
+            const items = [
+                ...((albums?.result?.albums) || []).map((item: any) => normalizeCollection(item, 'album')),
+                ...((playlists?.result?.playlists) || []).map((item: any) => normalizeCollection(item, 'playlist')),
+            ];
+            return { items, hasMore: false, nextOffset: offset + items.length };
+        },
     },
     playback: {
         async getSongDetail(id) {
@@ -506,9 +551,50 @@ export const neteaseProvider: OnlineMusicProvider = {
             const response = await neteaseApi.getPersonalFm(options ?? getPersonalFmRequestOptions());
             return (response?.data || []).map(normalizeNeteaseSong);
         },
-        async getRecommendedCollections(limit) {
-            const response = await neteaseApi.getPersonalizedPlaylists(limit);
-            return (response?.result || []).map((item: any) => normalizeCollection(item));
+        async getRecommendedCollections(limit, context) {
+            const scope = context?.scope ?? 'all';
+            const items: ProviderCollection[] = [];
+            if (scope === 'personalized' || scope === 'all') {
+                const response = await neteaseApi.getPersonalizedPlaylists(limit);
+                items.push(...(response?.result || []).map((item: any) => normalizeCollection(item)));
+            }
+            if (scope === 'editorial' || scope === 'all') {
+                // 电台页（广场）要的是「大家都在听的」+ 能换一批。/personalized 没有 offset
+                // （包里把参数注释掉了，探针 2026-10-08），所以编辑语义走 /top/playlist，
+                // `from` 直接当 offset 用。
+                const response = await neteaseApi.getTopPlaylists(limit, context?.from ?? 0);
+                items.push(...(response?.playlists || []).map((item: any) => normalizeCollection(item)));
+            }
+            return items;
+        },
+        // 与当前这首相似的歌曲。上游 /simi/song 匿名返回空数组，需登录态（探针 2026-10-08）；
+        // 未登录时这里得到 []，发现页按「空段丢弃」处理，不会出空壳。
+        async getSimilarSongs(seed, limit) {
+            const response = await neteaseApi.getSimilarSongs(toNeteaseId(seed), limit ?? 15);
+            return (response?.songs || []).map(normalizeNeteaseSong);
+        },
+        // 发现页三段的歌曲视图。section 名字与 QQ/酷狗共用同一套约定（similar/radar/new-songs）：
+        // - similar: /simi/song（种子驱动）
+        // - radar: 网易云没有按红心推的独立接口，用口味日推 /recommend/songs 近似——
+        //   它同样是「跟着账号画像走」的语义，比不出一段更接近 QQ 雷达的本意。
+        // - new-songs: /personalized/newsong 新歌速递
+        async getRecommendationRowSongs(section, options) {
+            const limit = options?.limit ?? 15;
+            if (section === 'similar') {
+                const seed = options?.seedSongId;
+                if (!seed) return [];
+                const response = await neteaseApi.getSimilarSongs(toNeteaseId(seed), limit);
+                return (response?.songs || []).map(normalizeNeteaseSong);
+            }
+            if (section === 'radar') {
+                const response = await neteaseApi.getDailyRecommendedSongs(false);
+                return (response?.songs || []).map(normalizeNeteaseSong);
+            }
+            if (section === 'new-songs') {
+                const response = await neteaseApi.getPersonalizedNewSongs(limit);
+                return (response?.songs || []).map(normalizeNeteaseSong);
+            }
+            return [];
         },
         async getHistoryEntries() {
             const response = await neteaseApi.getDailyRecommendationHistoryDates();
@@ -541,6 +627,24 @@ export const neteaseProvider: OnlineMusicProvider = {
             const playlistId = typeof playlist === 'object' ? playlist.id : playlist;
             const trackIds = tracks.map(track => typeof track === 'object' ? track.id : track);
             await neteaseApi.updatePlaylistTracks(operation, toNeteaseId(playlistId), trackIds.map(toNeteaseId));
+        },
+        // 新建歌单。上游回包形状两种都见过（{playlist:{id}} 与 {id}），两种都认；
+        // 都没有就按 invalid-response 抛，让调用方看到真实失败而不是拿到 0 号歌单。
+        async createPlaylist(dirName) {
+            const response = await neteaseApi.createPlaylist(dirName);
+            const code = Number(response?.code);
+            if ([301, 401, 403].includes(code)) {
+                throw new OnlineProviderError('auth-required', 'NetEase rejected the playlist creation: not signed in', 'netease');
+            }
+            const createdId = response?.playlist?.id ?? response?.id;
+            if (code !== 200 || createdId === undefined || createdId === null) {
+                throw new OnlineProviderError(
+                    'invalid-response',
+                    `NetEase returned no created playlist id (code ${response?.code})`,
+                    'netease',
+                );
+            }
+            return normalizeCollection(response?.playlist ?? { id: createdId, name: dirName });
         },
         async subscribePlaylist(playlist, subscribed) {
             await neteaseApi.subscribePlaylist(toNeteaseId(typeof playlist === 'object' ? playlist.id : playlist), subscribed);
