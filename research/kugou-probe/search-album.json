@@ -1,0 +1,1697 @@
+{
+  "status": 1,
+  "error_code": 0,
+  "error_msg": "",
+  "data": {
+    "pagesize": 30,
+    "page": 1,
+    "from": 0,
+    "size": 30,
+    "total": 500,
+    "correctiontype": 0,
+    "correctionforce": 0,
+    "correctiontip": "",
+    "lists": [
+      {
+        "albumid": 960399,
+        "albumname": "魔杰座",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20241118/20241118160622508429.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "魔杰座 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2008-10-15",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 11,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 979856,
+        "albumname": "我很忙",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20220705/20220705143006989099.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "我很忙 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2007-11-02",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 10,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 958909,
+        "albumname": "十一月的萧邦",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121901851911.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "十一月的萧邦 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2005-11-01",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 12,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 971783,
+        "albumname": "七里香",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121745628430.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "七里香 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2004-08-03",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 10,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56983552"
+        },
+        "special_tag": "56983552",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 966846,
+        "albumname": "叶惠美",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20230920/20230920142503632013.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "叶惠美 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2003-07-31",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 11,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 982051,
+        "albumname": "十二新作",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20231016/20231016111750787075.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "十二新作 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2012-12-28",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 12,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 958812,
+        "albumname": "跨时代",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121628799968.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "跨时代 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2010-05-18",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 11,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56983552"
+        },
+        "special_tag": "56983552",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 965291,
+        "albumname": "依然范特西",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20170728/20170728122746411503.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "依然范特西 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2006-09-05",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 10,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 958706,
+        "albumname": "范特西",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250221/20250221180749429614.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "范特西 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2001-09-14",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 10,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 978031,
+        "albumname": "Jay",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121911543146.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "Jay - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2000-11-07",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 10,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 961807,
+        "albumname": "八度空间",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250221/20250221180703846658.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "八度空间 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2002-07-18",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 10,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 1645030,
+        "albumname": "周杰伦的床边故事",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20200620/20200620103601113025.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "周杰伦的床边故事 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2016-06-24",
+        "language": "华语",
+        "privilege": 10,
+        "oldhide": 1,
+        "buyercount": 384273,
+        "songcount": 10,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "124026880"
+        },
+        "special_tag": "124026880",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 58849245,
+        "albumname": "最伟大的作品",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20220714/20220714213006413283.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "最伟大的作品 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2022-07-15",
+        "language": "华语",
+        "privilege": 10,
+        "oldhide": 1,
+        "buyercount": 930631,
+        "songcount": 12,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "54624256"
+        },
+        "special_tag": "54624256",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 962593,
+        "albumname": "哎呦，不错哦",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20220718/20220718150812467588.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "哎呦，不错哦 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2014-12-26",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 12,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 179652761,
+        "albumname": "太阳之子",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20260319/20260319101420611881.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "太阳之子 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2026-03-25",
+        "language": "华语",
+        "privilege": 10,
+        "oldhide": 1,
+        "buyercount": 467459,
+        "songcount": 13,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56983552"
+        },
+        "special_tag": "56983552",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 1739223,
+        "albumname": "J III MP3 Player",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121743958387.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "J III MP3 Player - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2005-06-24",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 5,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "4227072"
+        },
+        "special_tag": "4227072",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 554150,
+        "albumname": "不能说的秘密 电影原声带",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250613/20250613162604104449.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "不能说的秘密 电影原声带 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2007-08-13",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 24,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "54558720"
+        },
+        "special_tag": "54558720",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 973367,
+        "albumname": "寻找周杰伦",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121827823161.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "寻找周杰伦 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2003-11-13",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 4,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "54575104"
+        },
+        "special_tag": "54575104",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 2996504,
+        "albumname": "周杰伦 2004 无与伦比 演唱会 Live CD",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250407/20250407171310989593.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "周杰伦 2004 无与伦比 演唱会 Live CD - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2005-01-20",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 25,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "54558720"
+        },
+        "special_tag": "54558720",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 976474,
+        "albumname": "范特西PLUS",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121634338963.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "范特西PLUS - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2001-12-28",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 3,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 982406,
+        "albumname": "惊叹号",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20231008/20231008094411989519.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "惊叹号 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2011-11-11",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 11,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56983552"
+        },
+        "special_tag": "56983552",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 983761,
+        "albumname": "霍元甲",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121724155901.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "霍元甲 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2006-01-20",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 2,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56999936"
+        },
+        "special_tag": "56999936",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 978017,
+        "albumname": "2007世界巡回演唱会",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20250125/20250125121906767600.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "2007世界巡回演唱会 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2008-01-30",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 21,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 28687022,
+        "albumname": "说好不哭(with 五月天阿信)",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20190910/20190910141803519889.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "说好不哭(with 五月天阿信) - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2019-09-16",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 1601886,
+        "songcount": 1,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56934400"
+        },
+        "special_tag": "56934400",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 35195334,
+        "albumname": "我是如此相信",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20191213/20191213180006195341.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "我是如此相信 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2019-12-15",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 1,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56999936"
+        },
+        "special_tag": "56999936",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 81544089,
+        "albumname": "圣诞星 (feat. 杨瑞代)",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20241226/20241226183508804409.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "圣诞星 (feat. 杨瑞代) - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2023-12-22",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 1,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56934400"
+        },
+        "special_tag": "56934400",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 1608731,
+        "albumname": "周杰伦魔天伦世界巡回演唱会",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20200620/20200620180255898149.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "周杰伦魔天伦世界巡回演唱会 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2016-05-10",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 22,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "54558720"
+        },
+        "special_tag": "54558720",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 974915,
+        "albumname": "The One 演唱会",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20241206/20241206175526276180.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 2,
+        "title": "The One 演唱会 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2002-10-25",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 20,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56918016"
+        },
+        "special_tag": "56918016",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 8308163,
+        "albumname": "等你下课",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20231008/20231008094422438620.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 3,
+        "title": "等你下课 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2018-01-18",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 1,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56999936"
+        },
+        "special_tag": "56999936",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      },
+      {
+        "albumid": 526309,
+        "albumname": "双截棍影音单曲",
+        "singer": "周杰伦",
+        "singerid": "0",
+        "grade": 0,
+        "grade_int": "",
+        "img": "http://imge.kugou.com/stdmusic/240/20200909/20200909113516611470.jpg",
+        "intro": "",
+        "grade_float": "",
+        "company": "",
+        "quality": 1,
+        "title": "双截棍影音单曲 - 周杰伦",
+        "collect_count": 0,
+        "publish_time": "2002-04-09",
+        "language": "华语",
+        "privilege": 0,
+        "oldhide": 0,
+        "buyercount": 0,
+        "songcount": 2,
+        "newquality": 1,
+        "cd_url": "",
+        "isfirst": 0,
+        "category": 1,
+        "short_intro": "",
+        "ostremark": "",
+        "auxiliary": "",
+        "chapter_name": "",
+        "play_times": 0,
+        "program_inner": 0,
+        "alg_path": "",
+        "program_def_songs": [],
+        "tag_str": "",
+        "album_aux": "",
+        "play_count": 0,
+        "isouter": 0,
+        "outerdata": {},
+        "trans_param": {
+          "special_tag": "56934400"
+        },
+        "special_tag": "56934400",
+        "singerids": [
+          3520
+        ],
+        "singers": [
+          {
+            "name": "周杰伦",
+            "id": 3520
+          }
+        ],
+        "rec_tag": {
+          "desc": "",
+          "type": 0
+        },
+        "jump_url": ""
+      }
+    ]
+  }
+}

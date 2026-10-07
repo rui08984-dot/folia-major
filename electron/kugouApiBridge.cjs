@@ -21,6 +21,8 @@ const OPERATION_MODULES = {
   user_cloud: ['user_cloud'],
   user_cloud_url: ['user_cloud_url'],
   search: ['search'],
+  search_suggest: ['search_suggest'],
+  top_playlist: ['top_playlist'],
   audio: ['audio'],
   krm_audio: ['krm_audio'],
   song_url: ['song_url'],
