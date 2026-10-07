@@ -23,7 +23,6 @@ import { omni } from '../services/onlineMusic/omni';
 import { getPersonalFmSelectionLabel } from '../services/onlineMusic/fmModes';
 import { PERSONAL_FM_CARD_ID, buildDiscoverSections, type DiscoverSection, type DiscoverSectionId } from './app/home/buildDiscoverSections';
 import { usePersonalFmModeStore } from '../stores/usePersonalFmModeStore';
-import { useDislikedSongsStore } from '../stores/useDislikedSongsStore';
 import { useRecentPlaysStore } from '../stores/useRecentPlaysStore';
 import { getSongCoverUrl } from '../services/onlineMusic/songMetadata';
 import OnlineProviderSwitcher from './app/home/OnlineProviderSwitcher';
@@ -39,7 +38,6 @@ import { useHomeLayoutSettingsStore } from '../stores/useHomeLayoutSettingsStore
 import { useNeteaseApiStatusStore } from '../stores/useNeteaseApiStatusStore';
 import { useThemeSettingsStore } from '../stores/useThemeSettingsStore';
 import { countRender } from '../dev/renderCount';
-import { getPlaybackSongKey } from '../utils/appPlaybackGuards';
 
 // src/components/Grid3D.tsx
 // Glassmorphic interactive desktop home view replacing the legacy 3D carousel.
@@ -245,8 +243,6 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         : []);
     // 统一最近播放：订阅历史条目，决定「最近播放」卡出不出、有几首。
     const recentPlays = useRecentPlaysStore(state => state.entries);
-    // 「不感兴趣」过的歌的 key 集合：发现页各段渲染时过滤掉，点了不感兴趣的卡立刻消失且不再冒回。
-    const dislikedKeys = useDislikedSongsStore(state => state.keys);
     const activeProviderNeedsRelogin = activeProviderSummary?.error === 'auth-required';
 
     const [focusedIndex, setFocusedIndex] = useState(0);
@@ -806,11 +802,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             radar: t('home.discoverRadar'),
             'new-songs': t('home.discoverNewSongs'),
         };
-        const isDisliked = (song: UnifiedSong) => {
-            const key = getPlaybackSongKey(song);
-            return Boolean(key) && dislikedKeys.includes(key);
-        };
-        return discoverSections.flatMap(section => section.songs.filter(song => !isDisliked(song)).map(song => ({
+        return discoverSections.flatMap(section => section.songs.map(song => ({
             id: `discover-song-${String(song.sourceRef?.mediaId ?? song.id)}`,
             name: song.name,
             coverUrl: getSongCoverUrl(song, activeProviderId) || '',
@@ -823,7 +815,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                 isFmCall: section.id === 'personal-fm',
             },
         })));
-    }, [discoverSections, activeProviderId, dislikedKeys, t]);
+    }, [discoverSections, activeProviderId, t]);
 
     // 换一批走 surface 原生 actions 槽（与本地库「刷新文件夹」同款位置与写法）
     const discoverActions = useMemo<DesktopGrid3DAction[]>(() => [

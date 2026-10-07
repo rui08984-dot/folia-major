@@ -12,7 +12,6 @@ import { setStatusMessage as setStatusMsg } from '../stores/useStatusMessageStor
 import { setReplayGainMode } from '../stores/usePlaybackStore';
 import { useStableActionSurface } from './useStableCallbacks';
 import { selectDisplayDuration, usePlaybackStore } from '../stores/usePlaybackStore';
-import { useDislikedSongsStore } from '../stores/useDislikedSongsStore';
 import { setIsPanelOpen, useAppViewStore } from '../stores/useAppViewStore';
 import { setIsDevDebugOverlayVisible, setIsMemoryMonitorVisible } from '../stores/useAppChromeStore';
 import { useAudioSettingsStore } from '../stores/useAudioSettingsStore';
@@ -195,14 +194,10 @@ export function usePlaybackInteractionBridge({
         }
 
         if (currentSong && isFmMode) {
-            // 「不感兴趣」= 跳下一首 ＋ 这首歌从推荐流消失。消失是客户端能 100% 保证的部分，
-            // 所以先无条件记进 disliked 集合（发现页据此过滤），再尽力把负反馈发给 QQ 服务端。
-            // 服务端写入可能失败（feedback_radio 偶发/参数被拒），不能让它挡住「消失」这个用户可见效果。
-            useDislikedSongsStore.getState().add(currentSong);
             try {
                 await omni.dislikeSong(currentSong);
             } catch (error) {
-                console.warn('[FmTrash] 服务端负反馈写入失败（不影响本地隐藏）', error);
+                void error;
             }
             void handleNextTrack();
         }

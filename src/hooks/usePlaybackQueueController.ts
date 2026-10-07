@@ -459,13 +459,14 @@ export function usePlaybackQueueController({
             return;
         }
         const song = allowedSong;
-        // 同曲守卫：点的就是当前已经加载的这首（用户反馈：正在播还点会从头再来）。
-        // 不重走加载流程——暂停中就续播，正在播则什么都不做。automix 的自动前进不算
-        // （它是要正常换到下一首，不该被这条拦下）。用 getState() 取实时值，避开 useCallback 闭包陈旧。
+        // 点的就是当前这首：不重新加载（不中断播放、不回 0），但把播放器页打开、暂停则续播——
+        // 也就是「点正在播的歌 = 展开现在正在播放的界面」。automix 自动前进不算（那是正常换曲）。
+        // 用 getState() 取实时值，避开 useCallback 闭包陈旧。
         if (!options.isAutomixAdvance) {
             const live = usePlaybackStore.getState();
             if (live.currentSong && getPlaybackSongKey(song) === getPlaybackSongKey(live.currentSong)) {
                 if (live.playerState === PlayerState.PAUSED) void audioRef.current?.play();
+                navigateToPlaybackView();
                 return;
             }
         }
