@@ -1,0 +1,25 @@
+{
+  "first_show_num": 5,
+  "god_reply_tips": {
+    "add_tips": "翻牌为神回复",
+    "rm_tips": "取消翻牌"
+  },
+  "config": {
+    "tipOfNoUploadImg": "该功能仅对部分用户开放",
+    "input_hint": "",
+    "urlOfNoUploadImg": "https://h5.kugou.com/requirement/v-c1f295e9/index.html",
+    "canUploadImg": 0
+  },
+  "is_show_rcmd": 0,
+  "childrenid": "1723639894",
+  "err_code": 60102,
+  "message": "success",
+  "view_count": 1,
+  "msg": "success",
+  "tid": "32100650",
+  "had_del_first_reply": 0,
+  "comments_num": 0,
+  "current_page": 1,
+  "status": 1,
+  "has_filter_risk_user": 0
+}
