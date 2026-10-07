@@ -87,6 +87,7 @@ import { usePlaybackUiEffects } from './hooks/usePlaybackUiEffects';
 import { useLibraryPlaybackController } from './hooks/useLibraryPlaybackController';
 import { useNavidromeScrobbleReporter } from './hooks/useNavidromeScrobbleReporter';
 import { useNeteaseScrobbleReporter } from './hooks/useNeteaseScrobbleReporter';
+import { useRecentPlaysRecorder } from './hooks/useRecentPlaysRecorder';
 import { usePlaybackQueueController } from './hooks/usePlaybackQueueController';
 import { usePlaybackTransportController } from './hooks/usePlaybackTransportController';
 import { useLocalLibraryCatalog } from './hooks/useLocalLibraryCatalog';
@@ -1441,6 +1442,9 @@ export default function App() {
         currentSong,
         activeDeck: automix.activeDeck,
     });
+
+    // 统一最近播放：订阅 currentSong 变化记一条历史，跨音源。放在这里而不是各 setCurrentSong 调用点。
+    useRecentPlaysRecorder();
 
     const {
         mediaSessionPlayRef,

@@ -1123,6 +1123,7 @@ export default {
     "resultsFor": "Results for",
     "noResults": "No results found.",
     "playlists": "Playlists",
+    "recentPlays": "Recently Played",
     "cloud": "Cloud",
     "albums": "Albums",
     "allAlbums": "All",

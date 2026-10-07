@@ -1116,6 +1116,7 @@ export default {
     "resultsFor": "Hasil untuk",
     "noResults": "Tidak ada hasil ditemukan.",
     "playlists": "Playlist",
+    "recentPlays": "Sering Diputar",
     "cloud": "Cloud",
     "albums": "Album",
     "allAlbums": "Semua",

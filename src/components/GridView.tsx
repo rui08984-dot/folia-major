@@ -67,6 +67,7 @@ import { OmniError, type MediaId, type ProviderCollection } from '../types/onlin
 import { useSidePanelBottomPx } from '../hooks/usePlayerBottomBarBottomPx';
 import { hasBlockingWindow } from '../utils/keyboardTargets';
 import { useGridViewSettingsStore } from '../stores/useGridViewSettingsStore';
+import { useRecentPlaysStore } from '../stores/useRecentPlaysStore';
 
 export interface GridViewSourceActions {
     local?: {
@@ -482,11 +483,15 @@ export const GridView: React.FC<GridViewProps> = ({
     const isNavidromeCollection = collectionSource === 'navidrome';
     const isAlbumCollection = collection?.type === 'album';
     const isDailyRecommendationsCollection = collectionSource === 'online' && collection?.type === 'daily_recommendations';
+    // 统一最近播放：跨音源的本地虚拟集合，曲目来自 useRecentPlaysStore，绝不进 provider 缓存
+    // （缓存会把历史冻结在打开那一刻，之后播的新歌进不来）。
+    const isRecentPlaysCollection = collectionSource === 'online' && collection?.type === 'recent_plays';
     // 每日推荐自带「刷新」，私人 FM 不分页；其余在线集合都能跳过缓存整张重新拉取。
     const canReloadOnlineCollection = mode === 'tracks'
         && collectionSource === 'online'
         && !usesExternalTracks
         && !isDailyRecommendationsCollection
+        && !isRecentPlaysCollection
         && collection?.type !== 'radio';
     const isLocalFolderCollection = isLocalCollection && collection?.type === 'folder' && !collection?.isVirtual;
     const isLocalAllSongsCollection = isLocalCollection && collection?.type === 'folder' && Boolean(collection?.isVirtual);
@@ -830,6 +835,8 @@ export const GridView: React.FC<GridViewProps> = ({
                     responseTracks = await omni.getPersonalFm();
                 } else if (isDailyRecommendationsCollection) {
                     responseTracks = await omni.getDailySongs();
+                } else if (isRecentPlaysCollection) {
+                    responseTracks = useRecentPlaysStore.getState().entries.map(entry => entry.song);
                 } else {
                     const page = await loadOnlineCollectionPage(GRID_INITIAL_BATCH_SIZE, 0);
                     responseTracks = page.items;
@@ -854,7 +861,10 @@ export const GridView: React.FC<GridViewProps> = ({
                         setHasMore(hasMoreSync);
                     });
 
-                    saveToCache(CACHE_KEY, { tracks: responseTracks, snapshotTime: targetTime, schemaVersion: CACHE_SCHEMA_VERSION });
+                    // 最近播放不进缓存：它是活数据，缓存会把历史冻结在打开那一刻。
+                    if (!isRecentPlaysCollection) {
+                        saveToCache(CACHE_KEY, { tracks: responseTracks, snapshotTime: targetTime, schemaVersion: CACHE_SCHEMA_VERSION });
+                    }
 
                     if (hasMoreSync) {
                         fetchRemainingTracks(responseTracks, targetTime, totalTracksSync);

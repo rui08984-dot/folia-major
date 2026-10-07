@@ -23,6 +23,7 @@ import { omni } from '../services/onlineMusic/omni';
 import { getPersonalFmSelectionLabel } from '../services/onlineMusic/fmModes';
 import { PERSONAL_FM_CARD_ID, buildDiscoverSections, type DiscoverSection, type DiscoverSectionId } from './app/home/buildDiscoverSections';
 import { usePersonalFmModeStore } from '../stores/usePersonalFmModeStore';
+import { useRecentPlaysStore } from '../stores/useRecentPlaysStore';
 import { getSongCoverUrl } from '../services/onlineMusic/songMetadata';
 import OnlineProviderSwitcher from './app/home/OnlineProviderSwitcher';
 import OnlineProviderConnectPanel from './app/home/OnlineProviderConnectPanel';
@@ -240,6 +241,8 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             ...(cloudPlaylist ? [cloudPlaylist] : []),
         ]
         : []);
+    // 统一最近播放：订阅历史条目，决定「最近播放」卡出不出、有几首。
+    const recentPlays = useRecentPlaysStore(state => state.entries);
     const activeProviderNeedsRelogin = activeProviderSummary?.error === 'auth-required';
 
     const [focusedIndex, setFocusedIndex] = useState(0);
@@ -734,7 +737,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
     // Filter cloud and local playlists
     const playlistCards = useMemo(() => {
-        return activeCollections.map(p => ({
+        const cards = activeCollections.map(p => ({
             id: p.id,
             name: p.name,
             coverUrl: p.coverUrl,
@@ -744,7 +747,21 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             type: p.type,
             raw: p
         }));
-    }, [activeCollections, t]);
+        // 统一最近播放：有历史才出这张卡，置顶。它是跨音源的虚拟集合，点开走 GridView 的 recent_plays 分支。
+        if (recentPlays.length > 0) {
+            cards.unshift({
+                id: 'recent_plays',
+                name: t('home.recentPlays'),
+                coverUrl: recentPlays[0]?.song.album?.coverUrl,
+                trackCount: recentPlays.length,
+                description: t('home.recentPlays'),
+                summary: '',
+                type: 'recent_plays',
+                raw: { id: 'recent_plays', name: t('home.recentPlays'), type: 'recent_plays' } as unknown as ProviderCollection,
+            });
+        }
+        return cards;
+    }, [activeCollections, recentPlays, t]);
 
     const albumCards = useMemo(() => {
         return favoriteAlbums.map(a => ({
