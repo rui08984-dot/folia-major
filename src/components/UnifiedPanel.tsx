@@ -13,7 +13,7 @@ import LocalTab from './panelTab/LocalTab';
 import FmTab from './panelTab/FmTab';
 import NaviTab from './panelTab/NaviTab';
 import OnlineLyricsTab from './panelTab/OnlineLyricsTab';
-import CommentsTab from './panelTab/CommentsTab';
+import CommentsModal from './modal/CommentsModal';
 import type { OnlineLyricsState } from '../types';
 import type { AudioQualityPreference } from '../types/onlineMusic';
 import type { ThemeSourceModel } from '../hooks/themeControllerState';
@@ -241,6 +241,8 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
     const coverAreaRef = React.useRef<HTMLDivElement>(null);
     const [isCoverActionsVisible, setIsCoverActionsVisible] = React.useState(false);
     const [showGuideLine, setShowGuideLine] = React.useState(false);
+    // 评论不是面板页而是独立大窗：tab 图标点了就弹 CommentsModal（面板内不再平铺小列表）。
+    const [isCommentsModalOpen, setIsCommentsModalOpen] = React.useState(false);
     const [isDragging, setIsDragging] = React.useState(false);
     const guideHideTimeoutRef = React.useRef<number | null>(null);
 
@@ -302,7 +304,8 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
     usePlayerPanelTabShortcut({
         isOpen,
         currentTab,
-        availableTabs: tabs.map(tab => tab.id),
+        // 评论是弹窗入口不是面板页，别让它进键盘循环（循环到了会切出一个空白页）。
+        availableTabs: tabs.map(tab => tab.id).filter(id => id !== 'comments'),
         onTabChange,
     });
 
@@ -764,12 +767,18 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
                                     {tabs.map((tab) => (
                                         <button
                                             key={tab.id}
-                                            onClick={() => onTabChange(tab.id)}
-                                            aria-pressed={currentTab === tab.id}
+                                            onClick={() => {
+                                                if (tab.id === 'comments') {
+                                                    setIsCommentsModalOpen(true);
+                                                    return;
+                                                }
+                                                onTabChange(tab.id);
+                                            }}
+                                            aria-pressed={tab.id === 'comments' ? isCommentsModalOpen : currentTab === tab.id}
                                             // 每一格各自是一个思索目标：停在哪一格，讲的就是那一页。
                                             data-ponder-panel-tab-button={tab.id}
                                             className={`flex-1 py-2 flex items-center justify-center transition-all rounded-lg
-                                                ${currentTab === tab.id ? `${activeTabBg} shadow-sm` : 'opacity-40 hover:opacity-100'}`}
+                                                ${(tab.id === 'comments' ? isCommentsModalOpen : currentTab === tab.id) ? `${activeTabBg} shadow-sm` : 'opacity-40 hover:opacity-100'}`}
                                             title={tab.label}
                                             style={{ color: 'var(--text-primary)' }}
                                         >
@@ -954,9 +963,6 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
                                             isDaylight={isDaylight}
                                         />
                                     )}
-                                    {currentTab === 'comments' && isOnline && currentSong && (
-                                        <CommentsTab song={currentSong} isDaylight={isDaylight} />
-                                    )}
                                 </div>
                             </div>
                         </motion.div>
@@ -1057,6 +1063,17 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* 评论大窗：评论 tab 图标是唯一入口（portal 挂 body，不受面板滑动变换影响）。
+                开着时换歌，列表跟着新歌重拉；切回本地源则整窗消失。 */}
+            {isOnline && currentSong && (
+                <CommentsModal
+                    isOpen={isCommentsModalOpen}
+                    onClose={() => setIsCommentsModalOpen(false)}
+                    song={currentSong}
+                    isDaylight={isDaylight}
+                />
+            )}
         </motion.div>
     );
 };
