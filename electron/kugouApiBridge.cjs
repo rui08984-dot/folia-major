@@ -23,6 +23,7 @@ const OPERATION_MODULES = {
   search: ['search'],
   search_suggest: ['search_suggest'],
   top_playlist: ['top_playlist'],
+  comment_music: ['comment_music'],
   audio: ['audio'],
   krm_audio: ['krm_audio'],
   song_url: ['song_url'],

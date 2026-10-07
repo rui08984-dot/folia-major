@@ -707,7 +707,14 @@ export default {
     "controls": "控制",
     "visualizer": "歌词动画",
     "playlist": "播放列表",
-    "account": "账户"
+    "account": "账户",
+    "comments": "评论",
+    "commentsLoading": "加载评论中…",
+    "commentsEmpty": "还没有评论",
+    "commentsError": "评论没能加载出来",
+    "commentsRetry": "重试",
+    "commentsHot": "热评",
+    "commentsLoadMore": "加载更多"
   },
   "lyricExport": {
     "exported": "歌词已导出",

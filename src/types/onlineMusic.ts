@@ -50,6 +50,8 @@ export interface ProviderCapabilities {
     userAlbums?: boolean;
     /** The provider accepts a listening report for a track the user actually played. */
     playbackReports?: boolean;
+    /** The provider exposes a read-only song comment list. */
+    comments?: boolean;
 }
 
 export interface ProviderAvailability {
@@ -379,6 +381,28 @@ export interface OnlineMutationProvider {
     subscribeAlbum?(id: MediaId, subscribed: boolean): Promise<void>;
 }
 
+/** 一条歌曲评论。三家字段拼法各异，正规化到这一份；缺的留空，UI 按存在与否渲染。 */
+export type ProviderComment = {
+    id: MediaId;
+    content: string;
+    userName: string;
+    avatarUrl?: string;
+    likedCount?: number;
+    /** 展示用的时间串，各平台自带（相对时间或日期），不再本地化以免口径打架。 */
+    timeStr?: string;
+    ipLocation?: string;
+    /** 热评置顶标记。 */
+    isHot?: boolean;
+};
+
+/**
+ * 歌曲评论区。只读：发评论/点赞是写操作，会动用户账号且风控敏感，第一期明确不做
+ * （与「不感兴趣」的取舍同源）。QQ 的 h5 评论通道匿名回空，需登录态；网易/酷狗匿名可用。
+ */
+export interface OnlineCommentProvider {
+    getSongComments?(song: SongResult, limit: number, offset: number): Promise<ProviderPage<ProviderComment>>;
+}
+
 export interface OnlineMusicProvider {
     id: OnlineProviderId;
     displayName: string;
@@ -399,6 +423,7 @@ export interface OnlineMusicProvider {
     catalog?: OnlineCatalogProvider;
     recommendations?: OnlineRecommendationProvider;
     mutations?: OnlineMutationProvider;
+    comments?: OnlineCommentProvider;
 }
 
 // Public canonical contract consumed through the omni facade. Provider-prefixed

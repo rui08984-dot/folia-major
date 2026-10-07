@@ -28,6 +28,7 @@ vi.mock('@/services/netease', () => ({
         getSearchSuggest: vi.fn(),
         searchByType: vi.fn(),
         createPlaylist: vi.fn(),
+        getSongComments: vi.fn(),
     },
 }));
 
@@ -375,6 +376,33 @@ describe('neteaseProvider playlist creation', () => {
     it('rejects a success code without any created id as invalid-response', async () => {
         vi.mocked(neteaseApi.createPlaylist).mockResolvedValue({ code: 200 } as any);
         await expect(neteaseProvider.mutations!.createPlaylist!('新建歌单')).rejects.toMatchObject({ code: 'invalid-response' });
+    });
+});
+
+describe('neteaseProvider song comments', () => {
+    beforeEach(() => vi.clearAllMocks());
+
+    it('merges hot comments first, then normal comments, with paging', async () => {
+        vi.mocked(neteaseApi.getSongComments).mockResolvedValue({
+            total: 100,
+            more: true,
+            hotComments: [{ commentId: 1, content: '热评', likedCount: 999, user: { nickname: 'A', avatarUrl: 'http://x/a.jpg' } }],
+            comments: [{ commentId: 2, content: '普通评论', likedCount: 3, user: { nickname: 'B' }, ipLocation: '北京', timeStr: '2小时前' }],
+        } as any);
+
+        const page = await neteaseProvider.comments!.getSongComments!(song, 20, 0);
+        expect(page.items).toHaveLength(2);
+        expect(page.items[0]).toMatchObject({ id: 1, isHot: true, likedCount: 999, avatarUrl: 'https://x/a.jpg' });
+        expect(page.items[1]).toMatchObject({ id: 2, ipLocation: '北京', timeStr: '2小时前' });
+        expect(page).toMatchObject({ total: 100, hasMore: true });
+    });
+
+    it('drops comments with empty content', async () => {
+        vi.mocked(neteaseApi.getSongComments).mockResolvedValue({
+            comments: [{ commentId: 5, content: '   ', user: { nickname: 'x' } }],
+        } as any);
+        const page = await neteaseProvider.comments!.getSongComments!(song, 20, 0);
+        expect(page.items).toEqual([]);
     });
 });
 

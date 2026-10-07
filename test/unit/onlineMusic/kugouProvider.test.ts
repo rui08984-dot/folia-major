@@ -1826,5 +1826,31 @@ describe('kugouProvider', () => {
             expect(requestMock).not.toHaveBeenCalledWith('top_playlist', expect.anything());
             expect(collections).toEqual([]);
         });
+
+        it('reads song comments by mixsongid and normalizes user/like fields', async () => {
+            requestMock.mockImplementation((operation: string) => {
+                if (operation === 'comment_music') {
+                    return Promise.resolve({
+                        count: 708022,
+                        list: [
+                            { id: 1723639894, content: '听了3000遍', user_name: '某人', user_pic: 'http://c/user.jpg', like: 42, addtime: '2025-12-26 19:46:04' },
+                            { id: 1, content: '', user_name: '空' },
+                        ],
+                    });
+                }
+                return Promise.resolve({});
+            });
+            const commentSong = { id: 'x', name: '晴天', artists: [], album: { id: '', name: '' }, durationMs: 0, sourceRef: { kind: 'online', providerId: 'kugou', mediaId: 'x', providerData: { mixSongId: '32100650' } } } as never;
+            const page = await kugouProvider.comments?.getSongComments?.(commentSong, 20, 0);
+            expect(page?.items).toHaveLength(1);
+            expect(page?.items[0]).toMatchObject({ id: 1723639894, content: '听了3000遍', userName: '某人', likedCount: 42, avatarUrl: 'https://c/user.jpg' });
+            expect(requestMock).toHaveBeenCalledWith('comment_music', expect.objectContaining({ mixsongid: '32100650' }));
+        });
+
+        it('returns empty comments when the song has no mixsongid', async () => {
+            const page = await kugouProvider.comments?.getSongComments?.(normalizeKugouSong({ hash: 'abc', name: 'x' }), 20, 0);
+            expect(page?.items).toEqual([]);
+            expect(requestMock).not.toHaveBeenCalledWith('comment_music', expect.anything());
+        });
     });
 });

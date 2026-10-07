@@ -10,6 +10,7 @@ import type {
     ProviderSongAvailability,
     ProviderSongReplacement,
     ProviderArtistSummary,
+    ProviderComment,
     ProviderUser,
 } from '../../types/onlineMusic';
 import { getPersonalFmRequestOptions } from '../../stores/usePersonalFmModeStore';
@@ -111,6 +112,25 @@ const normalizeCollection = (raw: any, type = 'playlist'): ProviderCollection =>
 const extractCloudLyricText = (response: any): string => (
     response?.lrc || response?.data?.lrc || response?.lyric || response?.data?.lyric || ''
 );
+
+const normalizeNeteaseComment = (raw: any, isHot = false): ProviderComment | null => {
+    const content = String(raw?.content || '').trim();
+    if (!content) return null;
+    const likedCount = Number(raw?.likedCount);
+    return {
+        id: raw?.commentId ?? 0,
+        content,
+        userName: String(raw?.user?.nickname || raw?.user?.userName || '匿名'),
+        avatarUrl: raw?.user?.avatarUrl ? toHttpsCommentUrl(String(raw.user.avatarUrl)) : undefined,
+        ...(Number.isFinite(likedCount) && likedCount >= 0 ? { likedCount } : {}),
+        ...(raw?.timeStr ? { timeStr: String(raw.timeStr) } : {}),
+        ...(raw?.ipLocation ? { ipLocation: String(raw.ipLocation) } : {}),
+        ...(isHot ? { isHot: true } : {}),
+    };
+};
+
+// 网易评论头像回的是 http，渲染层混合内容会被拦，统一升 https。
+const toHttpsCommentUrl = (url: string): string => url.replace(/^http:/, 'https:');
 
 const neteaseChorusRangesCache = new Map<string, Promise<Array<{ startTime: number; endTime: number }>>>();
 
@@ -254,6 +274,7 @@ export const neteaseProvider: OnlineMusicProvider = {
         likes: true,
         userAlbums: true,
         playbackReports: true,
+        comments: true,
     },
     normalizeSong: normalizeNeteaseSong,
     normalizeUser,
@@ -650,5 +671,21 @@ export const neteaseProvider: OnlineMusicProvider = {
             await neteaseApi.subscribePlaylist(toNeteaseId(typeof playlist === 'object' ? playlist.id : playlist), subscribed);
         },
         async subscribeAlbum(id, subscribed) { await neteaseApi.subscribeAlbum(toNeteaseId(id), subscribed); },
+    },
+    comments: {
+        // 网易评论匿名可用（探针 2026-10-08：晴天 total 197万）。热评置顶，普通评论接在其后，
+        // 与网易自己的排序一致；offset 只作用于普通评论（热评每次都随首屏返回）。
+        async getSongComments(song, limit, offset) {
+            const response = await neteaseApi.getSongComments(toNeteaseId(song.id), limit, offset);
+            const hot = (response?.hotComments || [])
+                .map((item: any) => normalizeNeteaseComment(item, true))
+                .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c));
+            const normal = (response?.comments || [])
+                .map((item: any) => normalizeNeteaseComment(item, false))
+                .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c));
+            const items = [...hot, ...normal];
+            const total = Number(response?.total) || items.length;
+            return { items, total, hasMore: Boolean(response?.more), nextOffset: offset + limit };
+        },
     },
 };

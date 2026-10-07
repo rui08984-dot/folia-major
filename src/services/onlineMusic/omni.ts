@@ -19,6 +19,7 @@ import type {
     OnlineSearchSuggestion,
     PersonalFmRequestOptions,
     ProviderCatalogEntityKind,
+    ProviderComment,
     QrLoginMethod,
     QrLoginState,
 } from '../../types/onlineMusic';
@@ -395,6 +396,27 @@ export const omni = {
         const provider = getOnlineMusicProvider(source.providerId);
         return providerSupports(provider, 'recommendations')
             && Boolean(provider?.recommendations?.dislikeSong);
+    },
+
+    canCommentSong(song: SongResult): boolean {
+        const source = getPlaybackSourceRef(song);
+        if (source.kind !== 'online') return false;
+        const provider = getOnlineMusicProvider(source.providerId);
+        return providerSupports(provider, 'comments')
+            && Boolean(provider?.comments?.getSongComments);
+    },
+
+    async getSongComments(
+        song: SongResult,
+        page: PageInput,
+    ): Promise<OmniPage<ProviderComment>> {
+        const source = getPlaybackSourceRef(song);
+        if (source.kind !== 'online') return emptyPage(page.offset);
+        const provider = getOnlineMusicProvider(source.providerId);
+        if (!provider || !this.canCommentSong(song) || !provider.comments?.getSongComments) {
+            return emptyPage(page.offset);
+        }
+        return provider.comments.getSongComments(song, page.limit, page.offset);
     },
 
     canSubscribeCollection(collection: OmniCollection): boolean {

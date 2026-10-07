@@ -1,0 +1,922 @@
+{
+  "status": 1,
+  "err_code": 0,
+  "msg": "success",
+  "message": "success",
+  "childrenid": "20505418",
+  "count": 708022,
+  "combine_count": 708022,
+  "list": [
+    {
+      "id": 1723639894,
+      "special_id": 2364,
+      "special_child_name": "周杰伦 - 晴天",
+      "code": "fc4be23b4e972707f36b8a828a93ba8a",
+      "special_child_id": "20505418",
+      "status": "1",
+      "content": "听《晴天》已听3000多遍了，想要这个",
+      "bi": "|_:1|images:1",
+      "puser_id": 0,
+      "pcontent": "",
+      "delPid": 0,
+      "addtime": "2025-12-26 19:46:04",
+      "action": "",
+      "extdata": "{\"city\":\"\\u6f4d\\u574a\\u5e02\",\"action\":1,\"updatetime\":\"2026-10-08 02:15:54\"}",
+      "reply_num": 416,
+      "user_id": 1072328892,
+      "user_name": "屿知",
+      "user_pic": "http://imge.kugou.com/kugouicon/165/20260321/20260321081537844939.jpg",
+      "user_sex": 1,
+      "userlimit": false,
+      "vip_type": 0,
+      "y_type": 0,
+      "m_type": 0,
+      "vip_user_type": 0,
+      "album_audio_id": 32100650,
+      "is_publish": 1,
+      "jump": 1,
+      "song_show_text": "周杰伦 - 晴天",
+      "show_follow_button": 0,
+      "vinfo9": {
+        "auth_info": "",
+        "pic": "http://imge.kugou.com/commendpic/20180627/20180627153930257837.png",
+        "star_v_status": 0,
+        "tme_star_status": 0,
+        "actor_status": 0,
+        "biz_status": 0,
+        "cmt_talent_status": 1,
+        "user_iden": 0,
+        "student_status": 0,
+        "user_label": "",
+        "justiceLeague": 0,
+        "singer_status": 0
+      },
+      "vipinfo": {
+        "vip_type": 0,
+        "y_type": 0,
+        "user_type": 0,
+        "user_y_type": 0,
+        "m_type": 0,
+        "fancy_number": {
+          "pic": "",
+          "number": "",
+          "expire_time": ""
+        },
+        "nameplate": null,
+        "svip_info": null
+      },
+      "udetail": {
+        "user_id": 1072328892,
+        "medal_type": "wise_man",
+        "medal_classify_id": 2024041501,
+        "medal_show_type": 2,
+        "medal_roll_word": "Lv.2 评论达人",
+        "medal_def_small_pic": "https://vipimgbssdl.kugou.com/3bd74a68fffe0d83616b5b536efcd8ce.png",
+        "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2024041501&isHideTitleBar=1&jumpTarget=detail&level=&shareId=vuks5s1k4bracj1&type=wise_man",
+        "show_type_v3": 0,
+        "small_pic_v3": "",
+        "word_v3": "",
+        "singer_avatar": ""
+      },
+      "like": {
+        "count": 35330,
+        "haslike": false,
+        "hasoppose": false,
+        "likenum": 35330,
+        "opposenum": 0
+      },
+      "images": [
+        {
+          "url": "https://cmtimgbssdl.cloud.kugou.com/c4584f9425b1d155a8f8224d0ab263c0.jpg",
+          "width": 416,
+          "height": 268,
+          "mark": 1,
+          "label": "[此评论图片请到手机查看]"
+        }
+      ],
+      "edit_status": 0,
+      "encyclopedic_flag": 0,
+      "is_show_encyclopedic": 0,
+      "has_encyclopedic": 0,
+      "location": "山东",
+      "is_hidden_cmt": 0,
+      "is_reply": 0,
+      "comments_num": 0,
+      "udetails": [
+        {
+          "medal_type": "wise_man",
+          "medal_classify_id": 2024041501,
+          "medal_show_type": 2,
+          "medal_roll_word": "Lv.2 评论达人",
+          "medal_def_small_pic": "https://vipimgbssdl.kugou.com/3bd74a68fffe0d83616b5b536efcd8ce.png",
+          "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2024041501&isHideTitleBar=1&jumpTarget=detail&level=&shareId=vuks5s1k4bracj1&type=wise_man",
+          "def_small_pic_new": "https://vipimgbssdl.kugou.com/3bd74a68fffe0d83616b5b536efcd8ce.png",
+          "show_type_v3": 2,
+          "small_pic_v3": "https://vipimgbssdl.kugou.com/012f846947b02639d5b01a38443a44c2.png_34x34.png",
+          "word_v3": "Lv.2 评论达人",
+          "singer_avatar": ""
+        },
+        {
+          "medal_type": "default",
+          "medal_classify_id": 2026011205,
+          "medal_show_type": 1,
+          "medal_def_small_pic": "https://vipimgbssdl.kugou.com/b25b934062008e2d27d7b75e0206a7bd.png",
+          "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2026011205&isHideTitleBar=1&jumpTarget=detail&level=&shareId=vuks5s1k4bracj1&type=default",
+          "def_small_pic_new": "https://vipimgbssdl.kugou.com/b25b934062008e2d27d7b75e0206a7bd.png",
+          "show_type_v3": 1,
+          "small_pic_v3": "https://vipimgbssdl.kugou.com/b25b934062008e2d27d7b75e0206a7bd.png",
+          "word_v3": "",
+          "singer_avatar": ""
+        }
+      ],
+      "album_id": 966846,
+      "author_name": "",
+      "cover": "http://imge.kugou.com/stdmusic/{size}/20230920/20230920142503632013.jpg",
+      "hash": "B3A52A7A958BF0AED0EBFBA2E9A818B7",
+      "loadoffset": 50,
+      "risk": 0,
+      "score": 1791391378,
+      "loadone": 1,
+      "play_ts": -1,
+      "cmt_source": 1
+    },
+    {
+      "id": 1214639143,
+      "special_id": 2364,
+      "special_child_name": "周杰伦 - 晴天",
+      "code": "fc4be23b4e972707f36b8a828a93ba8a",
+      "special_child_id": "20505418",
+      "status": "1",
+      "content": "“晴天很好听   沈抱山是薄荷味的”\n“这首歌叫——唱给李迟舒的歌”\n李迟舒，夏天到了，和沈抱山热恋吧",
+      "bi": "|_:1|images:1",
+      "puser_id": 0,
+      "pcontent": "",
+      "delPid": 0,
+      "addtime": "2026-07-17 14:37:52",
+      "action": "",
+      "extdata": "{\"city\":\"\\u5357\\u5b81\\u5e02\",\"action\":1,\"updatetime\":\"2026-10-08 00:57:37\"}",
+      "reply_num": 109,
+      "user_id": 750566332,
+      "user_name": "小序",
+      "user_pic": "http://imge.kugou.com/kugouicon/165/20260711/20260711140019316471.jpg",
+      "user_sex": 2,
+      "userlimit": false,
+      "vip_type": 0,
+      "y_type": 0,
+      "m_type": 0,
+      "vip_user_type": 0,
+      "album_audio_id": 32100650,
+      "is_publish": 1,
+      "jump": 1,
+      "song_show_text": "周杰伦 - 晴天",
+      "show_follow_button": 0,
+      "svip_level": 2,
+      "svip_score": 3137,
+      "vinfo9": {
+        "auth_info": "",
+        "pic": "",
+        "star_v_status": 0,
+        "tme_star_status": 0,
+        "actor_status": 0,
+        "biz_status": 0,
+        "cmt_talent_status": 0,
+        "user_iden": 0,
+        "student_status": 0,
+        "user_label": "",
+        "justiceLeague": 0,
+        "singer_status": 0
+      },
+      "vipinfo": {
+        "vip_type": 0,
+        "y_type": 0,
+        "user_type": 0,
+        "user_y_type": 0,
+        "m_type": 0,
+        "fancy_number": {
+          "pic": "",
+          "number": "",
+          "expire_time": ""
+        },
+        "nameplate": null,
+        "svip_info": null
+      },
+      "udetail": {
+        "show_type_v3": 0,
+        "small_pic_v3": "",
+        "word_v3": "",
+        "singer_avatar": ""
+      },
+      "like": {
+        "count": 891,
+        "haslike": false,
+        "hasoppose": false,
+        "likenum": 891,
+        "opposenum": 0
+      },
+      "images": [
+        {
+          "url": "https://cmtimgbssdl.kugou.com/fd4436e7594e4d066a2ba115b8a9c304.jpg",
+          "width": 1440,
+          "height": 960,
+          "mark": 1,
+          "label": "[此评论图片请到手机查看]"
+        }
+      ],
+      "edit_status": 0,
+      "encyclopedic_flag": 0,
+      "is_show_encyclopedic": 0,
+      "has_encyclopedic": 0,
+      "location": "广西",
+      "is_hidden_cmt": 0,
+      "is_reply": 0,
+      "comments_num": 0,
+      "album_id": 966846,
+      "author_name": "",
+      "cover": "http://imge.kugou.com/stdmusic/{size}/20230920/20230920142503632013.jpg",
+      "hash": "B3A52A7A958BF0AED0EBFBA2E9A818B7",
+      "loadoffset": 144,
+      "risk": 0,
+      "score": 1791387731,
+      "loadone": 1,
+      "play_ts": -1,
+      "cmt_source": 1
+    },
+    {
+      "id": 1639604280,
+      "special_id": 2364,
+      "special_child_name": "周杰伦 - 晴天",
+      "code": "fc4be23b4e972707f36b8a828a93ba8a",
+      "special_child_id": "20505418",
+      "status": "1",
+      "content": "游戏是他的晴天，班主任是他的雨天",
+      "bi": "|_:1|images:1",
+      "puser_id": 0,
+      "pcontent": "",
+      "delPid": 0,
+      "addtime": "2023-08-14 13:25:46",
+      "action": "",
+      "extdata": "{\"city\":\"\\u8861\\u9633\\u5e02\",\"action\":1,\"updatetime\":\"2026-10-08 00:29:01\"}",
+      "reply_num": 595,
+      "user_id": 1536189633,
+      "user_name": "扶苏",
+      "user_pic": "http://imge.kugou.com/kugouicon/165/20241215/20241215005848233090.jpg",
+      "user_sex": 1,
+      "userlimit": false,
+      "vip_type": 6,
+      "y_type": 0,
+      "m_type": 1,
+      "vip_user_type": 0,
+      "album_audio_id": 32100650,
+      "is_publish": 1,
+      "jump": 1,
+      "song_show_text": "周杰伦 - 晴天",
+      "show_follow_button": 0,
+      "svip_level": 5,
+      "svip_score": 30791,
+      "vinfo9": {
+        "auth_info": "视频萌新",
+        "pic": "http://imge.kugou.com/commendpic/20180627/20180627153930257837.png",
+        "star_v_status": 0,
+        "tme_star_status": 0,
+        "actor_status": 0,
+        "biz_status": 0,
+        "cmt_talent_status": 1,
+        "user_iden": 0,
+        "student_status": 0,
+        "user_label": "",
+        "justiceLeague": 0,
+        "singer_status": 0
+      },
+      "vipinfo": {
+        "vip_type": 6,
+        "y_type": 0,
+        "user_type": 13,
+        "user_y_type": 0,
+        "m_type": 1,
+        "fancy_number": {
+          "pic": "",
+          "number": "",
+          "expire_time": ""
+        },
+        "nameplate": null,
+        "svip_info": null
+      },
+      "udetail": {
+        "user_id": 1536189633,
+        "medal_type": "singer_energy",
+        "medal_classify_id": 3520,
+        "medal_show_type": 2,
+        "medal_roll_word": "杰迷",
+        "medal_def_small_pic": "https://webimg.kgimg.com/952abd44a25ac6d2e1ee9637ffce72c7.png",
+        "medal_is_show_2nd_classify_name": 1,
+        "medal_2nd_classify_name": "22",
+        "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=3520&isHideTitleBar=1&jumpTarget=detail&level=22&shareId=1dp0p611k4br1b0a&type=singer_energy",
+        "pendant_id": 49,
+        "pendant_url": "https://vipimgbssdl.kugou.com/d360313dd637f10203e8412ae1b8c862.png",
+        "pendant_dynamic": "https://vipimgbssdl.kugou.com/424a6380b7dbda4bd060c8cfa6990e8a.gif",
+        "pendant_name": "锦鲤附体",
+        "show_type_v3": 0,
+        "small_pic_v3": "",
+        "word_v3": "",
+        "singer_avatar": ""
+      },
+      "like": {
+        "count": 33802,
+        "haslike": false,
+        "hasoppose": false,
+        "likenum": 33802,
+        "opposenum": 1
+      },
+      "images": [
+        {
+          "url": "https://cmtimgbssdl.cloud.kugou.com/d1f9b7fffdc9e0ad6f8dc9e4ff05fd76.jpg",
+          "width": 572,
+          "height": 600,
+          "mark": 1,
+          "label": "[此评论图片请到手机查看]"
+        }
+      ],
+      "edit_status": 0,
+      "encyclopedic_flag": 0,
+      "is_show_encyclopedic": 0,
+      "has_encyclopedic": 0,
+      "location": "湖南",
+      "is_hidden_cmt": 0,
+      "is_reply": 0,
+      "nameplate_type": 1,
+      "nameplate_url": "https://vipimgbssdl.kugou.com/3aff1da15669a5acdd2ad9f60494b4d2.png",
+      "nameplate_dynamic": "https://vipimgbssdl.kugou.com/b3ce3938cd94eeb61676e632accd45d2.webp",
+      "nameplate_url_v1": "https://vipimgbssdl.kugou.com/3aff1da15669a5acdd2ad9f60494b4d2.png",
+      "nameplate_dynamic_v1": "https://vipimgbssdl.kugou.com/b3ce3938cd94eeb61676e632accd45d2.webp",
+      "comments_num": 0,
+      "udetails": [
+        {
+          "medal_type": "singer_energy",
+          "medal_classify_id": 3520,
+          "medal_show_type": 2,
+          "medal_roll_word": "杰迷",
+          "medal_def_small_pic": "https://webimg.kgimg.com/952abd44a25ac6d2e1ee9637ffce72c7.png",
+          "medal_is_show_2nd_classify_name": 1,
+          "medal_2nd_classify_name": "22",
+          "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=3520&isHideTitleBar=1&jumpTarget=detail&level=22&shareId=1dp0p611k4br1b0a&type=singer_energy",
+          "def_small_pic_new": "https://vipimgbssdl.kugou.com/c3da73f421c6c308319241167f3e6183.png",
+          "show_type_v3": 2,
+          "small_pic_v3": "https://vipimgbssdl.kugou.com/21523d2816fd4f0d0e0eca86582479b9.png_34x34.png",
+          "word_v3": "Lv.22 杰迷",
+          "singer_avatar": ""
+        },
+        {
+          "medal_type": "wise_man",
+          "medal_classify_id": 2024041501,
+          "medal_show_type": 2,
+          "medal_roll_word": "Lv.6 评论达人",
+          "medal_def_small_pic": "https://vipimgbssdl.kugou.com/3bd74a68fffe0d83616b5b536efcd8ce.png",
+          "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2024041501&isHideTitleBar=1&jumpTarget=detail&level=&shareId=1dp0p611k4br1b0a&type=wise_man",
+          "def_small_pic_new": "https://vipimgbssdl.kugou.com/3bd74a68fffe0d83616b5b536efcd8ce.png",
+          "show_type_v3": 2,
+          "small_pic_v3": "https://vipimgbssdl.kugou.com/012f846947b02639d5b01a38443a44c2.png_34x34.png",
+          "word_v3": "Lv.6 评论达人",
+          "singer_avatar": ""
+        }
+      ],
+      "album_id": 966846,
+      "author_name": "",
+      "cover": "http://imge.kugou.com/stdmusic/{size}/20230920/20230920142503632013.jpg",
+      "hash": "B3A52A7A958BF0AED0EBFBA2E9A818B7",
+      "loadoffset": 49,
+      "risk": 0,
+      "score": 1791386002,
+      "loadone": 1,
+      "play_ts": -1,
+      "cmt_source": 1
+    },
+    {
+      "id": 1168471301,
+      "special_id": 2364,
+      "special_child_name": "周杰伦 - 晴天",
+      "code": "fc4be23b4e972707f36b8a828a93ba8a",
+      "special_child_id": "20505418",
+      "status": "1",
+      "content": "嘿！bro！今天你也很帅，别往下滑了，接着！",
+      "bi": "|_:1|images:1",
+      "puser_id": 0,
+      "pcontent": "",
+      "delPid": 0,
+      "addtime": "2026-04-09 21:45:43",
+      "action": "",
+      "extdata": "{\"city\":\"\\u4e0a\\u6d77\\u5e02\",\"action\":1,\"updatetime\":\"2026-10-08 01:32:15\"}",
+      "reply_num": 193,
+      "user_id": 1795433838,
+      "user_name": "悔",
+      "user_pic": "http://imge.kugou.com/kugouicon/165/20261002/20261002093438152961.jpg",
+      "user_sex": 0,
+      "userlimit": false,
+      "vip_type": 6,
+      "y_type": 0,
+      "m_type": 1,
+      "vip_user_type": 0,
+      "album_audio_id": 32100650,
+      "is_publish": 1,
+      "jump": 1,
+      "song_show_text": "周杰伦 - 晴天",
+      "show_follow_button": 0,
+      "svip_level": 4,
+      "svip_score": 9075,
+      "vinfo9": {
+        "auth_info": "",
+        "pic": "http://imge.kugou.com/commendpic/20180627/20180627153930257837.png",
+        "star_v_status": 0,
+        "tme_star_status": 0,
+        "actor_status": 0,
+        "biz_status": 0,
+        "cmt_talent_status": 1,
+        "user_iden": 0,
+        "student_status": 0,
+        "user_label": "",
+        "justiceLeague": 0,
+        "singer_status": 0
+      },
+      "vipinfo": {
+        "vip_type": 6,
+        "y_type": 0,
+        "user_type": 13,
+        "user_y_type": 0,
+        "m_type": 1,
+        "fancy_number": {
+          "pic": "",
+          "number": "",
+          "expire_time": ""
+        },
+        "nameplate": null,
+        "svip_info": null
+      },
+      "udetail": {
+        "user_id": 1795433838,
+        "medal_type": "wise_man",
+        "medal_classify_id": 2024122501,
+        "medal_show_type": 2,
+        "medal_roll_word": "新晋 众测官",
+        "medal_def_small_pic": "https://vipimgbssdl.kugou.com/16cfa0c6c910b8005d2a2f5930d526d8.png",
+        "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2024122501&isHideTitleBar=1&jumpTarget=detail&level=&shareId=1lg89be1k4bqs0sq&type=wise_man",
+        "pendant_id": 254,
+        "pendant_url": "https://vipimgbssdl.kugou.com/e3faccda1e66ea4d8b296eff38afb289.png",
+        "pendant_dynamic": "https://vipimgbssdl.kugou.com/28113aab68d5d5768af81c7feea814f9.gif",
+        "pendant_name": "苍兰诀",
+        "show_type_v3": 0,
+        "small_pic_v3": "",
+        "word_v3": "",
+        "singer_avatar": ""
+      },
+      "like": {
+        "count": 5388,
+        "haslike": false,
+        "hasoppose": false,
+        "likenum": 5388,
+        "opposenum": 0
+      },
+      "images": [
+        {
+          "url": "https://cmtimgbssdl.cloud.kugou.com/11a5a9188c44bd96bc3e6c2cef50be34.jpg",
+          "width": 1920,
+          "height": 1080,
+          "mark": 1,
+          "label": "[此评论图片请到手机查看]"
+        }
+      ],
+      "edit_status": 0,
+      "encyclopedic_flag": 0,
+      "is_show_encyclopedic": 0,
+      "has_encyclopedic": 0,
+      "location": "广东",
+      "is_hidden_cmt": 0,
+      "is_reply": 0,
+      "nameplate_type": 1,
+      "nameplate_url": "https://vipimgbssdl.kugou.com/443082d876ae45377744e40203756d4b.png",
+      "nameplate_dynamic": "https://vipimgbssdl.kugou.com/2d5ff8cd2343a545558efcd2a86191ff.webp",
+      "nameplate_url_v1": "https://vipimgbssdl.kugou.com/443082d876ae45377744e40203756d4b.png",
+      "nameplate_dynamic_v1": "https://vipimgbssdl.kugou.com/2d5ff8cd2343a545558efcd2a86191ff.webp",
+      "comments_num": 0,
+      "udetails": [
+        {
+          "medal_type": "wise_man",
+          "medal_classify_id": 2024122501,
+          "medal_show_type": 2,
+          "medal_roll_word": "新晋 众测官",
+          "medal_def_small_pic": "https://vipimgbssdl.kugou.com/16cfa0c6c910b8005d2a2f5930d526d8.png",
+          "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2024122501&isHideTitleBar=1&jumpTarget=detail&level=&shareId=1lg89be1k4bqs0sq&type=wise_man",
+          "def_small_pic_new": "https://vipimgbssdl.kugou.com/16cfa0c6c910b8005d2a2f5930d526d8.png",
+          "show_type_v3": 2,
+          "small_pic_v3": "https://vipimgbssdl.kugou.com/0f1026c8f458b39162a957ba604967e5.png_34x34.png",
+          "word_v3": "新晋 众测官",
+          "singer_avatar": ""
+        },
+        {
+          "medal_type": "wise_man",
+          "medal_classify_id": 2024041501,
+          "medal_show_type": 2,
+          "medal_roll_word": "Lv.1 评论达人",
+          "medal_def_small_pic": "https://vipimgbssdl.kugou.com/3bd74a68fffe0d83616b5b536efcd8ce.png",
+          "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2024041501&isHideTitleBar=1&jumpTarget=detail&level=&shareId=1lg89be1k4bqs0sq&type=wise_man",
+          "def_small_pic_new": "https://vipimgbssdl.kugou.com/3bd74a68fffe0d83616b5b536efcd8ce.png",
+          "show_type_v3": 2,
+          "small_pic_v3": "https://vipimgbssdl.kugou.com/012f846947b02639d5b01a38443a44c2.png_34x34.png",
+          "word_v3": "Lv.1 评论达人",
+          "singer_avatar": ""
+        }
+      ],
+      "album_id": 966846,
+      "author_name": "",
+      "cover": "http://imge.kugou.com/stdmusic/{size}/20230920/20230920142503632013.jpg",
+      "hash": "B3A52A7A958BF0AED0EBFBA2E9A818B7",
+      "loadoffset": 61,
+      "risk": 0,
+      "score": 1791388355,
+      "loadone": 1,
+      "play_ts": -1,
+      "cmt_source": 1
+    },
+    {
+      "id": 1070662887,
+      "special_id": 2364,
+      "special_child_name": "周杰伦 - 晴天",
+      "code": "fc4be23b4e972707f36b8a828a93ba8a",
+      "special_child_id": "20505418",
+      "status": "1",
+      "content": "孩子们，其实我逃出来了",
+      "bi": "|_:1|images:1",
+      "puser_id": 0,
+      "pcontent": "",
+      "delPid": 0,
+      "addtime": "2025-06-20 22:25:43",
+      "action": "",
+      "extdata": "{\"city\":\"\\u5317\\u4eac\\u5e02\",\"action\":1,\"updatetime\":\"2026-10-07 23:51:08\"}",
+      "reply_num": 650,
+      "user_id": 485272504,
+      "user_name": "亚托克斯",
+      "user_pic": "http://imge.kugou.com/kugouicon/165/20251024/20251024182347629625.jpg",
+      "user_sex": 1,
+      "userlimit": false,
+      "vip_type": 0,
+      "y_type": 0,
+      "m_type": 1,
+      "vip_user_type": 0,
+      "album_audio_id": 32100650,
+      "is_publish": 1,
+      "jump": 1,
+      "song_show_text": "周杰伦 - 晴天",
+      "show_follow_button": 0,
+      "vinfo9": {
+        "auth_info": "",
+        "pic": "http://imge.kugou.com/commendpic/20180627/20180627153930257837.png",
+        "star_v_status": 0,
+        "tme_star_status": 0,
+        "actor_status": 0,
+        "biz_status": 0,
+        "cmt_talent_status": 1,
+        "user_iden": 0,
+        "student_status": 0,
+        "user_label": "",
+        "justiceLeague": 0,
+        "singer_status": 0
+      },
+      "vipinfo": {
+        "vip_type": 0,
+        "y_type": 0,
+        "user_type": 1,
+        "user_y_type": 0,
+        "m_type": 1,
+        "fancy_number": {
+          "pic": "",
+          "number": "",
+          "expire_time": ""
+        },
+        "nameplate": null,
+        "svip_info": null
+      },
+      "udetail": {
+        "user_id": 485272504,
+        "medal_type": "album_attainment",
+        "medal_classify_id": 2025091901,
+        "medal_show_type": 2,
+        "medal_roll_word": "青铜收藏家 周杰伦",
+        "medal_def_small_pic": "https://vipimgbssdl.kugou.com/b826296d7bf88c7f5b79c41ab74a1173.png",
+        "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2025091901&isHideTitleBar=1&jumpTarget=detail&level=&shareId=eepato1k4bqc6l1&type=album_attainment",
+        "show_type_v3": 0,
+        "small_pic_v3": "",
+        "word_v3": "",
+        "singer_avatar": ""
+      },
+      "like": {
+        "count": 23898,
+        "haslike": false,
+        "hasoppose": false,
+        "likenum": 23898,
+        "opposenum": 0
+      },
+      "images": [
+        {
+          "url": "https://cmtimgbssdl.cloud.kugou.com/ca07285ccf0931ccfa3a8b57ad29ab15.jpg",
+          "width": 1080,
+          "height": 1108,
+          "mark": 1,
+          "label": "[此评论图片请到手机查看]"
+        }
+      ],
+      "edit_status": 0,
+      "encyclopedic_flag": 0,
+      "is_show_encyclopedic": 0,
+      "has_encyclopedic": 0,
+      "location": "福建",
+      "is_hidden_cmt": 0,
+      "is_reply": 0,
+      "comments_num": 0,
+      "udetails": [
+        {
+          "medal_type": "album_attainment",
+          "medal_classify_id": 2025091901,
+          "medal_show_type": 2,
+          "medal_roll_word": "青铜收藏家 周杰伦",
+          "medal_def_small_pic": "https://vipimgbssdl.kugou.com/b826296d7bf88c7f5b79c41ab74a1173.png",
+          "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2025091901&isHideTitleBar=1&jumpTarget=detail&level=&shareId=eepato1k4bqc6l1&type=album_attainment",
+          "def_small_pic_new": "https://vipimgbssdl.kugou.com/b826296d7bf88c7f5b79c41ab74a1173.png",
+          "show_type_v3": 2,
+          "small_pic_v3": "https://vipimgbssdl.kugou.com/caa48885e45c86738a533084618dcf86.png_34x34.png",
+          "word_v3": "青铜收藏家",
+          "singer_avatar": ""
+        },
+        {
+          "medal_type": "digital_album",
+          "fan_badge_small_pic_url": "https://vipimgbssdl.kugou.com/533aa6129f9a6f861d9c53917dd6d4bf.png",
+          "singer_id": 2026032302,
+          "medal_classify_id": 2026032302,
+          "medal_show_type": 1,
+          "medal_def_small_pic": "https://vipimgbssdl.kugou.com/533aa6129f9a6f861d9c53917dd6d4bf.png",
+          "medal_h5_url": "https://activity.kugou.com/page/v-21847b5d/detail.html?classifyId=2026032302&isHideTitleBar=1&jumpTarget=detail&level=&shareId=eepato1k4bqc6l1&type=digital_album",
+          "def_small_pic_new": "https://vipimgbssdl.kugou.com/533aa6129f9a6f861d9c53917dd6d4bf.png",
+          "show_type_v3": 1,
+          "small_pic_v3": "https://vipimgbssdl.kugou.com/533aa6129f9a6f861d9c53917dd6d4bf.png",
+          "word_v3": "",
+          "singer_avatar": ""
+        }
+      ],
+      "album_id": 966846,
+      "author_name": "",
+      "cover": "http://imge.kugou.com/stdmusic/{size}/20230920/20230920142503632013.jpg",
+      "hash": "B3A52A7A958BF0AED0EBFBA2E9A818B7",
+      "loadoffset": 34,
+      "risk": 0,
+      "score": 1791385073,
+      "loadone": 1,
+      "play_ts": -1,
+      "cmt_source": 1
+    }
+  ],
+  "weightListTopLabel": "精彩评论",
+  "current_page": 1,
+  "weightListFullApi": "http://m.comment.service.kugou.com/v1/weightlist",
+  "hasRcmd": false,
+  "song_score": {
+    "score_user_count": 0,
+    "score_list_url": "",
+    "user_simple_song_scor": 0,
+    "is_show": 0,
+    "user_cmtid": "",
+    "special_child_id": "",
+    "special_child_name": "",
+    "user_score_status": 0,
+    "song_score": 0,
+    "user_song_score": 0
+  },
+  "captcha": 0,
+  "has_filter_risk_user": 0,
+  "hot_word_list": [
+    {
+      "content": "晴天",
+      "count": 23505
+    },
+    {
+      "content": "快乐",
+      "count": 15218
+    },
+    {
+      "content": "生日",
+      "count": 14056
+    },
+    {
+      "content": "故事",
+      "count": 4811
+    },
+    {
+      "content": "周董",
+      "count": 4164
+    },
+    {
+      "content": "青春",
+      "count": 3798
+    },
+    {
+      "content": "雨天",
+      "count": 3376
+    },
+    {
+      "content": "下雨",
+      "count": 3062
+    },
+    {
+      "content": "jay",
+      "count": 2697
+    },
+    {
+      "content": "回忆",
+      "count": 2207
+    },
+    {
+      "content": "前奏",
+      "count": 2078
+    },
+    {
+      "content": "开心",
+      "count": 1833
+    },
+    {
+      "content": "何奕",
+      "count": 1576
+    },
+    {
+      "content": "距离",
+      "count": 1380
+    },
+    {
+      "content": "拜拜",
+      "count": 1294
+    },
+    {
+      "content": "女孩",
+      "count": 1279
+    },
+    {
+      "content": "中考",
+      "count": 1217
+    },
+    {
+      "content": "等待",
+      "count": 1123
+    },
+    {
+      "content": "毕业",
+      "count": 1116
+    }
+  ],
+  "artCmtConfig": {
+    "tipOfNoUseArtCmt": "该功能仅对部分用户开放",
+    "wayToEdit": 1,
+    "canUseArtCmt": 0,
+    "urlOfNoUseArtCmt": "",
+    "h5EditorUrl": "",
+    "canUploadImg": 0
+  },
+  "tag": [
+    {
+      "url": "http://m.comment.service.kugou.com/v1/cmtlist?",
+      "name": "全部",
+      "type": "default",
+      "count": 708022
+    },
+    {
+      "url": "http://m.comment.service.kugou.com/r/v1/rank/topliked?",
+      "name": "最热",
+      "type": "api",
+      "count": 708022,
+      "meta": {
+        "maxDisplay": 99999,
+        "action": "empty"
+      }
+    }
+  ],
+  "cache_time": 300,
+  "classify_list": [
+    {
+      "id": 13,
+      "label": "歌曲相关",
+      "icon": "https://cmtimgbssdl.cloud.kugou.com/3f64f4a94cca6f3026fee5c9829eb1bf.png",
+      "cnt": 55447
+    },
+    {
+      "id": 12,
+      "label": "有图",
+      "icon": "https://cmtimgbssdl.cloud.kugou.com/e20ae89a1f8610ce807f859ee27c6367.png",
+      "cnt": 10773
+    }
+  ],
+  "config": {
+    "canUploadImg": 0,
+    "closeCmt": 0,
+    "emptyTip": "还没有人评论，快来抢沙发吧！",
+    "input_hint": "把所有心事都放进评论里~",
+    "numOpusUserMax": 3,
+    "numOpusUserMaxSVIP": 1,
+    "numOpusUserMaxYVIP": 3,
+    "tipOfNoUploadImg": "该功能仅对部分用户开放",
+    "tip_noupload_video": "该功能仅对部分用户开放",
+    "toastBgOpus": "http://imge.kugou.com/commendpic/20190403/20190403110105584375.png",
+    "urlOfNoUploadImg": "https://h5.kugou.com/requirement/v-c1f295e9/index.html",
+    "url_noupload_video": "http://www2.kugou.kugou.com/apps/commentBlackHouse/msg.html?tid=126797095",
+    "canUploadVoice": 0
+  },
+  "topad": [
+    {
+      "title": "偶遇",
+      "jump": {
+        "type": "encounter",
+        "h5Url": "http://m.kugou.com/webapp/meet/index.html?from=cmttop&app_ver=1"
+      },
+      "picUrl": "http://imge.kugou.com/commendpic/20190624/20190624140050350145.png?encounter"
+    },
+    {
+      "title": "神评",
+      "jump": {
+        "type": "h5",
+        "h5Url": "https://activity.kugou.com/simple/edithd_god-comment.html?&from=topad&godk=dailypicked"
+      },
+      "picUrl": "http://imge.kugou.com/commendpic/20190624/20190624140104257200.png?god"
+    },
+    {
+      "title": "音乐圈",
+      "jump": {
+        "type": "mh",
+        "h5Url": "http://m.kugou.com/webapp/meet/index.html?from=cmttop&app_ver=1"
+      },
+      "picUrl": "http://imge.kugou.com/commendpic/20190627/20190627142848372996.png?mh"
+    },
+    {
+      "title": "最赞",
+      "jump": {
+        "type": "topliked",
+        "h5Url": "http://m.comment.service.kugou.com/r/v1/rank/topliked?"
+      },
+      "picUrl": "http://imge.kugou.com/commendpic/20190906/20190906154718567045.png?topliked"
+    },
+    {
+      "title": "话题",
+      "jump": {
+        "type": "subject",
+        "ver": "10000"
+      },
+      "picUrl": "http://imge.kugou.com/commendpic/20200511/20200511151934648780.png"
+    },
+    {
+      "title": "速配",
+      "jump": {
+        "type": "h5NeedsLogin",
+        "h5Url": "https://activity.kugou.com/vo-activity/1fa28c00-fb07-11e9-b353-7d83949cb4b8/index.html?needkeyboardheight=1&from=cmt"
+      },
+      "picUrl": "http://imge.kugou.com/commendpic/20190624/20190624140113446067.png?snapchat"
+    }
+  ],
+  "maxPage": 5000,
+  "song_like_num": 1772,
+  "event_info": {
+    "event_url": "",
+    "user_vote": 0,
+    "options": null
+  },
+  "tail_icon": [
+    {
+      "id": "2_1",
+      "icon": "http://mobileservicebssdl.tx.kugou.com/346230c406a37d983155c89fd2295ab9.png"
+    },
+    {
+      "id": "2_2",
+      "icon": "http://mobileservicebssdl.tx.kugou.com/f99694010b1a10f433bcfbcf6c541c61.png"
+    },
+    {
+      "id": "2_3",
+      "icon": "http://mobileservicebssdl.tx.kugou.com/89dcbd8df275bbe89f1f47787d16c9e5.png"
+    },
+    {
+      "id": "2_4",
+      "icon": "http://mobileservicebssdl.tx.kugou.com/9ffaea4a56914ccb80fc0d1ec2c621d5.png"
+    },
+    {
+      "id": "3_202_7",
+      "icon": "https://p3fx.kgimg.com/stdmusic/100/20250528/20250528171101621448.jpg",
+      "url": "https://www.kugou.com/yy/rank/home/1-6666.html?from=homepage"
+    },
+    {
+      "id": "3_202_21",
+      "icon": "https://cmtimgbssdl.cloud.kugou.com/3797272cc645b885876a082f5b2e377d.png",
+      "url": "https://www.kugou.com"
+    },
+    {
+      "id": "3_202_38",
+      "icon": "https://cmtimgbssdl.cloud.kugou.com/1db57d4ab9e26febd9ed53b6e00220c8.webp",
+      "url": "https://www.kugou.com"
+    }
+  ],
+  "popular_rank": {
+    "title": "No.25",
+    "sub_title": "人气年榜",
+    "jump_url": "https://h5.kugou.com/list/v-a8032fee/index.html",
+    "typ": "year"
+  }
+}

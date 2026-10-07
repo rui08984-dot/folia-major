@@ -1,7 +1,7 @@
 import React from 'react';
 import { PANEL_SLIDE_CLAMP_PX, PANEL_SLIDE_TRACK_BASE_PX, PANEL_SLIDE_TRACK_FULL_PX, PANEL_SLIDE_TRIGGER_PX } from '../utils/panelSlideGesture';
 import { motion, AnimatePresence, useTransform } from 'framer-motion';
-import { Settings, Settings2, X, Disc, SlidersHorizontal, ListMusic, User as UserIcon, Home as HomeIcon, FileAudio, FileText, Radio, Cloud, Star, Command, ChevronLeft, MirrorRectangular, Puzzle } from 'lucide-react';
+import { Settings, Settings2, X, Disc, SlidersHorizontal, ListMusic, User as UserIcon, Home as HomeIcon, FileAudio, FileText, Radio, Cloud, Star, Command, ChevronLeft, MirrorRectangular, Puzzle, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Album, Artist, SongResult, Theme, PlayerState, ReplayGainMode, ThemeMode, VisualizerMode } from '../types';
 import type { ProviderUser } from '../types/onlineMusic';
@@ -13,6 +13,7 @@ import LocalTab from './panelTab/LocalTab';
 import FmTab from './panelTab/FmTab';
 import NaviTab from './panelTab/NaviTab';
 import OnlineLyricsTab from './panelTab/OnlineLyricsTab';
+import CommentsTab from './panelTab/CommentsTab';
 import type { OnlineLyricsState } from '../types';
 import type { AudioQualityPreference } from '../types/onlineMusic';
 import type { ThemeSourceModel } from '../hooks/themeControllerState';
@@ -24,10 +25,11 @@ import { openAddToPlaylist, useAddToPlaylistStore } from '../stores/useAddToPlay
 import { usePlayerPanelTabShortcut } from '../hooks/usePlayerPanelTabShortcut';
 import { FOLIUM_PANEL_TAB_PREFIX, FoliumPanelTabBody, useFoliumPanelTabs } from '../mods/folium/registries/playerPanelTabs';
 import { countRender } from '../dev/renderCount';
+import { omni } from '../services/onlineMusic/omni';
 
 const TOUCH_GUIDE_DISPLAY_MS = 1400;
 
-export type PanelTab = 'cover' | 'controls' | 'queue' | 'account' | 'local' | 'navi' | 'onlineLyrics'
+export type PanelTab = 'cover' | 'controls' | 'queue' | 'account' | 'local' | 'navi' | 'onlineLyrics' | 'comments'
     // Tabs registered by Folium mods (registries.playerPanelTabs).
     | `folium:${string}`;
 
@@ -281,6 +283,10 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
         tabs.splice(1, 0, { id: 'navi' as PanelTab, label: 'Navidrome', icon: Cloud });
     } else if (isOnline) {
         tabs.splice(1, 0, { id: 'onlineLyrics' as PanelTab, label: t('localMusic.lyrics'), icon: FileText });
+        // 评论区只在当前这首歌的 provider 支持评论时出现（QQ 需登录，但能力位为真，登录后自然有数据）。
+        if (currentSong && omni.canCommentSong(currentSong)) {
+            tabs.push({ id: 'comments' as PanelTab, label: t('panel.comments'), icon: MessageCircle });
+        }
     }
 
     foliumTabs.forEach((tab) => tabs.push({ id: tab.id, label: tab.label, icon: Puzzle }));
@@ -947,6 +953,9 @@ const UnifiedPanel: React.FC<UnifiedPanelProps> = ({
                                             onChangeReplayGainMode={onChangeReplayGainMode}
                                             isDaylight={isDaylight}
                                         />
+                                    )}
+                                    {currentTab === 'comments' && isOnline && currentSong && (
+                                        <CommentsTab song={currentSong} isDaylight={isDaylight} />
                                     )}
                                 </div>
                             </div>

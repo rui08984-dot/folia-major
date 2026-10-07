@@ -11,8 +11,9 @@ export const QQ_OPERATIONS = [
     'album_info', 'artist_albums', 'artist_songs',
     'smartbox',
     'recommend_radio', 'recommend_feed', 'recommend_radar', 'recommend_playlists', 'recommend_new_songs',
-    'recommend_similar',
+    'recommend_similar', 'recommend_radio_dislike',
     'like_song', 'unlike_song', 'playlist_songs', 'playlist_create',
+    'get_comments',
 ] as const;
 
 export type QqOperation = typeof QQ_OPERATIONS[number];
@@ -53,11 +54,15 @@ const ENDPOINTS: Record<QqOperation, string> = {
     recommend_playlists: '/recommend/playlists',
     recommend_new_songs: '/recommend/new-songs',
     recommend_similar: '/recommend/similar',
+    // 电台「不感兴趣」：把单曲从猜你喜欢画像拉黑。写操作，同样只在打过补丁的后端有，旧后端 404 降级。
+    recommend_radio_dislike: '/recommend/radio/dislike',
     // 写操作族：红心 = 写进官方「我喜欢」目录（dirid 201）；歌单写 = 自建目录的加/删歌与新建。
     like_song: '/like/song',
     unlike_song: '/unlike/song',
     playlist_songs: '/playlist/songs',
     playlist_create: '/playlist/create',
+    // 歌曲评论（legacy h5 通道，匿名回空、需登录态）。路由声明了路径参数但 controller 只读 query，走 query string。
+    get_comments: '/getComments',
 };
 
 // qq-music-api translates the native QR states into the Netease codes; 803 is the only one carrying a session.

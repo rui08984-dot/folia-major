@@ -224,6 +224,50 @@ describe('qqProvider', () => {
         expect(requestMock).toHaveBeenCalledWith('unlike_song', { songid: '5105918' });
     });
 
+    // 电台「不感兴趣」：mid 先解析成数字 id 再打 feedback_radio，上游不回替换曲（replacement 空）。
+    it('dislikes a radio song through the numeric id', async () => {
+        requestMock
+            .mockImplementation(async (operation: string) => {
+                if (operation === 'song_info') return SONG_INFO_RESPONSE;
+                return { code: 200 };
+            });
+
+        const result = await qqProvider.recommendations?.dislikeSong?.('003rJSwm3TechU');
+        expect(requestMock).toHaveBeenCalledWith('recommend_radio_dislike', { songid: '5105918' });
+        expect(result).toEqual({});
+    });
+
+    it('refuses to dislike when the numeric id cannot be resolved', async () => {
+        requestMock.mockImplementation(async (operation: string) => {
+            if (operation === 'song_info') return null;
+            return { code: 200 };
+        });
+        await expect(qqProvider.recommendations?.dislikeSong?.('badmid'))
+            .rejects.toMatchObject({ code: 'unsupported' });
+        expect(requestMock).not.toHaveBeenCalledWith('recommend_radio_dislike', expect.anything());
+    });
+
+    // QQ 歌曲评论：热评置顶再拼普通评论，匿名回空（需登录态）。
+    it('merges hot and normal comments for a song mid', async () => {
+        requestMock.mockImplementation(async (operation: string) => {
+            if (operation === 'get_comments') {
+                return {
+                    response: {
+                        hot_comment: { commentlist: [{ rootcommentid: 'h1', content: '热评', nick: 'A', agree: { num: 500 }, addtime: 1700000000 }] },
+                        comment: { commentlist: [{ rootcommentid: 'c1', content: '普通', nick: 'B', agree: { num: 2 } }, { rootcommentid: 'c2', content: '  ', nick: '空' }], commenttotal: 100 },
+                    },
+                };
+            }
+            return { code: 200 };
+        });
+        const commentSong = { id: '0039MnYb0qxYhV', name: '晴天', sourceRef: { kind: 'online', providerId: 'qq', mediaId: '0039MnYb0qxYhV' } } as never;
+        const page = await qqProvider.comments?.getSongComments?.(commentSong, 20, 0);
+        expect(page?.items).toHaveLength(2);
+        expect(page?.items[0]).toMatchObject({ id: 'h1', isHot: true, likedCount: 500, userName: 'A' });
+        expect(page?.items[1]).toMatchObject({ id: 'c1', content: '普通' });
+        expect(requestMock).toHaveBeenCalledWith('get_comments', expect.objectContaining({ id: '0039MnYb0qxYhV' }));
+    });
+
     // 新建歌单：后端 AddPlaylist 的回包不带 dirId，所以建完重拉自建歌单按名字认领。
     // 后端控制器读的是小写 `dirname` 查询参数，传错大小写会被 400 拒收。
     it('creates a playlist and claims it back by name from the owned list', async () => {

@@ -702,7 +702,14 @@ export default {
     "controls": "Kontrol",
     "visualizer": "Animasi Lirik",
     "playlist": "Playlist",
-    "account": "Akun"
+    "account": "Akun",
+    "comments": "Komentar",
+    "commentsLoading": "Memuat komentar…",
+    "commentsEmpty": "Belum ada komentar",
+    "commentsError": "Gagal memuat komentar",
+    "commentsRetry": "Coba lagi",
+    "commentsHot": "Populer",
+    "commentsLoadMore": "Muat lebih banyak"
   },
   "lyricExport": {
     "exported": "Lirik diekspor",

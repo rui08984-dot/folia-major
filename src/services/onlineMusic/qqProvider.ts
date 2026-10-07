@@ -5,6 +5,7 @@ import type {
     OnlineMusicProvider,
     OnlineSearchSuggestion,
     ProviderCollection,
+    ProviderComment,
     ProviderLyricsResult,
     ProviderPage,
     ProviderUser,
@@ -908,6 +909,7 @@ export const qqProvider: OnlineMusicProvider = {
         wordByWordLyrics: true,
         likes: true,
         userAlbums: true,
+        comments: true,
     },
     normalizeSong: normalizeQqSong,
     normalizeUser: normalizeQqUser,
@@ -1031,6 +1033,17 @@ export const qqProvider: OnlineMusicProvider = {
             // 反过来会把「抖音热门」摆在最前面，让人误以为这就是它的个性化推荐。
             return [...virtualRows, ...playlists];
         },
+        // 电台「不感兴趣」：QQ 的反馈接口只认数字 songId，mid 要先解析一次。
+        // 上游不回替换曲（与网易/酷狗的 dislike 不同），replacement 留空，调用方（FmTab 垃圾桶）
+        // 自己 handleNextTrack。旧后端 404 → requestQq 抛 unsupported，omni.canDislikeSong 已把它挡在门外。
+        async dislikeSong(id) {
+            const songId = await resolveQqNumericSongId(id);
+            if (!songId) {
+                throw new OnlineProviderError('unsupported', 'QQ dislike requires a resolvable numeric song id', 'qq');
+            }
+            await requestQq('recommend_radio_dislike', { songid: String(songId) });
+            return {};
+        },
     },
     mutations: {
         // 红心 = 写进官方「我喜欢」目录（dirid 201）。omni 的 canLikeSong 认的就是这个方法。
@@ -1091,5 +1104,43 @@ export const qqProvider: OnlineMusicProvider = {
         getArtistDetail,
         getArtistSongs,
         getArtistAlbums,
+    },
+    comments: {
+        // QQ 歌曲评论走 legacy h5 通道：匿名回空（探针 2026-10-08），带登录态才有内容。
+        // 上游热评/普通评论分两栏（hot_comment / comment），这里热评置顶再拼普通评论。
+        async getSongComments(song, limit, offset) {
+            const mid = getQqSongMid(song);
+            if (!mid) return { items: [], hasMore: false, nextOffset: offset };
+            const response = await requestQq<any>('get_comments', {
+                id: mid,
+                pagesize: limit,
+                pagenum: Math.floor(offset / Math.max(1, limit)),
+            });
+            const resp = response?.response ?? {};
+            const mapList = (list: any, isHot: boolean): ProviderComment[] => (
+                (Array.isArray(list) ? list : [])
+                    .map((raw: any): ProviderComment | null => {
+                        const content = String(raw?.content || '').trim();
+                        if (!content) return null;
+                        const likedCount = Number(raw?.agree?.num ?? raw?.agree);
+                        return {
+                            id: raw?.rootcommentid ?? raw?.commentid ?? 0,
+                            content,
+                            userName: String(raw?.nick || raw?.username || '匿名'),
+                            avatarUrl: raw?.avatar ? String(raw.avatar).replace(/^http:/, 'https:') : undefined,
+                            ...(Number.isFinite(likedCount) && likedCount >= 0 ? { likedCount } : {}),
+                            ...(raw?.addtime ? { timeStr: new Date(Number(raw.addtime) * 1000).toISOString().slice(0, 10) } : {}),
+                            ...(isHot ? { isHot: true } : {}),
+                        } satisfies ProviderComment;
+                    })
+                    .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c))
+            );
+            const items = [
+                ...mapList(resp?.hot_comment?.commentlist, true),
+                ...mapList(resp?.comment?.commentlist, false),
+            ];
+            const total = Number(resp?.comment?.commenttotal) || items.length;
+            return { items, total, hasMore: offset + items.length < total, nextOffset: offset + limit };
+        },
     },
 };

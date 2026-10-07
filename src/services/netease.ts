@@ -860,6 +860,11 @@ export const neteaseApi = {
     };
   },
 
+  // --- Song comments (read-only; anonymous works) ---
+  getSongComments: async (id: number, limit = 20, offset = 0) => {
+    return fetchWithCreds(`/comment/music?id=${id}&limit=${limit}&offset=${offset}`);
+  },
+
   getPersonalizedPlaylists: async (limit = 35) => {
     return fetchWithCreds(`/personalized?limit=${limit}`);
   },

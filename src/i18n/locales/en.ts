@@ -707,7 +707,14 @@ export default {
     "controls": "Controls",
     "visualizer": "Lyrics Animation",
     "playlist": "Playlist",
-    "account": "Account"
+    "account": "Account",
+    "comments": "Comments",
+    "commentsLoading": "Loading comments…",
+    "commentsEmpty": "No comments yet",
+    "commentsError": "Couldn't load comments",
+    "commentsRetry": "Retry",
+    "commentsHot": "Hot",
+    "commentsLoadMore": "Load more"
   },
   "lyricExport": {
     "exported": "Lyrics exported",

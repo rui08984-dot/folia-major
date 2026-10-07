@@ -8,6 +8,7 @@ import {
     type OnlineMusicProvider,
     type ProviderCatalogRef,
     type ProviderCollection,
+    type ProviderComment,
     type ProviderHistoryEntry,
     type ProviderPage,
     type ProviderUser,
@@ -970,6 +971,7 @@ export const kugouProvider: OnlineMusicProvider = {
         playlists: true, albums: true, artists: true, recommendations: true, mutations: true,
         wordByWordLyrics: true, userCloud: true, historyRecommendations: true,
         playlistSubscription: true, playlistTrackMutations: true, likes: true, userAlbums: true,
+        comments: true,
     },
     normalizeSong: normalizeKugouSong,
     normalizeUser,
@@ -1616,6 +1618,41 @@ export const kugouProvider: OnlineMusicProvider = {
                 list_create_userid: String(creatorUserId),
                 list_create_listid: String(albumId),
             });
+        },
+    },
+    comments: {
+        // 酷狗评论匿名可用（探针 2026-10-08：晴天 count 70万，list[] 带 user_name/user_pic/like）。
+        // 评论接口只认 mixsongid，从歌曲的 sourceRef.providerData 取；取不到就当没有评论区。
+        async getSongComments(song, limit, offset) {
+            const sourceRef = song.sourceRef?.kind === 'online' && song.sourceRef.providerId === 'kugou'
+                ? song.sourceRef
+                : null;
+            const mixSongId = sourceRef?.providerData?.mixSongId;
+            if (!mixSongId) return { items: [], hasMore: false, nextOffset: offset };
+            const response = await requestKugou<Record<string, any>>('comment_music', {
+                mixsongid: String(mixSongId),
+                page: Math.floor(offset / Math.max(1, limit)) + 1,
+                pagesize: limit,
+            });
+            const body = response?.data ?? response;
+            const rawList = Array.isArray(body?.list) ? body.list : [];
+            const items = rawList
+                .map((raw: any) => {
+                    const content = String(raw?.content || '').trim();
+                    if (!content) return null;
+                    const likedCount = Number(raw?.like ?? raw?.praise);
+                    return {
+                        id: raw?.id ?? 0,
+                        content,
+                        userName: String(raw?.user_name || raw?.nickname || '匿名'),
+                        avatarUrl: raw?.user_pic ? String(raw.user_pic).replace(/^http:/, 'https:') : undefined,
+                        ...(Number.isFinite(likedCount) && likedCount >= 0 ? { likedCount } : {}),
+                        ...(raw?.addtime ? { timeStr: String(raw.addtime) } : {}),
+                    } satisfies ProviderComment;
+                })
+                .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c));
+            const total = Number(body?.count) || items.length;
+            return { items, total, hasMore: offset + items.length < total, nextOffset: offset + items.length };
         },
     },
 };
