@@ -720,7 +720,8 @@ export default {
     "commentsRepliesEmpty": "还没有回复",
     "commentsRepliesLoading": "加载回复中…",
     "commentsRepliesError": "回复没能加载出来",
-    "commentsLikeFailed": "点赞没成功（可能需要先登录）"
+    "commentsLikeFailed": "点赞没成功（可能需要先登录）",
+    "commentsLikeCount": "{{n}} 人赞过"
   },
   "lyricExport": {
     "exported": "歌词已导出",

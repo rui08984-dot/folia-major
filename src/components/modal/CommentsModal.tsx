@@ -27,7 +27,10 @@ interface CommentsModalProps {
 }
 
 const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, isDaylight = false }) => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    // 赞数大数折叠（263327→26.3万/263K，随界面语言），不然长数字把评论区排版撑得难看。
+    const formatCount = (value: number): string =>
+        new Intl.NumberFormat(i18n.language || undefined, { notation: 'compact' }).format(value);
     const [comments, setComments] = useState<ProviderComment[]>([]);
     const [loading, setLoading] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -231,10 +234,12 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
                                 }`}
                             >
                                 <ThumbsUp size={11} fill={comment.liked ? 'currentColor' : 'none'} />
-                                {typeof comment.likedCount === 'number' ? comment.likedCount : null}
+                                {typeof comment.likedCount === 'number' ? formatCount(comment.likedCount) : null}
                             </button>
                         ) : (typeof comment.likedCount === 'number' && (
-                            <span className="flex items-center gap-1"><ThumbsUp size={11} />{comment.likedCount}</span>
+                            // 不能点赞的 provider（QQ/酷狗）：纯文字展示，不带 ThumbsUp 图标——
+                            // 图标会让它看起来像能点，用户点了没反应正来自这个误导。
+                            <span>{t('panel.commentsLikeCount', { n: formatCount(comment.likedCount) })}</span>
                         ))}
                         {comment.timeStr && <span>{comment.timeStr}</span>}
                         {comment.ipLocation && <span className="flex items-center gap-0.5"><MapPin size={10} />{comment.ipLocation}</span>}
@@ -254,7 +259,7 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
                                     {expanded ? t('panel.commentsHideReplies') : t('panel.commentsViewReplies')}
                                 </button>
                                 {expanded && (
-                                    <div className={`mt-2 space-y-2 border-l pl-3 ${isDaylight ? 'border-black/10' : 'border-white/10'}`}>
+                                    <div className={`mt-2 space-y-2 rounded-lg p-2.5 ${isDaylight ? 'bg-black/[0.025]' : 'bg-white/[0.03]'}`}>
                                         {entry?.loading && !entry.replies.length && (
                                             <div className={`flex items-center gap-1.5 py-1 text-[11px] ${textSecondary}`}>
                                                 <Loader2 size={12} className="animate-spin" />
@@ -276,16 +281,16 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
                                         {entry?.replies.map((reply, replyIndex) => (
                                             <div key={`${reply.id}-${replyIndex}`} className="flex items-start gap-2">
                                                 {reply.avatarUrl ? (
-                                                    <img src={reply.avatarUrl} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" loading="lazy" />
+                                                    <img src={reply.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover shrink-0" loading="lazy" />
                                                 ) : (
-                                                    <div className={`h-5 w-5 rounded-full ${cardBg} shrink-0`} />
+                                                    <div className={`h-6 w-6 rounded-full ${cardBg} shrink-0`} />
                                                 )}
-                                                <div className="min-w-0">
-                                                    <span className={`text-[11px] font-medium ${textSecondary}`}>{reply.userName}</span>
-                                                    <p className={`text-[13px] leading-relaxed whitespace-pre-wrap break-words ${textPrimary}`}>{reply.content}</p>
-                                                    <div className={`mt-0.5 flex items-center gap-2 text-[10px] ${textSecondary}`}>
+                                                <div className="min-w-0 flex-1">
+                                                    <span className={`text-xs font-medium ${textSecondary}`}>{reply.userName}</span>
+                                                    <p className={`text-sm leading-relaxed whitespace-pre-wrap break-words ${textPrimary}`}>{reply.content}</p>
+                                                    <div className={`mt-0.5 flex items-center gap-2 text-[11px] ${textSecondary}`}>
                                                         {typeof reply.likedCount === 'number' && (
-                                                            <span className="flex items-center gap-0.5"><ThumbsUp size={10} />{reply.likedCount}</span>
+                                                            <span>{t('panel.commentsLikeCount', { n: formatCount(reply.likedCount) })}</span>
                                                         )}
                                                         {reply.timeStr && <span>{reply.timeStr}</span>}
                                                     </div>

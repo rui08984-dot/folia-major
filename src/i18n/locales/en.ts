@@ -720,7 +720,8 @@ export default {
     "commentsRepliesEmpty": "No replies yet",
     "commentsRepliesLoading": "Loading replies…",
     "commentsRepliesError": "Couldn't load replies",
-    "commentsLikeFailed": "Couldn't like this comment (you may need to sign in first)"
+    "commentsLikeFailed": "Couldn't like this comment (you may need to sign in first)",
+    "commentsLikeCount": "{{n}} likes"
   },
   "lyricExport": {
     "exported": "Lyrics exported",
