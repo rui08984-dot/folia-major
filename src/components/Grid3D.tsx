@@ -655,7 +655,13 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         setLoadingDiscover(true);
         setDiscoverError(null);
         // 相似歌曲跟着此刻在听的这首走；没有在播放就不请求，那一段整段不出。
-        const seedSongId = currentTrack ? String(currentTrack.id) : undefined;
+        // 种子还必须与当前音源同源：QQ 歌的数字 id 拿去打网易的 /simi/song 只会问到无关的歌，
+        // 跨源时宁可整段不出。
+        const seedSongId = currentTrack
+            && currentTrack.sourceRef?.kind === 'online'
+            && currentTrack.sourceRef.providerId === activeProviderId
+            ? String(currentTrack.id)
+            : undefined;
         // 猜你喜欢单次上游硬顶 5 首，但每次调用返回的歌曲不同（实测 6 次 30 首零重复），
         // 所以并行拉 4 次按 mid 去重凑一份够「扫」的列表 —— 串行要 3.4s，并行只要一段往返。
         const collectFmSongs = async (): Promise<UnifiedSong[]> => {
