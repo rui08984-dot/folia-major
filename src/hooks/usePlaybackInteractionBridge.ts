@@ -195,12 +195,14 @@ export function usePlaybackInteractionBridge({
         }
 
         if (currentSong && isFmMode) {
+            // 「不感兴趣」= 跳下一首 ＋ 这首歌从推荐流消失。消失是客户端能 100% 保证的部分，
+            // 所以先无条件记进 disliked 集合（发现页据此过滤），再尽力把负反馈发给 QQ 服务端。
+            // 服务端写入可能失败（feedback_radio 偶发/参数被拒），不能让它挡住「消失」这个用户可见效果。
+            useDislikedSongsStore.getState().add(currentSong);
             try {
                 await omni.dislikeSong(currentSong);
-                // 记一笔，让发现页把这首过滤掉（QQ 不回替补曲，靠这层做到「点了就消失」）。
-                useDislikedSongsStore.getState().add(currentSong);
             } catch (error) {
-                void error;
+                console.warn('[FmTrash] 服务端负反馈写入失败（不影响本地隐藏）', error);
             }
             void handleNextTrack();
         }
