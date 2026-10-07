@@ -123,6 +123,7 @@ const normalizeNeteaseComment = (raw: any, isHot = false): ProviderComment | nul
         userName: String(raw?.user?.nickname || raw?.user?.userName || '匿名'),
         avatarUrl: raw?.user?.avatarUrl ? toHttpsCommentUrl(String(raw.user.avatarUrl)) : undefined,
         ...(Number.isFinite(likedCount) && likedCount >= 0 ? { likedCount } : {}),
+        ...(typeof raw?.liked === 'boolean' ? { liked: raw.liked } : {}),
         ...(raw?.timeStr ? { timeStr: String(raw.timeStr) } : {}),
         ...(raw?.ipLocation ? { ipLocation: String(raw.ipLocation) } : {}),
         ...(isHot ? { isHot: true } : {}),
@@ -703,6 +704,19 @@ export const neteaseProvider: OnlineMusicProvider = {
                 .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c));
             const items = [...best, ...normal];
             return { items, total: Number(data?.totalCount) || items.length, hasMore: false, nextOffset: offset };
+        },
+
+        // 点赞是写操作：上游 code 301/401/403 都是「没登录」，抛 auth-required 让 UI 走
+        // 回滚+提示；其余非 200 归 unavailable，同样是失败回滚，不装成功。
+        async likeComment(song, commentId, liked) {
+            const response = await neteaseApi.likeSongComment(toNeteaseId(song.id), commentId, liked);
+            const code = Number(response?.code);
+            if ([301, 401, 403].includes(code)) {
+                throw new OnlineProviderError('auth-required', 'NetEase comment likes need a signed-in account', 'netease');
+            }
+            if (code !== 200) {
+                throw new OnlineProviderError('unavailable', `NetEase rejected the comment like (code ${code})`, 'netease');
+            }
         },
     },
 };

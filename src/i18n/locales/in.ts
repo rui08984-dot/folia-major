@@ -714,7 +714,8 @@ export default {
     "commentsHideReplies": "Sembunyikan balasan",
     "commentsRepliesEmpty": "Belum ada balasan",
     "commentsRepliesLoading": "Memuat balasan…",
-    "commentsRepliesError": "Gagal memuat balasan"
+    "commentsRepliesError": "Gagal memuat balasan",
+    "commentsLikeFailed": "Gagal menyukai komentar ini (mungkin perlu masuk dulu)"
   },
   "lyricExport": {
     "exported": "Lirik diekspor",

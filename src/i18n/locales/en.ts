@@ -719,7 +719,8 @@ export default {
     "commentsHideReplies": "Hide replies",
     "commentsRepliesEmpty": "No replies yet",
     "commentsRepliesLoading": "Loading replies…",
-    "commentsRepliesError": "Couldn't load replies"
+    "commentsRepliesError": "Couldn't load replies",
+    "commentsLikeFailed": "Couldn't like this comment (you may need to sign in first)"
   },
   "lyricExport": {
     "exported": "Lyrics exported",

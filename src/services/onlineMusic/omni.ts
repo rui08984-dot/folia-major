@@ -441,6 +441,23 @@ export const omni = {
         return provider.comments.getCommentReplies(song, commentId, page.limit, page.offset);
     },
 
+    canLikeComment(song: SongResult): boolean {
+        const source = getPlaybackSourceRef(song);
+        if (source.kind !== 'online') return false;
+        const provider = getOnlineMusicProvider(source.providerId);
+        return providerSupports(provider, 'comments')
+            && Boolean(provider?.comments?.likeComment);
+    },
+
+    async likeComment(song: SongResult, commentId: ProviderComment['id'], liked: boolean): Promise<void> {
+        const source = getPlaybackSourceRef(song);
+        const provider = source.kind === 'online' ? getOnlineMusicProvider(source.providerId) : null;
+        if (!provider || !this.canLikeComment(song) || !provider.comments?.likeComment) {
+            throw new OnlineProviderError('unsupported', 'Comment likes are not supported here', source.kind === 'online' ? source.providerId : 'online');
+        }
+        return provider.comments.likeComment(song, commentId, liked);
+    },
+
     canSubscribeCollection(collection: OmniCollection): boolean {
         const provider = getOnlineMusicProvider(collection.providerId);
         if (

@@ -30,6 +30,7 @@ vi.mock('@/services/netease', () => ({
         createPlaylist: vi.fn(),
         getSongComments: vi.fn(),
         getCommentFloor: vi.fn(),
+        likeSongComment: vi.fn(),
     },
 }));
 
@@ -427,6 +428,27 @@ describe('neteaseProvider song comments', () => {
         const page = await neteaseProvider.comments!.getCommentReplies!(song, 9, 20, 20);
         expect(page.items).toEqual([]);
         expect(neteaseApi.getCommentFloor).not.toHaveBeenCalled();
+    });
+
+    // 点赞写操作：200 过；301/401/403 → auth-required；其余非 200 → unavailable。绝不静默装成功。
+    it('likes a comment and maps upstream auth failures', async () => {
+        vi.mocked(neteaseApi.likeSongComment).mockResolvedValue({ code: 200 } as any);
+        await expect(neteaseProvider.comments!.likeComment!(song, 42, true)).resolves.toBeUndefined();
+        expect(neteaseApi.likeSongComment).toHaveBeenCalledWith(expect.anything(), 42, true);
+
+        vi.mocked(neteaseApi.likeSongComment).mockResolvedValue({ code: 301, msg: '需要登录' } as any);
+        await expect(neteaseProvider.comments!.likeComment!(song, 42, true)).rejects.toMatchObject({ code: 'auth-required' });
+
+        vi.mocked(neteaseApi.likeSongComment).mockResolvedValue({ code: 502 } as any);
+        await expect(neteaseProvider.comments!.likeComment!(song, 42, false)).rejects.toMatchObject({ code: 'unavailable' });
+    });
+
+    it('carries the viewer liked flag when the upstream returns it', async () => {
+        vi.mocked(neteaseApi.getSongComments).mockResolvedValue({
+            comments: [{ commentId: 7, content: '赞过了', liked: true, user: { nickname: 'me' } }],
+        } as any);
+        const page = await neteaseProvider.comments!.getSongComments!(song, 20, 0);
+        expect(page.items[0]).toMatchObject({ liked: true });
     });
 });
 

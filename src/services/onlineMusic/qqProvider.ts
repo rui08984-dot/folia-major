@@ -250,6 +250,9 @@ const mapQqCommentList = (list: any, isHot: boolean): ProviderComment[] => {
                 userName: String(raw?.nick || raw?.rootcommentnick || raw?.username || '匿名'),
                 avatarUrl: raw?.avatarurl ? String(raw.avatarurl).replace(/^http:/, 'https:') : undefined,
                 ...(Number.isFinite(likedCount) && likedCount >= 0 ? { likedCount } : {}),
+                // ispraise=我赞没赞。读取匿名时它恒 0（上游按观看者算），只有带登录态读才可信——
+                // 但如实映射没有副作用；QQ 点赞写通道另有一关（见 likeComment 未声明的注释）。
+                ...(raw?.ispraise !== undefined && raw?.ispraise !== null ? { liked: Number(raw.ispraise) > 0 } : {}),
                 ...(Number.isFinite(timeSec) && timeSec > 0 ? { timeStr: new Date(timeSec * 1000).toISOString().slice(0, 10) } : {}),
                 ...(isHot ? { isHot: true } : {}),
             } satisfies ProviderComment;

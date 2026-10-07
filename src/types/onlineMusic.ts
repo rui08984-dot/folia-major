@@ -388,6 +388,8 @@ export type ProviderComment = {
     userName: string;
     avatarUrl?: string;
     likedCount?: number;
+    /** 我赞没赞（读态）。只有 provider 回得准才带；缺了就按未赞渲染，点赞能力位另判。 */
+    liked?: boolean;
     /** 展示用的时间串，各平台自带（相对时间或日期），不再本地化以免口径打架。 */
     timeStr?: string;
     ipLocation?: string;
@@ -396,8 +398,8 @@ export type ProviderComment = {
 };
 
 /**
- * 歌曲评论区。只读：发评论/点赞是写操作，会动用户账号且风控敏感，第一期明确不做
- * （与「不感兴趣」的取舍同源）。QQ 的 h5 评论通道匿名回空，需登录态；网易/酷狗匿名可用。
+ * 歌曲评论区。读取匿名即可；点赞是写操作（动用户账号），按 provider 能力位逐家声明——
+ * 不给「看得到点不了」的假按钮。
  */
 export interface OnlineCommentProvider {
     getSongComments?(song: SongResult, limit: number, offset: number): Promise<ProviderPage<ProviderComment>>;
@@ -407,6 +409,8 @@ export interface OnlineCommentProvider {
      * 也不能让 UI 对着不存在的游标请求出重复数据。
      */
     getCommentReplies?(song: SongResult, commentId: MediaId, limit: number, offset: number): Promise<ProviderPage<ProviderComment>>;
+    /** 点赞/取消点赞一条评论。失败抛错，由 UI 回滚乐观态。 */
+    likeComment?(song: SongResult, commentId: MediaId, liked: boolean): Promise<void>;
 }
 
 export interface OnlineMusicProvider {

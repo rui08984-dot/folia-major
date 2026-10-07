@@ -487,4 +487,23 @@ describe('omni comment reply threading', () => {
         const localSong = { ...song(providerId), sourceRef: { kind: 'local', mediaId: 'local-1' } } as UnifiedSong;
         expect(omni.canThreadCommentReplies(localSong)).toBe(false);
     });
+
+    // 点赞按能力位渲染：provider 没声明 likeComment 就 canLike=false，UI 连假按钮都不出。
+    it('hides comment likes when the provider does not declare the mutation', () => {
+        registerOnlineMusicProvider(commentsProvider(false));
+        expect(omni.canLikeComment(song(providerId, '9'))).toBe(false);
+    });
+
+    it('routes a comment like through the provider that supports it', async () => {
+        const likeComment = vi.fn(async () => undefined);
+        registerOnlineMusicProvider({
+            ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+            capabilities: { ...capabilities, comments: true },
+            comments: { getSongComments: async () => ({ items: [], hasMore: false, nextOffset: 0 }), likeComment },
+        });
+        const target = song(providerId, '9');
+        expect(omni.canLikeComment(target)).toBe(true);
+        await omni.likeComment(target, 'c-1', true);
+        expect(likeComment).toHaveBeenCalledWith(target, 'c-1', true);
+    });
 });

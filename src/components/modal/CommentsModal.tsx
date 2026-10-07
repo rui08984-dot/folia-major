@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { SongResult } from '../../types';
 import type { ProviderComment } from '../../types/onlineMusic';
 import { omni } from '../../services/onlineMusic/omni';
+import { setStatusMessage } from '../../stores/useStatusMessageStore';
 
 // src/components/modal/CommentsModal.tsx
 //
@@ -51,6 +52,9 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
     const replySeqRef = useRef(0);
     // 楼层能不能展开由 provider 能力位决定（酷狗匿名楼层拿不到内容，就不给这个按钮）。
     const canReplies = omni.canThreadCommentReplies(song);
+    // 点赞同理按能力位渲染：QQ/酷狗当前没接通写通道 → canLike=false，连假按钮都不出现。
+    const canLike = omni.canLikeComment(song);
+    const [pendingLikes, setPendingLikes] = useState<Record<string, boolean>>({});
 
     const textPrimary = isDaylight ? 'text-black/80' : 'text-white/85';
     const textSecondary = isDaylight ? 'text-black/45' : 'text-white/45';
@@ -118,6 +122,28 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
         // 拉过的楼直接用缓存展开，收起再点开不重打接口。
         if (!repliesById[commentId]) void loadReplies(commentId, 0, true);
     }, [expandedReplyId, repliesById, loadReplies]);
+
+    // 点赞：成功才改本地态（不搞先亮后回滚的乐观闪动）；失败态原样，走全局单通道提示。
+    const toggleLike = useCallback(async (comment: ProviderComment) => {
+        const key = String(comment.id);
+        if (pendingLikes[key]) return;
+        const nextLiked = !comment.liked;
+        setPendingLikes(prev => ({ ...prev, [key]: true }));
+        try {
+            await omni.likeComment(song, comment.id, nextLiked);
+            setComments(prev => prev.map(c => String(c.id) === key
+                ? { ...c, liked: nextLiked, likedCount: typeof c.likedCount === 'number' ? Math.max(0, c.likedCount + (nextLiked ? 1 : -1)) : c.likedCount }
+                : c));
+        } catch {
+            setStatusMessage({ type: 'error', text: t('panel.commentsLikeFailed') });
+        } finally {
+            setPendingLikes(prev => {
+                const next = { ...prev };
+                delete next[key];
+                return next;
+            });
+        }
+    }, [pendingLikes, song, t]);
 
     // 只在打开时拉取：组件常驻在面板树里（供退出动画），不弹窗就不该为每首歌白拉评论。
     useEffect(() => {
@@ -192,9 +218,24 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
                     </div>
                     <p className={`text-sm leading-relaxed whitespace-pre-wrap break-words ${textPrimary}`}>{comment.content}</p>
                     <div className={`mt-1.5 flex items-center gap-3 text-[11px] ${textSecondary}`}>
-                        {typeof comment.likedCount === 'number' && (
+                        {canLike ? (
+                            <button
+                                type="button"
+                                aria-pressed={Boolean(comment.liked)}
+                                disabled={Boolean(pendingLikes[String(comment.id)])}
+                                onClick={() => void toggleLike(comment)}
+                                className={`flex items-center gap-1 rounded-full px-1.5 py-0.5 transition-colors disabled:opacity-50 ${
+                                    comment.liked
+                                        ? hotBg
+                                        : `${textSecondary} hover:opacity-80`
+                                }`}
+                            >
+                                <ThumbsUp size={11} fill={comment.liked ? 'currentColor' : 'none'} />
+                                {typeof comment.likedCount === 'number' ? comment.likedCount : null}
+                            </button>
+                        ) : (typeof comment.likedCount === 'number' && (
                             <span className="flex items-center gap-1"><ThumbsUp size={11} />{comment.likedCount}</span>
-                        )}
+                        ))}
                         {comment.timeStr && <span>{comment.timeStr}</span>}
                         {comment.ipLocation && <span className="flex items-center gap-0.5"><MapPin size={10} />{comment.ipLocation}</span>}
                     </div>

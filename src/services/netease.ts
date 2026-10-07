@@ -871,6 +871,11 @@ export const neteaseApi = {
     return fetchWithCreds(`/comment/floor?parentCommentId=${parentCommentId}&id=${id}&type=0&limit=${limit}`);
   },
 
+  // --- Comment like (写操作，需登录) ---
+  likeSongComment: async (id: number, commentId: number | string, liked = true) => {
+    return fetchWithCreds(`/comment/like?id=${id}&cid=${commentId}&type=0&like=${liked}`);
+  },
+
   getPersonalizedPlaylists: async (limit = 35) => {
     return fetchWithCreds(`/personalized?limit=${limit}`);
   },
