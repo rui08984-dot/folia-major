@@ -12,6 +12,7 @@ import { setStatusMessage as setStatusMsg } from '../stores/useStatusMessageStor
 import { setReplayGainMode } from '../stores/usePlaybackStore';
 import { useStableActionSurface } from './useStableCallbacks';
 import { selectDisplayDuration, usePlaybackStore } from '../stores/usePlaybackStore';
+import { useDislikedSongsStore } from '../stores/useDislikedSongsStore';
 import { setIsPanelOpen, useAppViewStore } from '../stores/useAppViewStore';
 import { setIsDevDebugOverlayVisible, setIsMemoryMonitorVisible } from '../stores/useAppChromeStore';
 import { useAudioSettingsStore } from '../stores/useAudioSettingsStore';
@@ -196,6 +197,8 @@ export function usePlaybackInteractionBridge({
         if (currentSong && isFmMode) {
             try {
                 await omni.dislikeSong(currentSong);
+                // 记一笔，让发现页把这首过滤掉（QQ 不回替补曲，靠这层做到「点了就消失」）。
+                useDislikedSongsStore.getState().add(currentSong);
             } catch (error) {
                 void error;
             }
