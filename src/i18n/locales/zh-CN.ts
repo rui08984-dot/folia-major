@@ -714,7 +714,12 @@ export default {
     "commentsError": "评论没能加载出来",
     "commentsRetry": "重试",
     "commentsHot": "热评",
-    "commentsLoadMore": "加载更多"
+    "commentsLoadMore": "加载更多",
+    "commentsViewReplies": "查看回复",
+    "commentsHideReplies": "收起回复",
+    "commentsRepliesEmpty": "还没有回复",
+    "commentsRepliesLoading": "加载回复中…",
+    "commentsRepliesError": "回复没能加载出来"
   },
   "lyricExport": {
     "exported": "歌词已导出",

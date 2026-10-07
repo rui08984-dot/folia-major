@@ -714,7 +714,12 @@ export default {
     "commentsError": "Couldn't load comments",
     "commentsRetry": "Retry",
     "commentsHot": "Hot",
-    "commentsLoadMore": "Load more"
+    "commentsLoadMore": "Load more",
+    "commentsViewReplies": "View replies",
+    "commentsHideReplies": "Hide replies",
+    "commentsRepliesEmpty": "No replies yet",
+    "commentsRepliesLoading": "Loading replies…",
+    "commentsRepliesError": "Couldn't load replies"
   },
   "lyricExport": {
     "exported": "Lyrics exported",

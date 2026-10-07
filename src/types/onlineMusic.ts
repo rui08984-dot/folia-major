@@ -401,6 +401,12 @@ export type ProviderComment = {
  */
 export interface OnlineCommentProvider {
     getSongComments?(song: SongResult, limit: number, offset: number): Promise<ProviderPage<ProviderComment>>;
+    /**
+     * 盖楼：拉一条主评论下的回复。各平台游标不同（QQ 按 pagenum 页翻、网易按 time 游标走），
+     * 契约里统一 offset 语义对不齐的（网易）就只回首页并置 hasMore:false——宁可少翻一页，
+     * 也不能让 UI 对着不存在的游标请求出重复数据。
+     */
+    getCommentReplies?(song: SongResult, commentId: MediaId, limit: number, offset: number): Promise<ProviderPage<ProviderComment>>;
 }
 
 export interface OnlineMusicProvider {

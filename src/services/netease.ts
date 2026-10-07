@@ -865,6 +865,12 @@ export const neteaseApi = {
     return fetchWithCreds(`/comment/music?id=${id}&limit=${limit}&offset=${offset}`);
   },
 
+  // --- Comment floor replies (盖楼; anonymous works). Upstream pages by a `time` cursor, not
+  // offset, so callers that speak the offset contract can only take the first page. ---
+  getCommentFloor: async (id: number, parentCommentId: number | string, limit = 20) => {
+    return fetchWithCreds(`/comment/floor?parentCommentId=${parentCommentId}&id=${id}&type=0&limit=${limit}`);
+  },
+
   getPersonalizedPlaylists: async (limit = 35) => {
     return fetchWithCreds(`/personalized?limit=${limit}`);
   },

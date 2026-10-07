@@ -709,7 +709,12 @@ export default {
     "commentsError": "Gagal memuat komentar",
     "commentsRetry": "Coba lagi",
     "commentsHot": "Populer",
-    "commentsLoadMore": "Muat lebih banyak"
+    "commentsLoadMore": "Muat lebih banyak",
+    "commentsViewReplies": "Lihat balasan",
+    "commentsHideReplies": "Sembunyikan balasan",
+    "commentsRepliesEmpty": "Belum ada balasan",
+    "commentsRepliesLoading": "Memuat balasan…",
+    "commentsRepliesError": "Gagal memuat balasan"
   },
   "lyricExport": {
     "exported": "Lirik diekspor",

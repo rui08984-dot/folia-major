@@ -29,6 +29,7 @@ vi.mock('@/services/netease', () => ({
         searchByType: vi.fn(),
         createPlaylist: vi.fn(),
         getSongComments: vi.fn(),
+        getCommentFloor: vi.fn(),
     },
 }));
 
@@ -403,6 +404,29 @@ describe('neteaseProvider song comments', () => {
         } as any);
         const page = await neteaseProvider.comments!.getSongComments!(song, 20, 0);
         expect(page.items).toEqual([]);
+    });
+
+    // 楼中楼：神回复置顶再拼普通回复；上游翻页是 time 游标，契约 offset 对不齐 → 首页封顶。
+    it('loads floor replies with best replies first and no fake pagination', async () => {
+        vi.mocked(neteaseApi.getCommentFloor).mockResolvedValue({
+            data: {
+                bestComments: [{ commentId: 9, content: '神回复', likedCount: 88, user: { nickname: 'S' } }],
+                comments: [{ commentId: 10, content: '普通回复', user: { nickname: 'T' } }],
+                totalCount: 40,
+                hasMore: true,
+            },
+        } as any);
+        const page = await neteaseProvider.comments!.getCommentReplies!(song, 9, 20, 0);
+        expect(neteaseApi.getCommentFloor).toHaveBeenCalledWith(expect.anything(), 9, Math.max(20, 30));
+        expect(page.items.map(i => i.id)).toEqual([9, 10]);
+        expect(page.items[0]).toMatchObject({ isHot: true, likedCount: 88 });
+        expect(page.hasMore).toBe(false);
+    });
+
+    it('refuses offset paging on replies instead of re-asking the first page', async () => {
+        const page = await neteaseProvider.comments!.getCommentReplies!(song, 9, 20, 20);
+        expect(page.items).toEqual([]);
+        expect(neteaseApi.getCommentFloor).not.toHaveBeenCalled();
     });
 });
 

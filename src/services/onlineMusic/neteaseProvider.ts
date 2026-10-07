@@ -687,5 +687,22 @@ export const neteaseProvider: OnlineMusicProvider = {
             const total = Number(response?.total) || items.length;
             return { items, total, hasMore: Boolean(response?.more), nextOffset: offset + limit };
         },
+
+        // 盖楼：网易楼层接口（探针 2026-10-08：晴天热评回 data.comments + totalCount/hasMore，
+        // bestComments 是神回复）。上游翻页用 time 游标，契约只说 offset，对不齐 → 只回首页
+        // 并置 hasMore:false，limit 给足以覆盖绝大多数楼层；长尾等真需求再线程化游标。
+        async getCommentReplies(song, commentId, limit, offset) {
+            if (offset > 0) return { items: [], hasMore: false, nextOffset: offset };
+            const response = await neteaseApi.getCommentFloor(toNeteaseId(song.id), commentId, Math.max(limit, 30));
+            const data = response?.data ?? {};
+            const best = (data?.bestComments || [])
+                .map((item: any) => normalizeNeteaseComment(item, true))
+                .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c));
+            const normal = (data?.comments || [])
+                .map((item: any) => normalizeNeteaseComment(item, false))
+                .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c));
+            const items = [...best, ...normal];
+            return { items, total: Number(data?.totalCount) || items.length, hasMore: false, nextOffset: offset };
+        },
     },
 };

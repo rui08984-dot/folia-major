@@ -230,6 +230,34 @@ const toQqSongs = (raw: unknown): UnifiedSong[] => (
 );
 
 /**
+ * QQ h5 评论字段拼法特殊（探针 2026-10-08 实测晴天）：正文是 rootcommentcontent
+ * （不是 content！读错会把每条评论当空过滤掉 → 热门歌也显示「还没有评论」）、
+ * 点赞 praisenum、时间 time（unix 秒）、头像 avatarurl。表情是 [em]xxxx[/em] 标记，剥掉只留文字。
+ * 主评论（hot/comment 两栏）与楼层回复共用这一份映射，别复制粘贴出第二套。
+ */
+const mapQqCommentList = (list: any, isHot: boolean): ProviderComment[] => {
+    const cleanText = (value: unknown): string =>
+        String(value ?? '').replace(/\[em\][^[]*\[\/em\]/g, '').trim();
+    return (Array.isArray(list) ? list : [])
+        .map((raw: any): ProviderComment | null => {
+            const content = cleanText(raw?.rootcommentcontent ?? raw?.middlecommentcontent ?? raw?.content);
+            if (!content) return null;
+            const likedCount = Number(raw?.praisenum ?? raw?.agree?.num);
+            const timeSec = Number(raw?.time ?? raw?.addtime);
+            return {
+                id: raw?.rootcommentid ?? raw?.commentid ?? 0,
+                content,
+                userName: String(raw?.nick || raw?.rootcommentnick || raw?.username || '匿名'),
+                avatarUrl: raw?.avatarurl ? String(raw.avatarurl).replace(/^http:/, 'https:') : undefined,
+                ...(Number.isFinite(likedCount) && likedCount >= 0 ? { likedCount } : {}),
+                ...(Number.isFinite(timeSec) && timeSec > 0 ? { timeStr: new Date(timeSec * 1000).toISOString().slice(0, 10) } : {}),
+                ...(isHot ? { isHot: true } : {}),
+            } satisfies ProviderComment;
+        })
+        .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c));
+};
+
+/**
  * 解析出上游写操作要的数字 songId。
  * 红心（AddSonglist）只认数字 id，而对外身份是 songmid —— 对象歌优先用已带的数字 id，
  * 只有一个 mid 时补一次歌曲详情（有去重缓存）。解析不出就返回 null，调用方决定怎么报错。
@@ -1118,37 +1146,32 @@ export const qqProvider: OnlineMusicProvider = {
                 pagenum: Math.floor(offset / Math.max(1, limit)),
             });
             const resp = response?.response ?? {};
-            // QQ h5 评论字段拼法特殊（探针 2026-10-08 实测晴天）：正文是 rootcommentcontent
-            // （不是 content！读错会把每条评论当空过滤掉 → 热门歌也显示「还没有评论」）、
-            // 点赞 praisenum、时间 time（unix 秒）、头像 avatarurl。表情是 [em]xxxx[/em] 标记，剥掉只留文字。
-            const cleanText = (value: unknown): string =>
-                String(value ?? '').replace(/\[em\][^[]*\[\/em\]/g, '').trim();
-            const mapList = (list: any, isHot: boolean): ProviderComment[] => (
-                (Array.isArray(list) ? list : [])
-                    .map((raw: any): ProviderComment | null => {
-                        const content = cleanText(raw?.rootcommentcontent ?? raw?.middlecommentcontent ?? raw?.content);
-                        if (!content) return null;
-                        const likedCount = Number(raw?.praisenum ?? raw?.agree?.num);
-                        const timeSec = Number(raw?.time ?? raw?.addtime);
-                        return {
-                            id: raw?.rootcommentid ?? raw?.commentid ?? 0,
-                            content,
-                            userName: String(raw?.nick || raw?.rootcommentnick || raw?.username || '匿名'),
-                            avatarUrl: raw?.avatarurl ? String(raw.avatarurl).replace(/^http:/, 'https:') : undefined,
-                            ...(Number.isFinite(likedCount) && likedCount >= 0 ? { likedCount } : {}),
-                            ...(Number.isFinite(timeSec) && timeSec > 0 ? { timeStr: new Date(timeSec * 1000).toISOString().slice(0, 10) } : {}),
-                            ...(isHot ? { isHot: true } : {}),
-                        } satisfies ProviderComment;
-                    })
-                    .filter((c: ProviderComment | null): c is ProviderComment => Boolean(c))
-            );
             const items = [
-                ...mapList(resp?.hot_comment?.commentlist, true),
-                ...mapList(resp?.comment?.commentlist, false),
+                ...mapQqCommentList(resp?.hot_comment?.commentlist, true),
+                ...mapQqCommentList(resp?.comment?.commentlist, false),
             ];
             // 上游 h5 评论翻页用的是 lasthotcommentid 游标（上一页末条的 rootcommentid），
             // 不是页码；我们没有线程化这个游标，所以只出首页，别给 UI 一个会 400 的「加载更多」。
             return { items, total: items.length, hasMore: false, nextOffset: offset };
+        },
+
+        // 楼层回复与主评论同路由，只是 cmd=6 且 rootcommentid=主评论 id（fork 控制器把它转成
+        // lasthotcommentid 传给 h5）。实测（晴天 2026-10-08）：回 response.comment.commentlist，
+        // 形状与主评论条目一致，pagenum 可真翻页。
+        async getCommentReplies(song, commentId, limit, offset) {
+            const songId = await resolveQqNumericSongId(song);
+            if (!songId || !commentId) return { items: [], hasMore: false, nextOffset: offset };
+            const response = await requestQq<any>('get_comments', {
+                id: String(songId),
+                cmd: 6,
+                rootcommentid: String(commentId),
+                pagesize: limit,
+                pagenum: Math.floor(offset / Math.max(1, limit)),
+            });
+            const section = response?.response?.comment ?? {};
+            const items = mapQqCommentList(section?.commentlist, false);
+            const total = Number(section?.commenttotal) || items.length;
+            return { items, total, hasMore: offset + items.length < total, nextOffset: offset + items.length };
         },
     },
 };

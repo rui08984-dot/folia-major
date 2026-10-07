@@ -271,6 +271,30 @@ describe('qqProvider', () => {
         expect(requestMock).toHaveBeenCalledWith('get_comments', expect.objectContaining({ id: '5105918' }));
     });
 
+    // 楼中楼回复：cmd=6 + rootcommentid 走同一路由，形状同主评论、commenttotal 可真翻页。
+    it('loads comment replies via cmd=6 with the parent comment id', async () => {
+        requestMock.mockImplementation(async (operation: string) => {
+            if (operation === 'song_info') return SONG_INFO_RESPONSE;
+            if (operation === 'get_comments') {
+                return {
+                    response: {
+                        comment: { commentlist: [{ rootcommentid: 'r1', rootcommentcontent: '回复一', nick: 'C', praisenum: 3, time: 1700000000 }], commenttotal: 417 },
+                    },
+                };
+            }
+            return { code: 200 };
+        });
+        const commentSong = { id: '003rJSwm3TechU', name: '海阔天空', sourceRef: { kind: 'online', providerId: 'qq', mediaId: '003rJSwm3TechU' } } as never;
+        const page = await qqProvider.comments?.getCommentReplies?.(commentSong, 'c-root-1', 20, 0);
+        expect(page?.items).toHaveLength(1);
+        expect(page?.items[0]).toMatchObject({ id: 'r1', content: '回复一', userName: 'C', likedCount: 3 });
+        expect(page?.hasMore).toBe(true);
+        expect(page?.total).toBe(417);
+        expect(requestMock).toHaveBeenCalledWith('get_comments', expect.objectContaining({
+            id: '5105918', cmd: 6, rootcommentid: 'c-root-1',
+        }));
+    });
+
     // 新建歌单：后端 AddPlaylist 的回包不带 dirId，所以建完重拉自建歌单按名字认领。
     // 后端控制器读的是小写 `dirname` 查询参数，传错大小写会被 400 拒收。
     it('creates a playlist and claims it back by name from the owned list', async () => {

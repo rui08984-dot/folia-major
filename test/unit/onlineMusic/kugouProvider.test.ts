@@ -1852,5 +1852,11 @@ describe('kugouProvider', () => {
             expect(page?.items).toEqual([]);
             expect(requestMock).not.toHaveBeenCalledWith('comment_music', expect.anything());
         });
+
+        // 锁死决定（探针 2026-10-08）：comment_floor 匿名回空（连 417 条回复的热评也是 0 条），
+        // 不给 UI 一个点了必然空转的「查看回复」。若日后登录态真测通再实现这个方法并改这条断言。
+        it('does not expose reply threading (anonymous floor comes back empty)', () => {
+            expect(kugouProvider.comments?.getCommentReplies).toBeUndefined();
+        });
     });
 });

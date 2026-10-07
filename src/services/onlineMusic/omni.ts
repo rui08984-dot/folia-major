@@ -419,6 +419,28 @@ export const omni = {
         return provider.comments.getSongComments(song, page.limit, page.offset);
     },
 
+    canThreadCommentReplies(song: SongResult): boolean {
+        const source = getPlaybackSourceRef(song);
+        if (source.kind !== 'online') return false;
+        const provider = getOnlineMusicProvider(source.providerId);
+        return providerSupports(provider, 'comments')
+            && Boolean(provider?.comments?.getCommentReplies);
+    },
+
+    async getSongCommentReplies(
+        song: SongResult,
+        commentId: ProviderComment['id'],
+        page: PageInput,
+    ): Promise<OmniPage<ProviderComment>> {
+        const source = getPlaybackSourceRef(song);
+        if (source.kind !== 'online') return emptyPage(page.offset);
+        const provider = getOnlineMusicProvider(source.providerId);
+        if (!provider || !this.canThreadCommentReplies(song) || !provider.comments?.getCommentReplies) {
+            return emptyPage(page.offset);
+        }
+        return provider.comments.getCommentReplies(song, commentId, page.limit, page.offset);
+    },
+
     canSubscribeCollection(collection: OmniCollection): boolean {
         const provider = getOnlineMusicProvider(collection.providerId);
         if (

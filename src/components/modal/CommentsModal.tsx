@@ -16,6 +16,7 @@ import { omni } from '../../services/onlineMusic/omni';
 // 数据只走 omni（铁律），列表四态与条目样式自旧 CommentsTab 原样迁入，语义零变化。
 
 const PAGE_SIZE = 20;
+const REPLY_PAGE_SIZE = 20;
 
 interface CommentsModalProps {
     isOpen: boolean;
@@ -35,6 +36,21 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
     // 换歌/关窗时丢弃上一首的在途结果，避免慢响应把旧歌的评论盖到新歌上。
     const requestSeqRef = useRef(0);
     const windowRef = useRef<HTMLDivElement>(null);
+
+    // 盖楼状态，按主评论 id 索引：未展开不在表里；展开后 { replies, hasMore, offset, loading, error }。
+    // 与主列表同生共死（换歌/关窗一起清），不单独建 store —— 只有这扇窗消费它。
+    const [repliesById, setRepliesById] = useState<Record<string, {
+        replies: ProviderComment[];
+        hasMore: boolean;
+        offset: number;
+        loading: boolean;
+        error: boolean;
+    }>>({});
+    // 手风琴式：同一时刻只展开一条楼中楼（大窗高度有限，全开会翻不到底）。
+    const [expandedReplyId, setExpandedReplyId] = useState<string | null>(null);
+    const replySeqRef = useRef(0);
+    // 楼层能不能展开由 provider 能力位决定（酷狗匿名楼层拿不到内容，就不给这个按钮）。
+    const canReplies = omni.canThreadCommentReplies(song);
 
     const textPrimary = isDaylight ? 'text-black/80' : 'text-white/85';
     const textSecondary = isDaylight ? 'text-black/45' : 'text-white/45';
@@ -63,12 +79,55 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
         }
     }, [song]);
 
+    // 楼层回复：与主列表同一条 omni 路线；seq 按「最后一次发起」全局作废（换歌/关窗在
+    // 复位 effect 里 bump），慢响应不会把旧楼的回贴进新楼。
+    const loadReplies = useCallback(async (commentId: string, offset: number, replace: boolean) => {
+        const seq = ++replySeqRef.current;
+        setRepliesById(prev => ({
+            ...prev,
+            [commentId]: { replies: prev[commentId]?.replies ?? [], hasMore: false, offset, loading: true, error: false },
+        }));
+        try {
+            const page = await omni.getSongCommentReplies(song, commentId, { limit: REPLY_PAGE_SIZE, offset });
+            if (seq !== replySeqRef.current) return;
+            setRepliesById(prev => ({
+                ...prev,
+                [commentId]: {
+                    replies: replace ? page.items : [...(prev[commentId]?.replies ?? []), ...page.items],
+                    hasMore: page.hasMore,
+                    offset: page.nextOffset,
+                    loading: false,
+                    error: false,
+                },
+            }));
+        } catch {
+            if (seq !== replySeqRef.current) return;
+            setRepliesById(prev => ({
+                ...prev,
+                [commentId]: { replies: prev[commentId]?.replies ?? [], hasMore: false, offset, loading: false, error: true },
+            }));
+        }
+    }, [song]);
+
+    const toggleReplies = useCallback((commentId: string) => {
+        if (expandedReplyId === commentId) {
+            setExpandedReplyId(null);
+            return;
+        }
+        setExpandedReplyId(commentId);
+        // 拉过的楼直接用缓存展开，收起再点开不重打接口。
+        if (!repliesById[commentId]) void loadReplies(commentId, 0, true);
+    }, [expandedReplyId, repliesById, loadReplies]);
+
     // 只在打开时拉取：组件常驻在面板树里（供退出动画），不弹窗就不该为每首歌白拉评论。
     useEffect(() => {
         if (!isOpen) return;
         offsetRef.current = 0;
         setComments([]);
         setHasMore(false);
+        setRepliesById({});
+        setExpandedReplyId(null);
+        replySeqRef.current += 1;
         void fetchPage(0, true);
     }, [isOpen, fetchPage, song.id]);
 
@@ -139,6 +198,73 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
                         {comment.timeStr && <span>{comment.timeStr}</span>}
                         {comment.ipLocation && <span className="flex items-center gap-0.5"><MapPin size={10} />{comment.ipLocation}</span>}
                     </div>
+                    {canReplies && (() => {
+                        const key = String(comment.id);
+                        const entry = repliesById[key];
+                        const expanded = expandedReplyId === key;
+                        return (
+                            <div className="mt-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleReplies(key)}
+                                    className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] ${cardBg} ${textSecondary} transition-colors hover:opacity-80`}
+                                >
+                                    <MessageCircle size={11} />
+                                    {expanded ? t('panel.commentsHideReplies') : t('panel.commentsViewReplies')}
+                                </button>
+                                {expanded && (
+                                    <div className={`mt-2 space-y-2 border-l pl-3 ${isDaylight ? 'border-black/10' : 'border-white/10'}`}>
+                                        {entry?.loading && !entry.replies.length && (
+                                            <div className={`flex items-center gap-1.5 py-1 text-[11px] ${textSecondary}`}>
+                                                <Loader2 size={12} className="animate-spin" />
+                                                {t('panel.commentsRepliesLoading')}
+                                            </div>
+                                        )}
+                                        {entry?.error && !entry.replies.length && (
+                                            <button
+                                                type="button"
+                                                onClick={() => void loadReplies(key, 0, true)}
+                                                className={`text-[11px] ${textSecondary} underline underline-offset-2`}
+                                            >
+                                                {t('panel.commentsRepliesError')}
+                                            </button>
+                                        )}
+                                        {entry && !entry.loading && !entry.error && entry.replies.length === 0 && (
+                                            <span className={`text-[11px] ${textSecondary}`}>{t('panel.commentsRepliesEmpty')}</span>
+                                        )}
+                                        {entry?.replies.map((reply, replyIndex) => (
+                                            <div key={`${reply.id}-${replyIndex}`} className="flex items-start gap-2">
+                                                {reply.avatarUrl ? (
+                                                    <img src={reply.avatarUrl} alt="" className="h-5 w-5 rounded-full object-cover shrink-0" loading="lazy" />
+                                                ) : (
+                                                    <div className={`h-5 w-5 rounded-full ${cardBg} shrink-0`} />
+                                                )}
+                                                <div className="min-w-0">
+                                                    <span className={`text-[11px] font-medium ${textSecondary}`}>{reply.userName}</span>
+                                                    <p className={`text-[13px] leading-relaxed whitespace-pre-wrap break-words ${textPrimary}`}>{reply.content}</p>
+                                                    <div className={`mt-0.5 flex items-center gap-2 text-[10px] ${textSecondary}`}>
+                                                        {typeof reply.likedCount === 'number' && (
+                                                            <span className="flex items-center gap-0.5"><ThumbsUp size={10} />{reply.likedCount}</span>
+                                                        )}
+                                                        {reply.timeStr && <span>{reply.timeStr}</span>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {entry?.hasMore && !entry.loading && (
+                                            <button
+                                                type="button"
+                                                onClick={() => void loadReplies(key, entry.offset, false)}
+                                                className={`text-[11px] ${textSecondary} underline underline-offset-2`}
+                                            >
+                                                {t('panel.commentsLoadMore')}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
                 </div>
             ))}
             {hasMore && (

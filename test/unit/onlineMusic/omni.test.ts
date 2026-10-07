@@ -449,3 +449,42 @@ describe('omni like mutations', () => {
         expect(account.likedSongFileIds).toEqual({});
     });
 });
+
+// 盖楼门面：能力位决定「查看回复」按钮出不出；不支持的 provider 必须安静回空页而不是抛。
+describe('omni comment reply threading', () => {
+    const commentsProvider = (withReplies: boolean): OnlineMusicProvider => ({
+        ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+        capabilities: { ...capabilities, comments: true },
+        comments: {
+            getSongComments: async () => ({ items: [], hasMore: false, nextOffset: 0 }),
+            ...(withReplies ? {
+                getCommentReplies: async (_song: unknown, commentId: unknown) => ({
+                    items: [{ id: String(commentId), content: '回复', userName: 'u' }],
+                    hasMore: false,
+                    nextOffset: 0,
+                }),
+            } : {}),
+        },
+    });
+
+    it('threads replies through the owning provider when it supports the floor', async () => {
+        registerOnlineMusicProvider(commentsProvider(true));
+        const target = song(providerId, '9');
+        expect(omni.canThreadCommentReplies(target)).toBe(true);
+        const page = await omni.getSongCommentReplies(target, 'c-1', { limit: 20, offset: 0 });
+        expect(page.items).toEqual([{ id: 'c-1', content: '回复', userName: 'u' }]);
+    });
+
+    it('hides threading and returns an empty page for providers without reply support', async () => {
+        registerOnlineMusicProvider(commentsProvider(false));
+        const target = song(providerId, '9');
+        expect(omni.canThreadCommentReplies(target)).toBe(false);
+        const page = await omni.getSongCommentReplies(target, 'c-1', { limit: 20, offset: 0 });
+        expect(page.items).toEqual([]);
+    });
+
+    it('answers false for a song no online provider owns', () => {
+        const localSong = { ...song(providerId), sourceRef: { kind: 'local', mediaId: 'local-1' } } as UnifiedSong;
+        expect(omni.canThreadCommentReplies(localSong)).toBe(false);
+    });
+});
