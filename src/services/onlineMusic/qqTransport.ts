@@ -255,33 +255,56 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
     // Same-origin serverless calls must retain deployment-protection cookies; external qq-music-api instances
     // answer with `Access-Control-Allow-Origin: *`, so those requests still omit browser credentials.
     const credentials: RequestCredentials = isSameOriginBase(base) ? 'same-origin' : 'omit';
-    const response = await fetch(`${base}${endpoint.path}?${query}`, { credentials, headers });
-    if (!response.ok) {
-        const failure = await readJsonBody(response);
-        // A missing, expired, rejected, or non-persisted backend session is surfaced uniformly as 401.
-        if (response.status === 401) {
+
+    const QQ_REQUEST_TIMEOUT_MS = 10000;
+    const QQ_MAX_RETRIES = 1;
+
+    let lastResponse: Response | null = null;
+    let lastFailure: unknown;
+
+    for (let attempt = 0; attempt <= QQ_MAX_RETRIES; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), QQ_REQUEST_TIMEOUT_MS);
+      try {
+        const response = await fetch(`${base}${endpoint.path}?${query}`, { credentials, headers, signal: controller.signal });
+        clearTimeout(timer);
+        lastResponse = response;
+
+        if (!response.ok) {
+          const failure = await readJsonBody(response);
+          if (response.status === 401) {
             clearQqSession();
             throw new OnlineProviderError('auth-required', 'QQMusicApi login required', 'qq', failure);
-        }
-        // 404 是「这个后端没有这条路由」，不是网络故障 —— 用户可以自行部署任意版本的后端，
-        // 新路由在旧后端上必然 404。报成 `unsupported`，调用方才能据此回落到旧路径，
-        // 而不必去解析错误文案里的状态码。
-        if (response.status === 404) {
+          }
+          if (response.status === 404) {
             throw new OnlineProviderError(
-                'unsupported',
-                `QQMusicApi has no ${operation} route`,
-                'qq',
-                failure,
+              'unsupported',
+              `QQMusicApi has no ${operation} route`,
+              'qq',
+              failure,
             );
+          }
+          throw new OnlineProviderError('network', `QQMusicApi request failed: ${response.status}`, 'qq', failure);
         }
-        throw new OnlineProviderError('network', `QQMusicApi request failed: ${response.status}`, 'qq', failure);
+
+        const body = await readJsonBody(response);
+        if (body === undefined) {
+          throw new OnlineProviderError('invalid-response', `QQMusicApi returned an unreadable ${operation} body`, 'qq');
+        }
+        assertUpstreamAccepted(operation, body);
+        persistConfirmedSession(operation, body);
+        return body as T;
+      } catch (error) {
+        clearTimeout(timer);
+        lastFailure = error;
+        const isRetryable = error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
+        if (isRetryable && attempt < QQ_MAX_RETRIES) {
+          await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
+          continue;
+        }
+        throw error;
+      }
     }
 
-    const body = await readJsonBody(response);
-    if (body === undefined) {
-        throw new OnlineProviderError('invalid-response', `QQMusicApi returned an unreadable ${operation} body`, 'qq');
-    }
-    assertUpstreamAccepted(operation, body);
-    persistConfirmedSession(operation, body);
-    return body as T;
-};
+    throw lastFailure instanceof Error ? lastFailure : new OnlineProviderError('network', `QQMusicApi request failed after retries: ${operation}`, 'qq');
+  };

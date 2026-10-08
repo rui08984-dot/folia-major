@@ -92,17 +92,27 @@ const getApiBase = async () => {
   throw new Error("Failed to access environment variables for API base. Please configure VITE_NETEASE_API_BASE.");
 };
 
+const NETEASE_REQUEST_TIMEOUT_MS = 10000;
+const NETEASE_MAX_RETRIES = 1;
+
+const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs: number): Promise<Response> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 const fetchWithCreds = async (endpoint: string, options: RequestInit = {}) => {
   const base = await getApiBase();
   const url = `${base}${endpoint}`;
-  // Ensure we send credentials to persist session (cookies)
   const defaultOptions: RequestInit = {
     ...options,
     mode: 'cors',
   };
 
-  // Selective Timestamp: Only for login, user, and playlist detail endpoints
-  // as per request to avoid caching issues on dynamic user data, but keep content cacheable.
   const needsTimestamp =
     endpoint.includes('/login') ||
     endpoint.includes('/user') ||
@@ -113,9 +123,6 @@ const fetchWithCreds = async (endpoint: string, options: RequestInit = {}) => {
     const separator = finalUrl.includes('?') ? '&' : '?';
     finalUrl = `${finalUrl}${separator}timestamp=${Date.now()}`;
   }
-
-  // Note: For Vercel hosted APIs, we rely on the `cookie` query param if cross-site cookies are blocked,
-  // or `credentials: 'include'` if the server allows it. 
 
   const storedCookie = readProviderSessionValue('netease', 'cookie', ['netease_cookie']);
 
@@ -145,19 +152,31 @@ const fetchWithCreds = async (endpoint: string, options: RequestInit = {}) => {
   }
 
   if (cookieToUse) {
-    // Append cookie to URL
     const sep = finalUrl.includes('?') ? '&' : '?';
     finalUrl = `${finalUrl}${sep}cookie=${encodeURIComponent(cookieToUse)}`;
   }
 
-  const res = await fetch(finalUrl, { ...defaultOptions, credentials: 'include' });
-  const data = await res.json();
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= NETEASE_MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetchWithTimeout(finalUrl, { ...defaultOptions, credentials: 'include' }, NETEASE_REQUEST_TIMEOUT_MS);
+      const data = await res.json();
 
-  if (!storedCookie && cookieToUse && (data?.code === 301 || data?.code === 401 || data?.code === 403)) {
-    removeProviderSessionValue('netease', 'anonymous_cookie', ['netease_anonymous_cookie']);
+      if (!storedCookie && cookieToUse && (data?.code === 301 || data?.code === 401 || data?.code === 403)) {
+        removeProviderSessionValue('netease', 'anonymous_cookie', ['netease_anonymous_cookie']);
+      }
+
+      return data;
+    } catch (error) {
+      lastError = error;
+      if (attempt < NETEASE_MAX_RETRIES) {
+        await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
+      }
+    }
   }
 
-  return data;
+  console.warn('[Netease] request failed after retries', { endpoint, error: lastError });
+  return { code: -1, msg: 'network_error' };
 };
 
 const toHttps = (url?: unknown) => {
