@@ -21,7 +21,6 @@ import { useOnlineProviderQrLogin } from '../hooks/useOnlineProviderQrLogin';
 import type { OnlineProviderPlatformState } from '../hooks/useOnlineProviderPlatform';
 import { omni } from '../services/onlineMusic/omni';
 import { useHomeCardPositionStore } from '../stores/useHomeCardPositionStore';
-import { useFocusedCoverTint } from '../hooks/useFocusedCoverTint';
 import { CategoryFilterButton, CategoryFilterPanel, type CategorySelection } from './folia-grid/CategoryFilterPanel';
 import type { ProviderSongListCategoryGroup } from '../types/onlineMusic';
 import { getPersonalFmSelectionLabel } from '../services/onlineMusic/fmModes';
@@ -184,14 +183,12 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         showHomeTabDiscover,
         showHomeTabAlbums,
         showHomeTabLocal,
-        homeCoverTintBackground,
     } = useHomeLayoutSettingsStore(useShallow(state => ({
         showHomeTabPlaylist: state.showHomeTabPlaylist,
         showHomeTabRadio: state.showHomeTabRadio,
         showHomeTabDiscover: state.showHomeTabDiscover,
         showHomeTabAlbums: state.showHomeTabAlbums,
         showHomeTabLocal: state.showHomeTabLocal,
-        homeCoverTintBackground: state.homeCoverTintBackground,
     })));
     const {
         homeViewTab,
@@ -981,8 +978,6 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         onOpenGridView?.(createOnlineGridViewCollection(collection, activeProviderId));
     };
     // 背景色晕：取当前聚焦那张卡的封面主色。滑过去才取，不在列表级预取（见 hook 内注释）。
-    const focusedCardCoverUrl = currentDesktopItems[focusedIndex]?.coverUrl || '';
-    const coverTintColor = useFocusedCoverTint(focusedCardCoverUrl, homeCoverTintBackground);
 
 
     const handleFolderImport = async () => {
@@ -1143,21 +1138,6 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             className={`relative w-full h-full flex flex-col font-sans overflow-hidden ${mainBg} pointer-events-auto backdrop-blur-sm ${bottomPadding}`}
         >
 
-            {/* 封面主色的背景色晕：只叠一层、不换主题本体，所以跟现有主题设置共存而不冲突。
-                Daylight 下白底强，深色封面压不过，上限压得更低；Dark 模式才给足。
-                没有色（没开到/封面没取到）时整层不渲染，不留一块透明占位。 */}
-            {homeCoverTintBackground && coverTintColor && (
-                <div
-                    aria-hidden="true"
-                    data-testid="home-cover-tint"
-                    className="pointer-events-none absolute inset-0 z-0 transition-[background] duration-350 ease-out"
-                    style={{
-                        background: `radial-gradient(120% 80% at 50% 0%, ${coverTintColor} ${
-                            isDaylight ? '18%' : '26%'
-                        } 0%, transparent 70%)`,
-                    }}
-                />
-            )}
 
             {/* Main Header Container (Fades out when sliding/interacting) */}
             <div className="transition-opacity duration-300 ease-in-out z-20 opacity-100 select-none">
@@ -1576,7 +1556,10 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             {/* 分类筛选面板：挂在根容器（relative）上、马在 actions 行右侧下方。
                 只在电台 tab 开着时存在，关闭即卸载（不给全局留事件）。 */}
             {homeViewTab === 'radio' && categoryPanelOpen && categoryGroups.length > 0 && (
-                <div className="absolute right-4 top-14 z-30 md:right-8">
+                // 挂载点贴着 actions 行那一格（同一行栅格的最右列），面板自身再向视图夹紧，
+                // 不写死 top/right 像素值——header 高度随布局变，写死就会错位或被根容器的
+                // overflow-hidden 裁掉一截。
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-end px-4 pt-14 md:px-8 md:pt-16">
                     <CategoryFilterPanel
                         groups={categoryGroups}
                         isDaylight={isDaylight}
