@@ -1,5 +1,7 @@
 import { NeteaseUser, NeteasePlaylist, NoCopyrightRecommendation, SongPrivilege, SongResult } from "../types";
 import { readProviderSessionValue, removeProviderSessionValue, writeProviderSessionValue } from './onlineMusic/providerStorage';
+import { isOnline } from '../utils/networkStatus';
+import { dedupedRequest } from '../utils/requestDedup';
 import type { PersonalFmRequestOptions } from '../types/onlineMusic';
 
 type UnavailableSongReplacement = {
@@ -156,27 +158,36 @@ const fetchWithCreds = async (endpoint: string, options: RequestInit = {}) => {
     finalUrl = `${finalUrl}${sep}cookie=${encodeURIComponent(cookieToUse)}`;
   }
 
-  let lastError: unknown;
-  for (let attempt = 0; attempt <= NETEASE_MAX_RETRIES; attempt++) {
-    try {
-      const res = await fetchWithTimeout(finalUrl, { ...defaultOptions, credentials: 'include' }, NETEASE_REQUEST_TIMEOUT_MS);
-      const data = await res.json();
-
-      if (!storedCookie && cookieToUse && (data?.code === 301 || data?.code === 401 || data?.code === 403)) {
-        removeProviderSessionValue('netease', 'anonymous_cookie', ['netease_anonymous_cookie']);
-      }
-
-      return data;
-    } catch (error) {
-      lastError = error;
-      if (attempt < NETEASE_MAX_RETRIES) {
-        await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
-      }
-    }
+  // 离线检测：navigator.onLine 为 false 时直接降级，避免无意义的网络等待
+  if (!isOnline()) {
+    return { code: -1, msg: 'offline' };
   }
 
-  console.warn('[Netease] request failed after retries', { endpoint, error: lastError });
-  return { code: -1, msg: 'network_error' };
+  // 请求去重：相同 URL 的并发请求只发一次，其他调用方共享结果
+  return dedupedRequest(finalUrl, async () => {
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= NETEASE_MAX_RETRIES; attempt++) {
+      try {
+        const res = await fetchWithTimeout(finalUrl, { ...defaultOptions, credentials: 'include' }, NETEASE_REQUEST_TIMEOUT_MS);
+        const data = await res.json();
+
+        if (!storedCookie && cookieToUse && (data?.code === 301 || data?.code === 401 || data?.code === 403)) {
+          removeProviderSessionValue('netease', 'anonymous_cookie', ['netease_anonymous_cookie']);
+        }
+
+        return data;
+      } catch (error) {
+        lastError = error;
+        if (attempt < NETEASE_MAX_RETRIES) {
+          // 指数退避：300ms → 600ms
+          await new Promise(resolve => setTimeout(resolve, 300 * Math.pow(2, attempt)));
+        }
+      }
+    }
+
+    console.warn('[Netease] request failed after retries', { endpoint, error: lastError });
+    return { code: -1, msg: 'network_error' };
+  });
 };
 
 const toHttps = (url?: unknown) => {

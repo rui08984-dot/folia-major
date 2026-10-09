@@ -1,4 +1,5 @@
 import { OnlineProviderError } from '../../types/onlineMusic';
+import { dedupedRequest } from '../../utils/requestDedup';
 import { readProviderSessionValue, removeProviderSessionValue, writeProviderSessionValue } from './providerStorage';
 
 // src/services/onlineMusic/qqTransport.ts
@@ -145,6 +146,17 @@ const readJsonBody = async (response: Response): Promise<any> => {
     }
 };
 
+// 后端的退避时长（qq-music-api 在 429 的响应体里给 retryAfterMs，同时带 Retry-After 头，单位是秒）。
+// 只收非负安全整数，读不出就不给，调用方按普通失败处理。
+const readRetryAfterMs = (body: unknown, response: Response): number | undefined => {
+    const fromBody = body && typeof body === 'object' ? (body as { retryAfterMs?: unknown }).retryAfterMs : undefined;
+    if (typeof fromBody === 'number' && Number.isSafeInteger(fromBody) && fromBody >= 0) return fromBody;
+    const raw = response.headers?.get?.('Retry-After')?.trim();
+    if (!raw || !/^\d+$/.test(raw)) return undefined;
+    const seconds = Number(raw);
+    return Number.isSafeInteger(seconds * 1000) ? seconds * 1000 : undefined;
+};
+
 // 曲库三条路由被上游拒收时仍然回 HTTP 200，状态码藏在响应体里，而且层级还不一样：
 // `/getAlbumInfo` 直接是 `response.code`（参数类型错时是 1101 `para error!`），
 // 两条歌手路由的 `response.code` 恒为 0，真正的状态在 `response.singer.code`（400 / 104400）。
@@ -262,11 +274,15 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
     let lastResponse: Response | null = null;
     let lastFailure: unknown;
 
+    const requestUrl = `${base}${endpoint.path}?${query}`;
+
+    // 请求去重：相同 URL 的并发请求只发一次，其他调用方共享结果
+    return dedupedRequest(requestUrl, async () => {
     for (let attempt = 0; attempt <= QQ_MAX_RETRIES; attempt++) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), QQ_REQUEST_TIMEOUT_MS);
       try {
-        const response = await fetch(`${base}${endpoint.path}?${query}`, { credentials, headers, signal: controller.signal });
+        const response = await fetch(requestUrl, { credentials, headers, signal: controller.signal });
         clearTimeout(timer);
         lastResponse = response;
 
@@ -284,6 +300,16 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
               failure,
             );
           }
+          // 429 限流：带 retryAfterMs 让调用方决定是否重试
+          if (response.status === 429) {
+            throw new OnlineProviderError(
+              'network',
+              `QQMusicApi rate limited: ${operation}`,
+              'qq',
+              failure,
+              readRetryAfterMs(failure, response),
+            );
+          }
           throw new OnlineProviderError('network', `QQMusicApi request failed: ${response.status}`, 'qq', failure);
         }
 
@@ -298,8 +324,13 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
         clearTimeout(timer);
         lastFailure = error;
         const isRetryable = error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
-        if (isRetryable && attempt < QQ_MAX_RETRIES) {
-          await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
+        const isRateLimited = error instanceof OnlineProviderError && error.code === 'network' && error.retryAfterMs !== undefined;
+        if ((isRetryable || isRateLimited) && attempt < QQ_MAX_RETRIES) {
+          // 指数退避：300ms → 600ms；429 优先用上游给的 retryAfterMs
+          const backoffMs = isRateLimited && error instanceof OnlineProviderError && error.retryAfterMs
+            ? error.retryAfterMs
+            : 300 * Math.pow(2, attempt);
+          await new Promise(resolve => setTimeout(resolve, backoffMs));
           continue;
         }
         throw error;
@@ -307,4 +338,5 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
     }
 
     throw lastFailure instanceof Error ? lastFailure : new OnlineProviderError('network', `QQMusicApi request failed after retries: ${operation}`, 'qq');
-  };
+  });
+};

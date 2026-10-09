@@ -209,6 +209,8 @@ export class OnlineProviderError extends Error {
         message: string,
         public readonly providerId?: OnlineProviderId,
         public readonly cause?: unknown,
+        /** 429 退避时长（毫秒），调用方据此决定是否重试。 */
+        public readonly retryAfterMs?: number,
     ) {
         super(message);
         this.name = 'OnlineProviderError';
