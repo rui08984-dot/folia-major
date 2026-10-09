@@ -104,7 +104,7 @@ export const CategoryFilterPanel: React.FC<CategoryFilterPanelProps> = ({
             data-ponder-panel-category
             role="dialog"
             aria-label={t('home.categoryTitle')}
-            className={`pointer-events-auto relative z-20 max-h-[min(70vh,32rem)] overflow-y-auto rounded-[1.75rem] border p-2.5 backdrop-blur-2xl scrollbar-thin ${glass}`} style={{ width: `min(${Math.round(sizeScale * 100)}vw, ${Math.round(sizeScale * 30)}rem)` }}
+            className={`pointer-events-auto absolute right-0 top-full z-20 mt-2 max-h-[min(70vh,32rem)] overflow-y-auto rounded-[1.75rem] border p-2.5 backdrop-blur-2xl scrollbar-thin ${glass}`} style={{ width: `min(${Math.round(sizeScale * 100)}vw, ${Math.round(sizeScale * 30)}rem)` }}
         >
             {/* 上行：标题 + 清除/关闭 */}
             <div className="mb-2 flex items-center justify-between gap-2 px-1.5">

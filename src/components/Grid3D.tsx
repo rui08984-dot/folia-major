@@ -1437,6 +1437,22 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                         onFocusedIndexChange={setFocusedIndex}
                         onSelect={handleSelectCollectionCard}
                         actions={homeViewTab === 'discover' ? discoverActions : homeViewTab === 'radio' ? radioActions : undefined}
+                        actionOverlay={
+                            homeViewTab === 'radio' && categoryPanelOpen && categoryGroups.length > 0 ? (
+                                <CategoryFilterPanel
+                                    groups={categoryGroups}
+                                    isDaylight={isDaylight}
+                                    sizeScale={panelSizeScale}
+                                    selected={categorySelected}
+                                    onSelect={(selection) => {
+                                        setCategorySelected(selection);
+                            // 换一批同样道理：整批替换后回到头部，否则停在后半段会让人认不出已经换了内容。
+                            useHomeCardPositionStore.getState().forget(homeCardFocusScope);
+                                    }}
+                                    onClose={() => setCategoryPanelOpen(false)}
+                                />
+                            ) : null
+                        }
                         isLoading={isLoading}
                         emptyMessage={currentOnlineTabUnavailableReason || t('home.loadingLibrary')}
                         theme={theme}
@@ -1569,30 +1585,6 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
             {/* 分类筛选面板：挂在根容器（relative）上、马在 actions 行右侧下方。
                 只在电台 tab 开着时存在，关闭即卸载（不给全局留事件）。 */}
-            {/* 分类面板：AnimatePresence 裹着才播得了退出动画——条件渲染时 exit 是死代码，
-                面板会「咔」地消失。尺寸感知让宽度随窗口走（窗口拉窄它也跟着收）。 */}
-            <AnimatePresence>
-            {homeViewTab === 'radio' && categoryPanelOpen && categoryGroups.length > 0 && (
-                // 挂载点贴着 actions 行那一格（同一行栅格的最右列），面板自身再向视图夹紧，
-                // 不写死 top/right 像素值——header 高度随布局变，写死就会错位或被根容器的
-                // overflow-hidden 裁掉一截。
-                <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-end px-4 pt-14 md:px-8 md:pt-16">
-                    <CategoryFilterPanel
-                        groups={categoryGroups}
-                        isDaylight={isDaylight}
-                        sizeScale={panelSizeScale}
-                        selected={categorySelected}
-                        onSelect={(selection) => {
-                            setCategorySelected(selection);
-                            setCategoryPanelOpen(false);
-                            // 换一批同样道理：整批替换后回到头部，否则停在后半段会让人认不出已经换了内容。
-                            useHomeCardPositionStore.getState().forget(homeCardFocusScope);
-                        }}
-                        onClose={() => setCategoryPanelOpen(false)}
-                    />
-                </div>
-            )}
-            </AnimatePresence>
 
         </div>
     );
