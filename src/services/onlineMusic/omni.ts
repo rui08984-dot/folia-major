@@ -40,6 +40,12 @@ import {
 import { saveProviderAccountSnapshot } from './providerAccountCache';
 import { applyOmniAudioHook, applyOmniLyricsHook } from '../hostExtensionHooks';
 
+// 与各 provider 的 errorFields 同构：把错误抑制成可日志化的字段，不把错误对象本身扔进日志（可能带 cookie）。
+const errorFields = (error: unknown) => ({
+    name: error instanceof Error ? error.name : 'Error',
+    message: error instanceof Error ? error.message : String(error),
+});
+
 // src/services/onlineMusic/omni.ts
 // Online Music Network Interface (Omni) - a unified interface for interacting with multiple online music providers.
 
@@ -515,10 +521,18 @@ export const omni = {
             // editorial 槽位只消费歌单广场，personalFm 那 862ms 的调用是纯浪费 —— 跳过它，
             // 电台页的进入时间就从「最慢的一段」降到「歌单广场本身」。
             const wantPersonalFm = context?.scope !== 'editorial';
+            // 三路各自兑底：Promise.all 会让任何一路失败把整个首页拉空（电台页就得到一个全白屏），
+            // 而现实里最常见的故障就是其中一路被限流。走失的那一段就不出，其余段照常。
+            const swallow = (label: string) => (error: unknown) => {
+                console.warn('[Omni] home feed section failed', { label, ...errorFields(error) });
+                return [] as never[];
+            };
             const [personalFm, dailySongs, recommendedCollections] = await Promise.all([
-                wantPersonalFm ? recommendations?.getPersonalFm?.() ?? [] : Promise.resolve([]),
-                recommendations?.getDailySongs?.() ?? [],
-                recommendations?.getRecommendedCollections?.(limit, context) ?? [],
+                (wantPersonalFm ? recommendations?.getPersonalFm?.() : undefined)?.catch(swallow('personalFm'))
+                    ?? Promise.resolve([] as UnifiedSong[]),
+                (recommendations?.getDailySongs?.() ?? Promise.resolve([] as UnifiedSong[])).catch(swallow('dailySongs')),
+                (recommendations?.getRecommendedCollections?.(limit, context) ?? Promise.resolve([] as OmniCollection[]))
+                    .catch(swallow('recommendedCollections')),
             ]);
             return { personalFm, dailySongs, recommendedCollections };
         });

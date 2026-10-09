@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { saveProviderAccountSnapshot } from '@/services/onlineMusic/providerAccountCache';
 import { omni } from '@/services/onlineMusic/omni';
 import { registerOnlineMusicProvider, unregisterOnlineMusicProvider } from '@/services/onlineMusic/providerRegistry';
@@ -505,5 +505,44 @@ describe('omni comment reply threading', () => {
         expect(omni.canLikeComment(target)).toBe(true);
         await omni.likeComment(target, 'c-1', true);
         expect(likeComment).toHaveBeenCalledWith(target, 'c-1', true);
+    });
+});
+
+// 首页（电台/发现）三段式信息流：任何一路失败都不得把整个首页拉空。
+describe('omni home feed resilience', () => {
+    const feedProvider = (overrides: Partial<NonNullable<OnlineMusicProvider['recommendations']>>): OnlineMusicProvider => ({
+        ...provider(providerId, { searchSongs: async () => ({ items: [], hasMore: false, nextOffset: 0 }) }),
+        capabilities: { ...capabilities, recommendations: true },
+        recommendations: {
+            getPersonalFm: async () => [],
+            getDailySongs: async () => [],
+            getRecommendedCollections: async () => [],
+            ...overrides,
+        },
+    });
+
+    beforeEach(() => {
+        useOnlineProviderAccountStore.getState().setActiveProviderId(providerId);
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+
+    it('keeps the surviving sections when one section throws', async () => {
+        registerOnlineMusicProvider(feedProvider({
+            getPersonalFm: async () => { throw new Error('fm rate limited'); },
+            getRecommendedCollections: async () => [{ id: 'c1', name: '广场', type: 'playlist' } as never],
+        }));
+
+        const feed = await omni.getHomeFeed(35, { scope: 'all' });
+        // 挂掉的那一段自为空，其余段照常返回
+        expect(feed.personalFm).toEqual([]);
+        expect(feed.dailySongs).toEqual([]);
+        expect(feed.recommendedCollections).toHaveLength(1);
+    });
+
+    it('skips the personal FM call entirely for the editorial scope', async () => {
+        const getPersonalFm = vi.fn(async () => []);
+        registerOnlineMusicProvider(feedProvider({ getPersonalFm }));
+        await omni.getHomeFeed(35, { scope: 'editorial' });
+        expect(getPersonalFm).not.toHaveBeenCalled();
     });
 });
