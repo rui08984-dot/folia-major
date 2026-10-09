@@ -28,6 +28,11 @@ interface CategoryFilterPanelProps {
     selected: CategorySelection | null;
     onSelect: (selection: CategorySelection | null) => void;
     onClose: () => void;
+    /**
+     * 宽度档（0.42 / 0.55 / 1）。窗口越宽面板越宽，让一屏放得下更多胶囊、少换一行；
+     * 分段而不是线性，避免拖动窗口时宽度持续抖动。
+     */
+    sizeScale?: number;
 }
 
 export const CategoryFilterPanel: React.FC<CategoryFilterPanelProps> = ({
@@ -36,6 +41,7 @@ export const CategoryFilterPanel: React.FC<CategoryFilterPanelProps> = ({
     selected,
     onSelect,
     onClose,
+    sizeScale = 0.55,
 }) => {
     const { t } = useTranslation();
     const chrome = gridChromeClassesFor(isDaylight);
@@ -89,14 +95,16 @@ export const CategoryFilterPanel: React.FC<CategoryFilterPanelProps> = ({
     return (
         <motion.div
             ref={panelRef}
-            initial={calm ? undefined : { opacity: 0, y: -8, scale: 0.98 }}
-            animate={calm ? undefined : { opacity: 1, y: 0, scale: 1 }}
-            exit={calm ? undefined : { opacity: 0, y: -8, scale: 0.98 }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            // 进出同源：spring 让展开有「弹一下」的生命感，收起也不生硬。
+            // 幅度刻意小（y -6 / scale .98），面板是工具不是主角，不该抢卡片的注意力。
+            initial={calm ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+            animate={calm ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={calm ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.98 }}
+            transition={calm ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 34, mass: 0.7 }}
             data-ponder-panel-category
             role="dialog"
             aria-label={t('home.categoryTitle')}
-            className={`pointer-events-auto relative z-20 w-[min(88vw,26rem)] max-w-[calc(100vw-2rem)] max-h-[min(70vh,32rem)] overflow-y-auto rounded-[1.75rem] border p-2.5 backdrop-blur-2xl scrollbar-thin ${glass}`}
+            className={`pointer-events-auto relative z-20 max-h-[min(70vh,32rem)] overflow-y-auto rounded-[1.75rem] border p-2.5 backdrop-blur-2xl scrollbar-thin ${glass}`} style={{ width: `min(${Math.round(sizeScale * 100)}vw, ${Math.round(sizeScale * 30)}rem)` }}
         >
             {/* 上行：标题 + 清除/关闭 */}
             <div className="mb-2 flex items-center justify-between gap-2 px-1.5">

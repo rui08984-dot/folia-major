@@ -411,6 +411,20 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     const [discoverSections, setDiscoverSections] = useState<DiscoverSection[]>([]);
     const [discoverError, setDiscoverError] = useState<string | null>(null);
     const [loadingDiscover, setLoadingDiscover] = useState(false);
+    // 面板宽度跟着窗口走：窄窗收紧避免挤出屏幕，宽窗多给一些（一屏放得下更多胶囊，
+    // 少换一行）。0.55/1 两档是分段而不是线性——留出稳定的中间带，避免拖动时宽度抖动。
+    const [panelSizeScale, setPanelSizeScale] = useState(0.55);
+    useEffect(() => {
+        const compute = () => {
+            const width = window.innerWidth;
+            const next = width >= 1600 ? 1 : width >= 1100 ? 0.55 : 0.42;
+            setPanelSizeScale(prev => (prev === next ? prev : next));
+        };
+        compute();
+        window.addEventListener('resize', compute);
+        return () => window.removeEventListener('resize', compute);
+    }, []);
+
     // 与 DesktopGrid3DSurface 的 focusMemoryScope 字面保持一致：换一批要把这个 scope 的旧位置干掉。
     const homeCardFocusScope = JSON.stringify(['online', activeProviderId, activeUser?.id ?? null, homeViewTab]);
     // 歌单广场的分类筛选（语种/流派/主题/心情/场景）。provider 没实现时 groups 为空，入口自动不出。
@@ -1555,6 +1569,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
             {/* 分类筛选面板：挂在根容器（relative）上、马在 actions 行右侧下方。
                 只在电台 tab 开着时存在，关闭即卸载（不给全局留事件）。 */}
+            {/* 分类面板：AnimatePresence 裹着才播得了退出动画——条件渲染时 exit 是死代码，
+                面板会「咔」地消失。尺寸感知让宽度随窗口走（窗口拉窄它也跟着收）。 */}
+            <AnimatePresence>
             {homeViewTab === 'radio' && categoryPanelOpen && categoryGroups.length > 0 && (
                 // 挂载点贴着 actions 行那一格（同一行栅格的最右列），面板自身再向视图夹紧，
                 // 不写死 top/right 像素值——header 高度随布局变，写死就会错位或被根容器的
@@ -1563,6 +1580,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     <CategoryFilterPanel
                         groups={categoryGroups}
                         isDaylight={isDaylight}
+                        sizeScale={panelSizeScale}
                         selected={categorySelected}
                         onSelect={(selection) => {
                             setCategorySelected(selection);
@@ -1574,6 +1592,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     />
                 </div>
             )}
+            </AnimatePresence>
 
         </div>
     );
