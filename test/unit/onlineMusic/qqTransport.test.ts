@@ -371,7 +371,9 @@ describe('QQ Music Web transport', () => {
         await expect(requestQq('login_qr_key')).rejects.toMatchObject({
             code: 'network',
             providerId: 'qq',
-            cause: { retryAfterMs: 31000 },
+            // 退避时长是错误的一级属性（调用方直接读 error.retryAfterMs），不塞进 cause。
+            // 同时判断本地退避不得睡到 31 秒：上游建议值只透传，不当睡眠时长（否则 UI 假死）。
+            retryAfterMs: 31000,
         });
     });
 

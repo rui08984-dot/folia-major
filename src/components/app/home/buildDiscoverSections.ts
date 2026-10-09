@@ -68,3 +68,39 @@ export const buildDiscoverSections = ({
         songs: newSongs,
     },
 ] as DiscoverSection[]).filter(section => section.songs.length > 0);
+
+/**
+ * 发现页歌曲卡的 id。
+ *
+ * 🔴 必须带段 id：发现页四段（猜你喜欢/相似/雷达/新歌）之间没有去重，同一首歌完全可以
+ * 同时出现在两段里（FM 要的是「现在适合你的」，雷达要的是「同风格正在火的」，重合很常见）。
+ * 只按 mediaId 编 id 会让 React 撞 same key —— 它不会抛异常崩溃，而是随机丢弃/错位子节点
+ * （React 的告警原文就是 "children to be duplicated and/or omitted"），现象是往后拉时卡片
+ * 莫名消失、变成空块、位置乱跳，盯渲染代码永远看不出问题。2026-10-08 实测复现。
+ */
+export const buildDiscoverSongCardId = (sectionId: string, song: UnifiedSong): string =>
+    `discover-song-${sectionId}-${String(song.sourceRef?.mediaId ?? song.id)}`;
+
+/** 同一首歌在两个键下算同一首：跨源播放键优先，退化到歌曲自身 id。 */
+const discoverSongDedupeKey = (song: UnifiedSong): string => (
+    String(song.sourceRef?.mediaId ?? song.id)
+);
+
+/**
+ * 跨段去重：同一首歌只保留它第一次出现的那一段。
+ *
+ * 用户在发现页刷到两遍同一首歌只会以为推荐坏了；而播放队列用的仍是该段完整队列
+ * （调用侧自己保留 section.songs），所以去重不掉任何可播内容。
+ */
+export const dedupeDiscoverSongs = (sections: readonly DiscoverSection[]): DiscoverSection[] => {
+    const seen = new Set<string>();
+    return sections.map(section => {
+        const songs = section.songs.filter(song => {
+            const key = discoverSongDedupeKey(song);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+        return songs.length === section.songs.length ? section : { ...section, songs };
+    });
+};

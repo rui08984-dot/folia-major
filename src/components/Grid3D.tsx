@@ -21,7 +21,7 @@ import { useOnlineProviderQrLogin } from '../hooks/useOnlineProviderQrLogin';
 import type { OnlineProviderPlatformState } from '../hooks/useOnlineProviderPlatform';
 import { omni } from '../services/onlineMusic/omni';
 import { getPersonalFmSelectionLabel } from '../services/onlineMusic/fmModes';
-import { PERSONAL_FM_CARD_ID, buildDiscoverSections, type DiscoverSection, type DiscoverSectionId } from './app/home/buildDiscoverSections';
+import { buildDiscoverSections, buildDiscoverSongCardId, dedupeDiscoverSongs, type DiscoverSection } from './app/home/buildDiscoverSections';
 import { usePersonalFmModeStore } from '../stores/usePersonalFmModeStore';
 import { useRecentPlaysStore } from '../stores/useRecentPlaysStore';
 import { getSongCoverUrl } from '../services/onlineMusic/songMetadata';
@@ -650,7 +650,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         if (!force) {
             const cached = readDiscoverCache();
             if (cached && cached.length > 0) {
-                setDiscoverSections(cached);
+                setDiscoverSections(dedupeDiscoverSongs(cached));
                 return;
             }
             if (discoverSections.length > 0) return;
@@ -718,8 +718,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             // 空结果（上游全挂了）绝不覆盖已有内容、也绝不写缓存——否则一次 500 风暴就能
             // 把缓存污染成空，之后每次回来都绕开缓存重拉，列表永远在变、还越拉越卡。
             if (sections.length > 0) {
-                setDiscoverSections(sections);
-                writeDiscoverCache(sections);
+                const dedupedSections = dedupeDiscoverSongs(sections);
+                setDiscoverSections(dedupedSections);
+                writeDiscoverCache(dedupedSections);
             } else if (discoverSections.length === 0) {
                 setDiscoverError(t('home.discoverUnavailable'));
             }
@@ -803,7 +804,8 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             'new-songs': t('home.discoverNewSongs'),
         };
         return discoverSections.flatMap(section => section.songs.map(song => ({
-            id: `discover-song-${String(song.sourceRef?.mediaId ?? song.id)}`,
+            // id 与跨段去重都在 buildDiscoverSections 里（含为什么必须带段 id 的说明）
+            id: buildDiscoverSongCardId(section.id, song),
             name: song.name,
             coverUrl: getSongCoverUrl(song, activeProviderId) || '',
             description: song.artists?.map(a => a.name).join(', ') || '',

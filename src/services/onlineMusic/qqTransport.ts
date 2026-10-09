@@ -273,6 +273,7 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
 
     let lastResponse: Response | null = null;
     let lastFailure: unknown;
+    let lastRateLimitedRetryAfterMs: number | undefined;
 
     const requestUrl = `${base}${endpoint.path}?${query}`;
 
@@ -324,14 +325,27 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
         clearTimeout(timer);
         lastFailure = error;
         const isRetryable = error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
-        const isRateLimited = error instanceof OnlineProviderError && error.code === 'network' && error.retryAfterMs !== undefined;
+        const isRateLimited = error instanceof OnlineProviderError && error.retryAfterMs !== undefined;
+        if (isRateLimited && error instanceof OnlineProviderError) lastRateLimitedRetryAfterMs = error.retryAfterMs;
         if ((isRetryable || isRateLimited) && attempt < QQ_MAX_RETRIES) {
-          // 指数退避：300ms → 600ms；429 优先用上游给的 retryAfterMs
-          const backoffMs = isRateLimited && error instanceof OnlineProviderError && error.retryAfterMs
-            ? error.retryAfterMs
-            : 300 * Math.pow(2, attempt);
-          await new Promise(resolve => setTimeout(resolve, backoffMs));
+          // 429 也重试一次，但本地退避只走指数序列（300ms → 600ms）。上游给的 retryAfterMs 是「服务端希望
+          // 你等多久」的建议（扫码登录被限流时实测 31 秒），把它当本地睡眠时长会把一次普通请求堵住半分钟——
+          // 用户侧就是界面假死。建议值仍完整挂在错误的 retryAfterMs 上透传给调用方：真需要等那么久的
+          // 调用方（登录时间线）自己会拿它做，普通请求重试一次就抛出。
+          await new Promise(resolve => setTimeout(resolve, 300 * Math.pow(2, attempt)));
           continue;
+        }
+        // 重试后再次被限流时，第二次响应体可能已被消费或缺失，但上游第一次给的退避建议仍然有效
+        // —— 调用方（登录时间线）要能读到它才能告诉用户等多久。
+        if (lastRateLimitedRetryAfterMs !== undefined && error instanceof OnlineProviderError
+            && error.retryAfterMs === undefined) {
+          throw new OnlineProviderError(
+            error.code,
+            error.message,
+            error.providerId,
+            error.cause,
+            lastRateLimitedRetryAfterMs,
+          );
         }
         throw error;
       }
