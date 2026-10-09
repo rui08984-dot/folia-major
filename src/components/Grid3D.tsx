@@ -20,6 +20,7 @@ import { importLocalPlaylistFile } from '../services/localPlaylistFileService';
 import { useOnlineProviderQrLogin } from '../hooks/useOnlineProviderQrLogin';
 import type { OnlineProviderPlatformState } from '../hooks/useOnlineProviderPlatform';
 import { omni } from '../services/onlineMusic/omni';
+import { useHomeCardPositionStore } from '../stores/useHomeCardPositionStore';
 import { getPersonalFmSelectionLabel } from '../services/onlineMusic/fmModes';
 import { buildDiscoverSections, buildDiscoverSongCardId, dedupeDiscoverSongs, type DiscoverSection } from './app/home/buildDiscoverSections';
 import { usePersonalFmModeStore } from '../stores/usePersonalFmModeStore';
@@ -408,6 +409,8 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     const [discoverSections, setDiscoverSections] = useState<DiscoverSection[]>([]);
     const [discoverError, setDiscoverError] = useState<string | null>(null);
     const [loadingDiscover, setLoadingDiscover] = useState(false);
+    // 与 DesktopGrid3DSurface 的 focusMemoryScope 字面保持一致：换一批要把这个 scope 的旧位置干掉。
+    const homeCardFocusScope = JSON.stringify(['online', activeProviderId, activeUser?.id ?? null, homeViewTab]);
 
     const isLoading =
         (homeViewTab === 'playlist' && canUseOnlinePlaylists && activeCollections.length === 0 && activeUser !== null) ||
@@ -827,6 +830,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             icon: loadingDiscover ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />,
             disabled: loadingDiscover,
             onClick: () => {
+                // 换一批是整批内容替换；不清旧位置的话，用户停在第 30张时看到的仍然是“第 30 张”——而新批的
+                // 第 30 张与旧批的完全不同，就会觉得“后面的歌不变、前面的变了”。回到头部才符合预期。
+                useHomeCardPositionStore.getState().forget(homeCardFocusScope);
                 setDiscoverSections([]);
                 setDiscoverError(null);
                 // force：换一批必须绕开缓存去上游取新批次，否则会被旧缓存原样填回。
@@ -846,6 +852,8 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             disabled: loadingRadio,
             onClick: () => {
                 void (async () => {
+                    // 同上：换一批后回到第一张，否则停在后半段时看起来就像“没换成”。
+                    useHomeCardPositionStore.getState().forget(homeCardFocusScope);
                     const nextFrom = radioFrom + RADIO_PAGE_SIZE;
                     const count = await fetchRadioItems(nextFrom);
                     if (count === 0) {
