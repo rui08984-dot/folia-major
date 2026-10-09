@@ -34,6 +34,8 @@ export type HomeLayoutSettingsState = {
     rememberHomeCardPosition: boolean;
     handleToggleRememberHomeCardPosition: (remember: boolean) => void;
     grid3dCardStyle: 'image' | 'card';
+    homeCoverTintBackground: boolean;
+    handleSetHomeCoverTintBackground: (enabled: boolean) => void;
     handleSetGrid3dCardStyle: (style: 'image' | 'card') => void;
     homeLayoutStyle: 'carousel' | 'grid';
     showHomeTabPlaylist: boolean;
@@ -57,6 +59,13 @@ export const useHomeLayoutSettingsStore = create<HomeLayoutSettingsState>((set, 
         if (!remember) useHomeCardPositionStore.getState().clear();
     },
     grid3dCardStyle: readStoredGrid3dCardStyle(),
+    // 背景色晕跟随当前聚焦卡封面（默认开、可关）。
+    // 存储键与现有布局设置同套，不引入新的持久化方式。
+    homeCoverTintBackground: getStoredBoolean("home_cover_tint_background", true),
+    handleSetHomeCoverTintBackground: (enabled) => {
+        set({ homeCoverTintBackground: enabled });
+        setStoredBoolean("home_cover_tint_background", enabled);
+    },
     handleSetGrid3dCardStyle: (style) => {
         set({ grid3dCardStyle: style });
         if (typeof window !== 'undefined') localStorage.setItem('grid3d_card_style', style);

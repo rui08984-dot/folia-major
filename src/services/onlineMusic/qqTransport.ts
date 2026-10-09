@@ -14,6 +14,7 @@ export const QQ_OPERATIONS = [
     'recommend_radio', 'recommend_feed', 'recommend_radar', 'recommend_playlists', 'recommend_new_songs',
     'recommend_similar', 'recommend_radio_dislike',
     'like_song', 'unlike_song', 'playlist_songs', 'playlist_create',
+    'song_list_categories', 'song_lists',
     'get_comments',
 ] as const;
 
@@ -64,6 +65,8 @@ const ENDPOINTS: Record<QqOperation, string> = {
     playlist_create: '/playlist/create',
     // 歌曲评论（legacy h5 通道，匿名回空、需登录态）。路由声明了路径参数但 controller 只读 query，走 query string。
     get_comments: '/getComments',
+    song_list_categories: '/getSongListCategories',
+    song_lists: '/getSongLists',
 };
 
 // qq-music-api translates the native QR states into the Netease codes; 803 is the only one carrying a session.

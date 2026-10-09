@@ -13,6 +13,7 @@ import type {
     QrLoginState,
 } from '../../types/onlineMusic';
 import { OnlineProviderError } from '../../types/onlineMusic';
+import type { ProviderSongListCategoryGroup } from '../../types/onlineMusic';
 import { normalizeCommentText } from './commentText';
 import { createProviderSongMetadata } from '../../utils/songMetadata';
 import { toSafePlaybackUrl } from '../../utils/appPlaybackHelpers';
@@ -224,6 +225,66 @@ const unwrapPlaylist = (value: unknown): unknown => {
  * 判据是 `qqMid` 而不是 `sourceRef.mediaId`：后者在缺 mid 时会回退成数字 songId 而依然为真，
  * 但 `getAudioSource` 与 catalog 解析都拿不到可用的 songmid，那种歌既播不了也点不开专辑。
  */
+/**
+ * 歌单分类树（探针 2026-10-08）：上游  里每组带
+ *  与 （ 是数字字符串， 是中文名）。
+ * id 全部原样字符串化不做拆解：那些数字是上游的内部键，拆开就丢了连续性。
+ */
+/**
+ * 上游分类名带 HTML 实体（实测 ，即 R&B）。
+ * 只解决显示，id 不动：那些实体是上游注释编码，不解码用户就看到一串“&#38;”。
+ */
+export const decodeQqEntities = (text: string): string => text
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex: string) => String.fromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec: string) => String.fromCodePoint(Number(dec)))
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+export const toQqCategoryGroups = (raw: unknown): ProviderSongListCategoryGroup[] => {
+    const groups = (raw as { response?: { data?: { categories?: unknown[] } } })
+        ?.response?.data?.categories;
+    if (!Array.isArray(groups)) return [];
+
+    return groups.map((group: any) => ({
+        id: String(group?.categoryGroupId ?? group?.categoryGroupName ?? ''),
+        label: decodeQqEntities(String(group?.categoryGroupName ?? '')),
+        items: (Array.isArray(group?.items) ? group.items : []).map((item: any) => ({
+            id: String(item?.categoryId ?? ''),
+            label: decodeQqEntities(String(item?.categoryName ?? '')),
+        })),
+        // 分组名空白或者没有条目的组是无意义占位，不要呈现给用户。
+    })).filter(group => group.label && group.items.length > 0);
+};
+
+/**
+ * 按分类拉歌单广场（排序固定最热 sortId=5，采用上游默认这个最稳的值）。
+ * 内容与其他广场场景完全同构： + 。
+ */
+const fetchQqCategorySongLists = async (
+    categoryId: string,
+    limit: number,
+    offset: number,
+): Promise<ProviderPage<ProviderCollection>> => {
+    const response = await requestQq<any>('song_lists', {
+        categoryId,
+        sortId: 5,
+        page: Math.floor(Math.max(0, offset) / Math.max(1, limit)),
+        limit,
+    });
+    const data = response?.response?.data ?? {};
+    const list = (Array.isArray(data?.list) ? data.list : []).map((item: unknown) => normalizeQqCollection(item, 'playlist'));
+    const total = Number(data?.sum) || list.length;
+    return {
+        items: list,
+        total,
+        hasMore: offset + list.length < total,
+        nextOffset: offset + list.length,
+    };
+};
+
 const toQqSongs = (raw: unknown): UnifiedSong[] => (
     Array.isArray(raw)
         ? raw.map(unwrapTrack).map(normalizeQqSong).filter(song => Boolean(song.qqMid))
@@ -1134,6 +1195,11 @@ export const qqProvider: OnlineMusicProvider = {
         getArtistDetail,
         getArtistSongs,
         getArtistAlbums,
+        async getSongListCategories() {
+            const response = await requestQq<unknown>('song_list_categories');
+            return toQqCategoryGroups(response);
+        },
+        getCategorySongLists: fetchQqCategorySongLists,
     },
     comments: {
         // QQ 歌曲评论走 legacy h5 通道，匿名即可（探针 2026-10-08 判别：topid 必须是**数字 songid**，

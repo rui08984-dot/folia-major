@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { UnifiedSong } from '@/types';
-import {
-    buildDiscoverSongCardId,
-    dedupeDiscoverSongs,
-    type DiscoverSection,
-} from '@/components/app/home/buildDiscoverSections';
+import { buildDiscoverSongCardId, dedupeDiscoverSongs, type DiscoverSection } from '@/components/app/home/buildDiscoverSections';
 
 // test/unit/discoverSongCards.test.ts
 // 2026-10-08 实测复现的回归：发现页四段之间没有去重，同一首歌会同时出现在猜你喜欢和雷达里。

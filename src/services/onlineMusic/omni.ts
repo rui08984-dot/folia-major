@@ -25,6 +25,7 @@ import type {
 } from '../../types/onlineMusic';
 import { resolveProviderLyricsChorus } from '../../utils/lyrics/chorusResolver';
 import { OnlineProviderError } from '../../types/onlineMusic';
+import type { ProviderSongListCategoryGroup } from '../../types/onlineMusic';
 import { useOnlineProviderAccountStore } from '../../stores/useOnlineProviderAccountStore';
 import { getPlaybackSourceRef } from '../../utils/appPlaybackGuards';
 import { saveSongReplayGain } from './resourceCache';
@@ -402,6 +403,32 @@ export const omni = {
         const provider = getOnlineMusicProvider(source.providerId);
         return providerSupports(provider, 'recommendations')
             && Boolean(provider?.recommendations?.dislikeSong);
+    },
+
+    canBrowseSongListCategories(providerId: OmniProviderId): boolean {
+        const provider = getOnlineMusicProvider(providerId);
+        return providerSupports(provider, 'playlists')
+            && Boolean(provider?.catalog?.getSongListCategories);
+    },
+
+    async getSongListCategories(providerId: OmniProviderId): Promise<ProviderSongListCategoryGroup[]> {
+        const provider = getOnlineMusicProvider(providerId);
+        if (!provider || !this.canBrowseSongListCategories(providerId) || !provider.catalog?.getSongListCategories) {
+            return [];
+        }
+        return provider.catalog.getSongListCategories();
+    },
+
+    async getCategorySongLists(
+        providerId: OmniProviderId,
+        categoryId: string,
+        page: PageInput,
+    ): Promise<OmniPage<OmniCollection>> {
+        const provider = getOnlineMusicProvider(providerId);
+        if (!provider || !provider.catalog?.getCategorySongLists) {
+            return emptyPage(page.offset);
+        }
+        return provider.catalog.getCategorySongLists(categoryId, page.limit, page.offset);
     },
 
     canCommentSong(song: SongResult): boolean {

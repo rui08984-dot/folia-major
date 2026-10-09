@@ -1007,6 +1007,9 @@ export default {
     "statusFailed": "切换私人 FM 模式失败"
   },
   "home": {
+    "categoryTitle": "分类",
+    "categoryAll": "全部",
+    "categoryClear": "清除",
     "welcome": "欢迎使用 Folia",
     "lattice": "队列拼贴",
     "latticeLabel": "队列拼贴",

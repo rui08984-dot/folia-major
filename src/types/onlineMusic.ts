@@ -304,6 +304,22 @@ export interface OnlineLibraryProvider {
     getCloudCollection?(user?: ProviderUser): Promise<ProviderCollection | null>;
 }
 
+/**
+ * 歌单分类树（QQ 的「语种/流派/主题/心情/场景」分组）。
+ *  与  均为上游原生 id（字符串，不拆解），
+ * UI 只负责展示与选中，取数时原样交回 provider。
+ */
+export interface ProviderSongListCategoryGroup {
+    id: string;
+    label: string;
+    items: ProviderSongListCategoryItem[];
+}
+
+export interface ProviderSongListCategoryItem {
+    id: string;
+    label: string;
+}
+
 export interface OnlineCatalogProvider {
     canResolveSongCatalogRefs?(song: UnifiedSong): boolean;
     resolveSongCatalogRefs?(song: UnifiedSong): Promise<UnifiedSong>;
@@ -316,6 +332,10 @@ export interface OnlineCatalogProvider {
     getArtistAlbums?(id: MediaId, limit: number, offset: number): Promise<ProviderPage<ProviderCollection>>;
     getArtistDetail?(id: MediaId): Promise<ProviderCollection | null>;
     getSubscriptionStatus?(type: 'playlist' | 'album', id: MediaId, collection?: ProviderCollection): Promise<boolean>;
+    /** 歌单分类树；没实现就没有分类筛选入口。 */
+    getSongListCategories?(): Promise<ProviderSongListCategoryGroup[]>;
+    /** 按分类取歌单广场（排序固定最热）。 */
+    getCategorySongLists?(categoryId: string, limit: number, offset: number): Promise<ProviderPage<ProviderCollection>>;
 }
 
 /**

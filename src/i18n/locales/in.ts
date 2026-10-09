@@ -1003,6 +1003,9 @@ export default {
     "statusFailed": "Gagal mengganti mode FM Pribadi"
   },
   "home": {
+    "categoryTitle": "Kategori",
+    "categoryAll": "Semua",
+    "categoryClear": "Hapus",
     "welcome": "Selamat datang di Folia",
     "lattice": "Kolase antrean",
     "latticeLabel": "Kolase antrean",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Loader2, Settings, PanelsTopLeft, RefreshCw, Music, User } from 'lucide-react';
+import { Search, Loader2, Settings, PanelsTopLeft, RefreshCw, Music, User, ListFilter } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { resolveSearchSource, useSearchNavigationStore } from '../stores/useSearchNavigationStore';
 import type { LocalLibraryCatalogSnapshot } from '../hooks/useLocalLibraryCatalog';
@@ -21,6 +21,9 @@ import { useOnlineProviderQrLogin } from '../hooks/useOnlineProviderQrLogin';
 import type { OnlineProviderPlatformState } from '../hooks/useOnlineProviderPlatform';
 import { omni } from '../services/onlineMusic/omni';
 import { useHomeCardPositionStore } from '../stores/useHomeCardPositionStore';
+import { useFocusedCoverTint } from '../hooks/useFocusedCoverTint';
+import { CategoryFilterButton, CategoryFilterPanel, type CategorySelection } from './folia-grid/CategoryFilterPanel';
+import type { ProviderSongListCategoryGroup } from '../types/onlineMusic';
 import { getPersonalFmSelectionLabel } from '../services/onlineMusic/fmModes';
 import { buildDiscoverSections, buildDiscoverSongCardId, dedupeDiscoverSongs, type DiscoverSection } from './app/home/buildDiscoverSections';
 import { usePersonalFmModeStore } from '../stores/usePersonalFmModeStore';
@@ -181,12 +184,14 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         showHomeTabDiscover,
         showHomeTabAlbums,
         showHomeTabLocal,
+        homeCoverTintBackground,
     } = useHomeLayoutSettingsStore(useShallow(state => ({
         showHomeTabPlaylist: state.showHomeTabPlaylist,
         showHomeTabRadio: state.showHomeTabRadio,
         showHomeTabDiscover: state.showHomeTabDiscover,
         showHomeTabAlbums: state.showHomeTabAlbums,
         showHomeTabLocal: state.showHomeTabLocal,
+        homeCoverTintBackground: state.homeCoverTintBackground,
     })));
     const {
         homeViewTab,
@@ -411,6 +416,50 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     const [loadingDiscover, setLoadingDiscover] = useState(false);
     // 与 DesktopGrid3DSurface 的 focusMemoryScope 字面保持一致：换一批要把这个 scope 的旧位置干掉。
     const homeCardFocusScope = JSON.stringify(['online', activeProviderId, activeUser?.id ?? null, homeViewTab]);
+    // 歌单广场的分类筛选（语种/流派/主题/心情/场景）。provider 没实现时 groups 为空，入口自动不出。
+    // 选中后广场的数据源从推荐切到该分类下的歌单，而不是另开一个页面。
+    const [categoryGroups, setCategoryGroups] = useState<ProviderSongListCategoryGroup[]>([]);
+    const [categorySelected, setCategorySelected] = useState<CategorySelection | null>(null);
+    const [categoryPanelOpen, setCategoryPanelOpen] = useState(false);
+    const [categorySongLists, setCategorySongLists] = useState<ProviderCollection[]>([]);
+    const [loadingCategory, setLoadingCategory] = useState(false);
+
+    // 分类树：只在电台 tab 且该 provider 支持时拉一次（静态数据，不随选中变化）。
+    useEffect(() => {
+        if (homeViewTab !== "radio" || !canUseOnlineRadio) return;
+        if (!omni.canBrowseSongListCategories(activeProviderId)) return;
+        let cancelled = false;
+        void omni.getSongListCategories(activeProviderId)
+            .then(groups => { if (!cancelled) setCategoryGroups(groups); })
+            .catch(error => {
+                console.warn('[Grid3D] category tree failed', error);
+                if (!cancelled) setCategoryGroups([]);
+            });
+        return () => { cancelled = true; };
+    }, [homeViewTab, canUseOnlineRadio, activeProviderId]);
+
+    // 选中分类后拉该分类的歌单；取消选中（null）则回到推荐广场。
+    useEffect(() => {
+        if (homeViewTab !== "radio") return;
+        if (!categorySelected) {
+            setCategorySongLists([]);
+            return;
+        }
+        let cancelled = false;
+        setLoadingCategory(true);
+        // 一屏的量就够：分类本身就是“逐层挑”，先给一屏，不做无限滚动。
+        void omni.getCategorySongLists(activeProviderId, categorySelected.itemId, { limit: 35, offset: 0 })
+            .then(page => {
+                if (cancelled) return;
+                setCategorySongLists(page.items);
+            })
+            .catch(error => {
+                console.warn('[Grid3D] category song lists failed', error);
+                if (!cancelled) setCategorySongLists([]);
+            })
+            .finally(() => { if (!cancelled) setLoadingCategory(false); });
+        return () => { cancelled = true; };
+    }, [homeViewTab, categorySelected, activeProviderId]);
 
     const isLoading =
         (homeViewTab === 'playlist' && canUseOnlinePlaylists && activeCollections.length === 0 && activeUser !== null) ||
@@ -781,6 +830,20 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     }, [favoriteAlbums, t]);
 
     const radioCards = useMemo(() => {
+        // 选中分类时广场数据源换成该分类下的歌单（同样的拍立得卡，只换内容）。
+        // 卡片仍可点进歌单详情，走现有的 collection -> GridView 链路。
+        if (categorySelected) {
+            return categorySongLists.map(collection => ({
+                id: String(collection.id),
+                name: collection.name,
+                coverUrl: collection.coverUrl ?? "",
+                trackCount: undefined,
+                description: categorySelected.itemLabel,
+                summary: categorySelected.groupLabel,
+                type: "playlist" as const,
+                raw: collection,
+            }));
+        }
         return radioItems.map(r => ({
             id: r.id,
             name: r.name,
@@ -795,7 +858,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                     : 'playlist' as const,
             raw: r
         }));
-    }, [personalFmModeLabel, radioItems, t]);
+    }, [personalFmModeLabel, radioItems, t, categorySelected, categorySongLists]);
 
     // 各段拍平成歌曲拍立得卡。三行文字「歌名 / 歌手 / 来源」与集合卡同构：
     // 卡面直接标注这首歌来自哪一段（猜你喜欢/相似/雷达/新歌），这就是频道分类信息。
@@ -845,6 +908,16 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     // 广场的「换一批」：偏移按批次推进；拉到 0 条说明上游翻到头，回卷到 0 再来一轮，
     // 绝不让广场被换成空白。与发现页的刷新按钮同用 surface 原生 actions 槽。
     const radioActions = useMemo<DesktopGrid3DAction[]>(() => [
+        // 分类入口：只在该 provider 真的有分类时出现（空数组时不告诉用户“没这个功能”）。
+        // label 显示当前选中项，回到全部时恢复“分类”。
+        ...(categoryGroups.length > 0 ? [{
+            id: 'category-filter',
+            label: categorySelected ? categorySelected.itemLabel : t('home.categoryTitle'),
+            icon: <ListFilter size={13} />,
+            active: categoryPanelOpen || Boolean(categorySelected),
+            onClick: () => setCategoryPanelOpen(open => !open),
+            title: t('home.categoryTitle'),
+        }] : []),
         {
             id: 'swap-radio-batch',
             label: loadingRadio ? t('options.scanning') : t('home.swapBatch'),
@@ -907,6 +980,10 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             : card;
         onOpenGridView?.(createOnlineGridViewCollection(collection, activeProviderId));
     };
+    // 背景色晕：取当前聚焦那张卡的封面主色。滑过去才取，不在列表级预取（见 hook 内注释）。
+    const focusedCardCoverUrl = currentDesktopItems[focusedIndex]?.coverUrl || '';
+    const coverTintColor = useFocusedCoverTint(focusedCardCoverUrl, homeCoverTintBackground);
+
 
     const handleFolderImport = async () => {
         if (isLocalImporting || isLocalPlaylistImporting || isLocalRefreshing || scanProgress?.active) return;
@@ -1065,6 +1142,22 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             data-ponder-page-scope="grid-page"
             className={`relative w-full h-full flex flex-col font-sans overflow-hidden ${mainBg} pointer-events-auto backdrop-blur-sm ${bottomPadding}`}
         >
+
+            {/* 封面主色的背景色晕：只叠一层、不换主题本体，所以跟现有主题设置共存而不冲突。
+                Daylight 下白底强，深色封面压不过，上限压得更低；Dark 模式才给足。
+                没有色（没开到/封面没取到）时整层不渲染，不留一块透明占位。 */}
+            {homeCoverTintBackground && coverTintColor && (
+                <div
+                    aria-hidden="true"
+                    data-testid="home-cover-tint"
+                    className="pointer-events-none absolute inset-0 z-0 transition-[background] duration-350 ease-out"
+                    style={{
+                        background: `radial-gradient(120% 80% at 50% 0%, ${coverTintColor} ${
+                            isDaylight ? '18%' : '26%'
+                        } 0%, transparent 70%)`,
+                    }}
+                />
+            )}
 
             {/* Main Header Container (Fades out when sliding/interacting) */}
             <div className="transition-opacity duration-300 ease-in-out z-20 opacity-100 select-none">
@@ -1478,6 +1571,25 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                         void onlineProviderPlatform.logoutProvider(provider.providerId);
                     }}
                 />
+            )}
+
+            {/* 分类筛选面板：挂在根容器（relative）上、马在 actions 行右侧下方。
+                只在电台 tab 开着时存在，关闭即卸载（不给全局留事件）。 */}
+            {homeViewTab === 'radio' && categoryPanelOpen && categoryGroups.length > 0 && (
+                <div className="absolute right-4 top-14 z-30 md:right-8">
+                    <CategoryFilterPanel
+                        groups={categoryGroups}
+                        isDaylight={isDaylight}
+                        selected={categorySelected}
+                        onSelect={(selection) => {
+                            setCategorySelected(selection);
+                            setCategoryPanelOpen(false);
+                            // 换一批同样道理：整批替换后回到头部，否则停在后半段会让人认不出已经换了内容。
+                            useHomeCardPositionStore.getState().forget(homeCardFocusScope);
+                        }}
+                        onClose={() => setCategoryPanelOpen(false)}
+                    />
+                </div>
             )}
 
         </div>

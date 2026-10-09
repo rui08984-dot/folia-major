@@ -1008,6 +1008,9 @@ export default {
     "statusFailed": "Failed to switch the Personal FM mode"
   },
   "home": {
+    "categoryTitle": "Categories",
+    "categoryAll": "All",
+    "categoryClear": "Clear",
     "welcome": "Welcome to Folia",
     "lattice": "Queue collage",
     "latticeLabel": "Queue collage",
