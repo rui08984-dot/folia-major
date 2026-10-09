@@ -119,7 +119,9 @@ export default {
     "aiThemeUpdatedCustomPreferred": "Tema AI diperbarui, tapi tema kustom tetap diutamakan",
     "aiThemeGeneratedCustomPreferred": "Tema AI dibuat, tapi tema kustom tetap diutamakan"
   },
-  "status": {
+    "status": {
+    "networkLost": "Jaringan terputus, sebagian konten mungkin tidak dimuat",
+    "networkRestored": "Jaringan dipulihkan",
     "playerChromeAlwaysHidden": "Antarmuka akan tetap tersembunyi",
     "playerChromeAlwaysVisible": "Antarmuka akan tetap terlihat",
     "playerChromeAutoHide": "Antarmuka akan otomatis tersembunyi",

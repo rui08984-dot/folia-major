@@ -121,7 +121,9 @@ export default {
     "aiThemeUpdatedCustomPreferred": "AI 主题已更新，自定义主题仍为首选",
     "aiThemeGeneratedCustomPreferred": "AI 主题已生成，但当前仍优先使用自定义主题",
   },
-  "status": {
+    "status": {
+    "networkLost": "网络已断开，部分内容可能无法加载",
+    "networkRestored": "网络已恢复",
     "playerChromeAlwaysHidden": "UI 将始终隐藏",
     "playerChromeAlwaysVisible": "UI 将始终显示",
     "playerChromeAutoHide": "UI 将自动隐藏",

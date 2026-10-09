@@ -2,6 +2,7 @@ import type { Dispatch, MutableRefObject, RefObject, SetStateAction } from 'reac
 import { applyOnlineAudioSourceMetadata, loadOnlineSongAudioSource } from '../../../services/onlinePlayback';
 import type { SongResult } from '../../../types';
 import type { AudioQualityPreference } from '../../../types/onlineMusic';
+import { PlayerState } from '../../../types';
 import {
     getPlaybackSongKey,
     isLocalPlaybackSong,
@@ -30,6 +31,7 @@ type RecoveryControllerParams = {
     playQueue: SongResult[];
     onlineAudioUrlTtlMs: number;
     onlineAudioUrlRefreshBufferMs: number;
+    playerState: PlayerState;
 };
 
 // Provider stream URLs carry a per-request token in the query (QQ mints a fresh `vkey`/`guid`
@@ -70,6 +72,7 @@ export const createOnlineRecoveryController = ({
     playQueue,
     onlineAudioUrlTtlMs,
     onlineAudioUrlRefreshBufferMs,
+    playerState,
 }: RecoveryControllerParams) => {
     const shouldRefreshCurrentOnlineAudioSource = () => {
         if (!currentSong || isLocalPlaybackSong(currentSong) || isNavidromePlaybackSong(currentSong) || isStagePlaybackSong(currentSong)) {
@@ -153,7 +156,9 @@ export const createOnlineRecoveryController = ({
                 }
 
                 pendingResumeTimeRef.current = Math.max(0, resumeAt ?? audioRef.current.currentTime ?? 0);
-                shouldAutoPlayRef.current = autoplay;
+                // Resolving a fresh source must not undo a pause while the request
+                // was in flight. Other recovery callers retain their autoplay policy.
+                shouldAutoPlayRef.current = autoplay && playerState !== PlayerState.PAUSED;
                 currentOnlineAudioUrlFetchedAtRef.current = audioResult.audioSrc.startsWith('blob:')
                     ? null
                     : Date.now();

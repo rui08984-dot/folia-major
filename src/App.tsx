@@ -67,6 +67,7 @@ import { useNeteaseLibrary } from './hooks/useNeteaseLibrary';
 import { useKugouLibrary } from './hooks/useKugouLibrary';
 import { useQqLibrary } from './hooks/useQqLibrary';
 import { useOnlineProviderPlatform } from './hooks/useOnlineProviderPlatform';
+import { useNetworkRecovery } from './hooks/useNetworkRecovery';
 import { useAppPreferences } from './hooks/useAppPreferences';
 import { useElectronPlaybackBridge } from './hooks/useElectronPlaybackBridge';
 import { useElectronDisplaySleepBlocker } from './hooks/useElectronDisplaySleepBlocker';
@@ -582,7 +583,8 @@ export default function App() {
         playQueue,
         onlineAudioUrlTtlMs: ONLINE_AUDIO_URL_TTL_MS,
         onlineAudioUrlRefreshBufferMs: ONLINE_AUDIO_URL_REFRESH_BUFFER_MS,
-    }), [audioQuality, audioSrc, audioRef, blobUrlRef, currentOnlineAudioUrlFetchedAtRef, currentSong, currentSongRef, lastAudioRecoverySourceRef, onlinePlaybackRecoveryRef, pendingResumeTimeRef, persistLastPlaybackCache, playQueue, setAudioSrc, setCurrentSong, setPlayQueue, shouldAutoPlay]);
+        playerState,
+    }), [audioQuality, audioSrc, audioRef, blobUrlRef, currentOnlineAudioUrlFetchedAtRef, currentSong, currentSongRef, lastAudioRecoverySourceRef, onlinePlaybackRecoveryRef, pendingResumeTimeRef, persistLastPlaybackCache, playQueue, setAudioSrc, setCurrentSong, setPlayQueue, shouldAutoPlay, playerState]);
 
     const getCoverUrl = useMemo(
         () => createCoverUrlResolver(cachedCoverUrl, currentSong),
@@ -801,6 +803,7 @@ export default function App() {
         };
     }, [handleCancelProviderSwitch, handleConfirmProviderSwitch, isDaylight, providerSwitchPending, t]);
     const onlineProviderPlatform = useOnlineProviderPlatform(onlineProviderRefreshers, prepareOnlineProviderSwitch, onlineProviderLogouts);
+    useNetworkRecovery();
     const handleActiveProviderSyncData = useCallback(async () => {
         const providerId = onlineProviderPlatform.activeProviderId;
         if (providerId === 'netease') {

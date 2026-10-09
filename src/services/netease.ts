@@ -107,6 +107,16 @@ const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs: nu
   }
 };
 
+// 网易 429 限流退避时长：优先读响应体 retryAfterMs，其次 Retry-After 头（秒）。
+const readNeteaseRetryAfterMs = (body: unknown, response: Response): number | undefined => {
+  const fromBody = body && typeof body === 'object' ? (body as { retryAfterMs?: unknown }).retryAfterMs : undefined;
+  if (typeof fromBody === 'number' && Number.isSafeInteger(fromBody) && fromBody >= 0) return fromBody;
+  const raw = response.headers?.get?.('Retry-After')?.trim();
+  if (!raw || !/^\d+$/.test(raw)) return undefined;
+  const seconds = Number(raw);
+  return Number.isSafeInteger(seconds * 1000) ? seconds * 1000 : undefined;
+};
+
 const fetchWithCreds = async (endpoint: string, options: RequestInit = {}) => {
   const base = await getApiBase();
   const url = `${base}${endpoint}`;
@@ -169,6 +179,17 @@ const fetchWithCreds = async (endpoint: string, options: RequestInit = {}) => {
     for (let attempt = 0; attempt <= NETEASE_MAX_RETRIES; attempt++) {
       try {
         const res = await fetchWithTimeout(finalUrl, { ...defaultOptions, credentials: 'include' }, NETEASE_REQUEST_TIMEOUT_MS);
+
+        // 429 限流：读 retryAfterMs 退避，跟 QQ 保持一致
+        if (res.status === 429) {
+          const failure = await res.json().catch(() => undefined);
+          const retryAfterMs = readNeteaseRetryAfterMs(failure, res);
+          if (attempt < NETEASE_MAX_RETRIES) {
+            await new Promise(resolve => setTimeout(resolve, retryAfterMs ?? 300 * Math.pow(2, attempt)));
+            continue;
+          }
+        }
+
         const data = await res.json();
 
         if (!storedCookie && cookieToUse && (data?.code === 301 || data?.code === 401 || data?.code === 403)) {

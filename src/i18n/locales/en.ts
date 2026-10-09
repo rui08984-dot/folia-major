@@ -121,7 +121,9 @@ export default {
     "aiThemeUpdatedCustomPreferred": "AI theme updated, custom theme is still preferred",
     "aiThemeGeneratedCustomPreferred": "AI theme generated, but custom theme is still preferred",
   },
-  "status": {
+    "status": {
+    "networkLost": "Network disconnected, some content may not load",
+    "networkRestored": "Network restored",
     "playerChromeAlwaysHidden": "UI will remain hidden",
     "playerChromeAlwaysVisible": "UI will remain visible",
     "playerChromeAutoHide": "UI will auto-hide",
