@@ -204,6 +204,10 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
     }, []);
 
     const runSearch = useCallback((source?: SearchSource) => {
+        // 提交就把联想与历史收掉：否则结果都出来了，输入框下面还挂着一列联想词，
+        // 用户得再点一下空白处才消失。
+        setSuggestionsVisible(false);
+        setActiveSuggestion(-1);
         if (!source && searchQuery.trim()) {
             recordSearchHistory(searchQuery);
         }
@@ -398,6 +402,16 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                         </nav>
                     </header>
 
+                    {/* 搜索中的细进度条：只在「已经有结果、正在刷新」时出现。
+                        比把正文换成大转圈温和得多——用户还看得见上一批结果，同时知道在刷新。 */}
+                    {isSearching && results.length > 0 && (
+                        <div className="mx-auto w-full max-w-5xl px-1">
+                            <div className="h-0.5 w-full overflow-hidden rounded-full bg-current/10">
+                                <div className="h-full w-1/3 animate-[searchSweep_1.1s_ease-in-out_infinite] rounded-full bg-current/50" />
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mx-auto mt-3 min-h-0 w-full max-w-5xl flex-1 select-none overflow-y-auto overscroll-contain">
                         {searchError && results.length === 0 && !isSearching ? (
                             <div className="flex h-full flex-col items-center justify-center gap-3 text-center opacity-65">
@@ -417,8 +431,9 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                     {searchQuery.trim() || t('search.placeholder')}
                                 </h2>
                                 {isSearching && results.length === 0 ? (
-                                    <div className="flex items-center justify-center py-16">
-                                        <Loader2 className="h-8 w-8 animate-spin opacity-45" />
+                                    <div className="flex flex-col items-center justify-center gap-3 py-16 opacity-65">
+                                        <Loader2 className="h-6 w-6 animate-spin opacity-60" />
+                                        <p className="text-sm">{t('search.searching')}</p>
                                     </div>
                                 ) : (
                                     <>

@@ -268,10 +268,10 @@ export const useSearchNavigationStore = create<SearchNavigationState>((set, get)
             isLoadingMore: false,
             searchError: null,
             requestId,
-            searchResults: null,
+            // 不清空 searchResults：保留上一批结果当占位，新结果到了再整体替换。
+            // 立刻置空会让用户看到「内容闪一下全没、只剩一个转圈」，尤其是连续改搜索词的时候。
             offset: 0,
             hasMore: false,
-            scrollTop: 0,
         });
 
         try {

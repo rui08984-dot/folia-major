@@ -181,6 +181,8 @@ if (process.platform === 'darwin' && process.arch === 'x64') {
   app.commandLine.appendSwitch('enable-gpu-rasterization');
 }
 
+
+
 const store = new Store({ projectName: 'Folia' });
 const transcodeService = createTranscodeService({
   app,
@@ -4210,10 +4212,15 @@ async function startApi() {
   updateNeteaseApiStatus({ status: 'starting', port: null, error: null });
   try {
     const freePort = await getFreePort();
-    await initializeNcmApiRuntime();
     // 只监听 IPv4 回环：本地 API 只给本进程和渲染进程用，不该暴露到局域网；固定地址也让渲染进程
     // 不再随 localhost 解析到 ::1 还是 127.0.0.1 而走不同的来源 IP 分支（见 withoutImplicitClientIp）。
     await serveNcmApi({ port: freePort, host: '127.0.0.1' });
+    // 公钥/匿名令牌在端口 already listening 之后再补：它们各要走一次网络，放在 listen 前面
+    // 会让「网易 API 起来了」这件事一直等到网络往返结束——弱网时能拖十几秒，而这期间
+    // renderer 切到网易只会看到加载中。端口先通，请求照常发，失败也有既有重试路径兜。
+    void initializeNcmApiRuntime().catch((error) => {
+      console.warn('[Netease API] Runtime initialization did not complete; requests may fall back', error);
+    });
     assignedPort = freePort;
     neteaseLoginDiagnostics.noteStartup({ listenHost: '127.0.0.1', listenPort: freePort });
     updateNeteaseApiStatus({ status: 'running', port: assignedPort, error: null });

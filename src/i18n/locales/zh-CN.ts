@@ -927,6 +927,7 @@ export default {
     "syncFailedHint": "还有歌曲没加载成功（{{error}}）。点击从中断处继续加载"
   },
   "search": {
+    "searching": "搜索中…",
     "placeholder": "搜索歌曲...",
     "sourceNetease": "网易云",
     "sourceLocal": "本地",

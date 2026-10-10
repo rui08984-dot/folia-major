@@ -928,6 +928,7 @@ export default {
     "syncFailedHint": "Some songs failed to load ({{error}}). Click to continue from where it stopped"
   },
   "search": {
+    "searching": "Searching…",
     "placeholder": "Search songs...",
     "sourceNetease": "NetEase",
     "sourceLocal": "Local",

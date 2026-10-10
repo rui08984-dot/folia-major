@@ -923,6 +923,7 @@ export default {
     "syncFailedHint": "Beberapa lagu gagal dimuat ({{error}}). Klik untuk melanjutkan dari titik terakhir"
   },
   "search": {
+    "searching": "Mencari…",
     "placeholder": "Cari lagu...",
     "sourceNetease": "NetEase",
     "sourceLocal": "Lokal",
