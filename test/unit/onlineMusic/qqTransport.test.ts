@@ -430,6 +430,35 @@ describe('QQ Music Web transport', () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 
+    it('does not retry a request that timed out on its own budget', async () => {
+        // 超时是前端自己掐的（后端慢到 25s 才回 500）。重试一次等于让用户再等一个完整预算，
+        // 界面表现就是骨架长时间挂住。所以要立刻抛出，交给调用方给可重试的空态。
+        const abortError = new DOMException('The operation was aborted.', 'AbortError');
+        const fetchMock = vi.fn().mockRejectedValue(abortError);
+        vi.stubGlobal('fetch', fetchMock);
+        const { requestQq } = await import('@/services/onlineMusic/qqTransport');
+
+        await expect(requestQq('user_albums', { offset: 0, limit: 5 })).rejects.toMatchObject({
+            // 超时是原始 AbortError，不被包成 network 错误——调用方要能认出这是超时（可重试），
+            // 而不是一次明确的服务端拒绝。
+            name: 'AbortError',
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('retries once when the fetch itself fails at the network layer', async () => {
+        // TypeError 是 fetch 没发出请求就失败（DNS/连接被拒），这类失败值得再试一次；
+        // 与超时的区别正是 AbortError 不再重试那一条。
+        const fetchMock = vi.fn()
+            .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+            .mockResolvedValueOnce(Response.json({ code: 200, data: { ok: true } }));
+        vi.stubGlobal('fetch', fetchMock);
+        const { requestQq } = await import('@/services/onlineMusic/qqTransport');
+
+        await expect(requestQq('login_status')).resolves.toMatchObject({ code: 200 });
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
     it('keeps QR keys and session cookies out of error messages', async () => {
         storage.set('online_provider:qq:cookie', 'qqmusic_session=secret-session-token');
         const fetchMock = vi.fn().mockResolvedValue(Response.json({ code: 502 }, { status: 502 }));

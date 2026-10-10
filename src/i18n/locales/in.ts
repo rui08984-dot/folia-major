@@ -916,6 +916,7 @@ export default {
     "loading": "Memuat",
     "loadFailed": "Gagal memuat: {{error}}",
     "loadFailedHint": "Gagal memuat album, coba lagi nanti",
+    "albumsEmpty": "Belum ada album favorit. Ketuk \"Favorit\" di album, dan album itu akan muncul di sini.",
     "loadNotPublic": "Daftar putar ini tidak publik, sehingga sumber musik saat ini tidak dapat membaca isinya",
     "reload": "Muat ulang",
     "syncProgress": "Dimuat {{loaded}} / {{total}}",

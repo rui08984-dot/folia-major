@@ -271,7 +271,10 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
     // answer with `Access-Control-Allow-Origin: *`, so those requests still omit browser credentials.
     const credentials: RequestCredentials = isSameOriginBase(base) ? 'same-origin' : 'omit';
 
-    const QQ_REQUEST_TIMEOUT_MS = 10000;
+    // 内嵌后端的上游客户端（createAuthHttpClient）是 25s axios 超时，请求打满时它会占用
+    // 25s 才回 500。前端的预算必须比它长，否则前端先 abort，把一次还在飞的后端请求掐断——
+    // 界面表现就是骨架挂住不动，而日志里后端那两条 25s 超时正是这么来的。
+    const QQ_REQUEST_TIMEOUT_MS = 30000;
     const QQ_MAX_RETRIES = 1;
 
     let lastResponse: Response | null = null;
@@ -330,7 +333,10 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
       } catch (error) {
         clearTimeout(timer);
         lastFailure = error;
-        const isRetryable = error instanceof TypeError || (error instanceof DOMException && error.name === 'AbortError');
+        // AbortError 不重试：它几乎总是前端自己掐的超时（后端慢到 25s 才回），
+        // 再试一次等于让用户再等一个完整预算。超时后立刻抛出，交给调用方显示可重试的空态。
+        // TypeError（fetch 网络层失败）仍重试一次。
+        const isRetryable = error instanceof TypeError;
         const isRateLimited = error instanceof OnlineProviderError && error.retryAfterMs !== undefined;
         if (isRateLimited && error instanceof OnlineProviderError) lastRateLimitedRetryAfterMs = error.retryAfterMs;
         if ((isRetryable || isRateLimited) && attempt < QQ_MAX_RETRIES) {

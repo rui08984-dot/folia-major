@@ -921,6 +921,7 @@ export default {
     "loading": "Loading",
     "loadFailed": "Failed to load: {{error}}",
     "loadFailedHint": "Could not load albums, please try again",
+    "albumsEmpty": "No favourite albums yet. Tap \"Favourite\" on an album and it will show up here.",
     "loadNotPublic": "This playlist is not public, so the current music source cannot read its contents",
     "reload": "Reload",
     "syncProgress": "Loaded {{loaded}} / {{total}}",

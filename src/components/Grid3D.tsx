@@ -998,6 +998,13 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             ? albumsUnavailableReason
             : (homeViewTab === 'discover' ? (discoverError || radioUnavailableReason) : radioUnavailableReason));
 
+    // 专辑 tab 的空态要跟失败分开：都落到「暂无内容」的话，真实失败（请求被 abort/超时）
+    // 看起来也像「你本来就没有收藏专辑」，用户既不知道发生了什么也无从重试。
+    // 拉过一轮（albumsLoadedScopeRef 已置位）且确实一条都没有，才敢断定是空而不是失败。
+    const albumsEmptyMessage = (canUseOnlineAlbums && activeUser && albumsLoadedScopeRef.current !== null && favoriteAlbums.length === 0)
+        ? t('home.albumsEmpty')
+        : (currentOnlineTabUnavailableReason || t('home.loadingLibrary'));
+
     // Delegate GridView opening to the app-level host so Grid3D remains only the home surface.
     // If Personal FM is clicked, it plays Personal FM directly instead of opening GridView.
     const handleSelectCollectionCard = async (card: any) => {
@@ -1518,7 +1525,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                             ) : null
                         }
                         isLoading={isLoading}
-                        emptyMessage={currentOnlineTabUnavailableReason || t('home.loadingLibrary')}
+                        emptyMessage={homeViewTab === 'albums'
+                            ? albumsEmptyMessage
+                            : (currentOnlineTabUnavailableReason || t('home.loadingLibrary'))}
                         theme={theme}
                         isDaylight={isDaylight}
                         isInteractive={isInteractive}

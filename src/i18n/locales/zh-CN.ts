@@ -920,6 +920,7 @@ export default {
     "loading": "加载中",
     "loadFailed": "加载失败：{{error}}",
     "loadFailedHint": "专辑列表没能加载出来，稍后重试",
+    "albumsEmpty": "还没有收藏专辑。在专辑页点「收藏」，专辑就会出现在这里。",
     "loadNotPublic": "这个歌单不是公开歌单，当前音源接口读不到它的内容",
     "reload": "重新加载",
     "syncProgress": "已加载 {{loaded}} / {{total}}",
