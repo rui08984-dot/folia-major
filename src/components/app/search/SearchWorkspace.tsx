@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, Clock3, Loader2, Music, Search, User, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
+import { useCarouselDragScroll } from '../../../hooks/useCarouselDragScroll';
 import type { Theme, UnifiedSong } from '../../../types';
 import type { MediaId, OnlineSearchSuggestion } from '../../../types/onlineMusic';
 import {
@@ -154,6 +155,11 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
         return () => window.clearTimeout(timer);
     }, [isOnlineTab, isSearchOpen, searchQuery, searchSourceTab]);
 
+    // 三个结果横条各要一个独立的拖拽状态：共用一个 anchor 时，从歌单条滑到专辑条还没松手，
+    // 另一个条会被带着滚。
+    const carouselDrag0 = useCarouselDragScroll();
+    const carouselDrag1 = useCarouselDragScroll();
+    const carouselDrag2 = useCarouselDragScroll();
     const recordSearchHistory = useCallback((value: string) => {
         const trimmed = value.trim();
         if (!trimmed) return;
@@ -355,7 +361,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                         </nav>
                     </header>
 
-                    <div className="mx-auto mt-3 min-h-0 w-full max-w-5xl flex-1 overflow-y-auto">
+                    <div className="mx-auto mt-3 min-h-0 w-full max-w-5xl flex-1 select-none overflow-y-auto overscroll-contain">
                         {searchError && results.length === 0 && !isSearching ? (
                             <div className="flex h-full flex-col items-center justify-center gap-3 text-center opacity-65">
                                 <AlertCircle size={32} />
@@ -382,7 +388,10 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                         {songResults.length > 0 && (
                                             <section>
                                                 <h3 className="mb-2 text-sm font-medium opacity-60">{t('search.songs')}</h3>
-                                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                                <div
+                                                    className="flex gap-3 overflow-x-auto pb-2 select-none [touch-action:pan-x]"
+                                                    {...carouselDrag0}
+                                                >
                                                     {songResults.map(song => (
                                                         <button
                                                             key={`song-${String(song.sourceRef?.mediaId ?? song.id)}`}
@@ -439,7 +448,10 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                         {playlistResults.length > 0 && (
                                             <section>
                                                 <h3 className="mb-2 text-sm font-medium opacity-60">{t('search.playlist')}</h3>
-                                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                                <div
+                                                    className="flex gap-3 overflow-x-auto pb-2 select-none [touch-action:pan-x]"
+                                                    {...carouselDrag1}
+                                                >
                                                     {playlistResults.map(collection => (
                                                         <button
                                                             key={collectionKey(collection)}
@@ -473,7 +485,10 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                         {albumResults.length > 0 && (
                                             <section>
                                                 <h3 className="mb-2 text-sm font-medium opacity-60">{t('search.album')}</h3>
-                                                <div className="flex gap-3 overflow-x-auto pb-2">
+                                                <div
+                                                    className="flex gap-3 overflow-x-auto pb-2 select-none [touch-action:pan-x]"
+                                                    {...carouselDrag2}
+                                                >
                                                     {albumResults.map(collection => (
                                                         <button
                                                             key={collectionKey(collection)}

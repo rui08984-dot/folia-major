@@ -435,18 +435,33 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     const [categorySongLists, setCategorySongLists] = useState<ProviderCollection[]>([]);
     const [loadingCategory, setLoadingCategory] = useState(false);
 
-    // 分类树：只在电台 tab 且该 provider 支持时拉一次（静态数据，不随选中变化）。
+    // 分类树：只在电台 tab 且该 provider 支持时拉（静态数据，不随选中变化）。
+    // 失败要重试一次：上游偶发的出网抖动（实测见过 TLS socket 被断）会让这一趟空手而归，
+    // 而空数组的后果是「分类」入口整场消失——用户以为没这个功能。所以宁可多打一次。
     useEffect(() => {
-        if (homeViewTab !== "radio" || !canUseOnlineRadio) return;
+        if (homeViewTab !== 'radio' || !canUseOnlineRadio) return;
         if (!omni.canBrowseSongListCategories(activeProviderId)) return;
         let cancelled = false;
-        void omni.getSongListCategories(activeProviderId)
-            .then(groups => { if (!cancelled) setCategoryGroups(groups); })
-            .catch(error => {
-                console.warn('[Grid3D] category tree failed', error);
-                if (!cancelled) setCategoryGroups([]);
-            });
-        return () => { cancelled = true; };
+        let retryTimer = 0;
+
+        const load = (isRetry: boolean) => {
+            void omni.getSongListCategories(activeProviderId)
+                .then(groups => { if (!cancelled) setCategoryGroups(groups); })
+                .catch(error => {
+                    console.warn(`[Grid3D] category tree failed${isRetry ? ' (after retry)' : ''}`, error);
+                    if (cancelled) return;
+                    if (!isRetry) {
+                        retryTimer = window.setTimeout(() => load(true), 1500);
+                        return;
+                    }
+                    setCategoryGroups([]);
+                });
+        };
+        load(false);
+        return () => {
+            cancelled = true;
+            if (retryTimer) window.clearTimeout(retryTimer);
+        };
     }, [homeViewTab, canUseOnlineRadio, activeProviderId]);
 
     // 选中分类后拉该分类的歌单；取消选中（null）则回到推荐广场。
@@ -1074,6 +1089,11 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         e?.preventDefault();
         const query = (overrideQuery ?? searchQuery).trim();
         if (!query) return;
+
+        // 提交搜索就把联想收掉：不关的话用户回车/点搜索之后，那排联想词还挂在输入框下面，
+        // 盖住搜索结果入口，还得手动再点一下才消失。
+        setHeaderSuggestOpen(false);
+        setHeaderSuggestionIndex(-1);
 
         const searchSource = isOnlineTab ? activeProviderId : resolveSearchSource(homeViewTab);
         const didSearch = await submitSearch({
