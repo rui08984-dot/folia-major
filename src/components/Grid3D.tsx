@@ -1116,6 +1116,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     // 顶部搜索框的 smartbox 联想：只在在线 tab、有输入、且框聚焦时拉。
     // 点单曲直接播（provider 已把联想正规化成可播歌曲），点歌手填词走搜索——
     // 这是用户要的路径：打字即联想，常用查询根本不用进搜索页。
+    const suggestDismissTimerRef = useRef<number | null>(null);
     const [headerSuggestions, setHeaderSuggestions] = useState<OnlineSearchSuggestion[]>([]);
     const [headerSuggestionIndex, setHeaderSuggestionIndex] = useState(-1);
     const [headerSuggestOpen, setHeaderSuggestOpen] = useState(false);
@@ -1128,6 +1129,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         const timer = window.setTimeout(() => {
             void omni.searchSmartboxSuggestions(activeProviderId, searchQuery.trim())
                 .then(items => {
+                    // 请求飞行期间用户可能已经提交或者失焦：那时倒进数组就没意义了，
+                    // 下次再聚焦会重新拉。不校验开关的话，附带效应就是“搜完回来联想又弹出来”。
+                    if (!headerSuggestOpen) return;
                     setHeaderSuggestions(items);
                     setHeaderSuggestionIndex(-1);
                 })
@@ -1147,6 +1151,13 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         setSearchQuery(suggestion.value);
         void handleSearch(undefined, suggestion.value);
     };
+
+    // 卸载时丢掉还没跑的「关闭联想」定时器：组件走了之后再去 setState 是白跑，还带着告警。
+    useEffect(() => () => {
+        if (suggestDismissTimerRef.current) {
+            window.clearTimeout(suggestDismissTimerRef.current);
+        }
+    }, []);
 
     // Background style mappings
     const mainBg = isDaylight ? 'bg-white/40' : 'bg-black/20';
@@ -1372,12 +1383,23 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                     }
                                 }}
                                 onFocus={() => setHeaderSuggestOpen(true)}
-                                onBlur={() => window.setTimeout(() => setHeaderSuggestOpen(false), 120)}
+                                onBlur={() => {
+                                    // 延迟一点关：鼠标按下列表项时浏览器会先 blur，立刻关就点不到了。
+                                    // 句柄存 ref 里，卸载时清掉，别让定时器在组件走了以后还去 setState。
+                                    if (suggestDismissTimerRef.current) {
+                                        window.clearTimeout(suggestDismissTimerRef.current);
+                                    }
+                                    suggestDismissTimerRef.current = window.setTimeout(
+                                        () => setHeaderSuggestOpen(false),
+                                        120,
+                                    );
+                                }}
                                 className={`w-full ${inputBg} border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-white/20 transition-all placeholder:text-current placeholder:opacity-40 select-text`}
                                 style={{ color: 'var(--text-primary)' }}
                             />
 
-                            {isOnlineTab && headerSuggestions.length > 0 && (
+                            // 必须参与 headerSuggestOpen 判断：只看数组非空的话，提交搜索时把开关关了也缓不掉那个 250ms 防抖里还在飞的请求——它回来一填数组，面板又弹出来了，必须点别处才消失。
+                            {headerSuggestOpen && isOnlineTab && headerSuggestions.length > 0 && (
                                 <div
                                     className={`absolute left-0 right-0 top-full z-50 mt-2 rounded-2xl border p-2 ${
                                         isDaylight ? 'border-black/10 bg-white shadow-lg' : 'border-white/10 bg-[#141418] shadow-xl'
