@@ -1427,7 +1427,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                 style={{ color: 'var(--text-primary)' }}
                             />
 
-                            // 必须参与 headerSuggestOpen 判断：只看数组非空的话，提交搜索时把开关关了也缓不掉那个 250ms 防抖里还在飞的请求——它回来一填数组，面板又弹出来了，必须点别处才消失。
+                            {/* 必须参与 headerSuggestOpen 判断：只看数组非空的话，提交搜索时把开关关了也缓不掉那个 250ms 防抖里还在飞的请求——它回来一填数组，面板又弹出来了，必须点别处才消失。 */}
                             {headerSuggestOpen && isOnlineTab && headerSuggestions.length > 0 && (
                                 <div
                                     className={`absolute left-0 right-0 top-full z-50 mt-2 rounded-2xl border p-2 ${
