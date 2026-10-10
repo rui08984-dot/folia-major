@@ -929,6 +929,7 @@ export default {
   },
   "search": {
     "searching": "Searching…",
+    "noResultsHint": "Try adding the artist name, or use different keywords",
     "placeholder": "Search songs...",
     "sourceNetease": "NetEase",
     "sourceLocal": "Local",

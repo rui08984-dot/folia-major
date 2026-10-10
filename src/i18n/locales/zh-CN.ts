@@ -928,6 +928,7 @@ export default {
   },
   "search": {
     "searching": "搜索中…",
+    "noResultsHint": "试试歌曲名加歌手名，或换个关键词",
     "placeholder": "搜索歌曲...",
     "sourceNetease": "网易云",
     "sourceLocal": "本地",

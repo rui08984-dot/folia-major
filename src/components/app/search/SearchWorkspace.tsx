@@ -442,7 +442,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                                 <h3 className="mb-2 text-sm font-medium opacity-60">{t('search.songs')}</h3>
                                                 {/* 歌曲结果用虚拟长列表，不再是一条横着拖的小卡条：
                                                     一屏放得下几十行、上下直接滚，行高固定不抖动。 */}
-                                                <div className="h-[26rem]">
+                                                <div className="h-[clamp(18rem,52vh,34rem)]">
                                                     <SearchResultsList
                                                         tracks={songResults}
                                                         scrollTop={songListScrollTop}
@@ -552,8 +552,17 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                             </section>
                                         )}
                                         {songResults.length === 0 && playlistResults.length === 0 && albumResults.length === 0 && (
-                                            <div className="flex items-center justify-center py-16 text-sm opacity-50">
-                                                {searchError ? t('search.error') : t('home.noResults')}
+                                            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+                                                <p className="text-sm opacity-60">
+                                                    {searchError ? t('search.error') : t('home.noResults')}
+                                                </p>
+                                                {/* 空结果是最容易卡住用户的地方：给一条能照做的下一步，
+                                                    而不是让他对着一句「没有」猜。 */}
+                                                {!searchError && (
+                                                    <p className="max-w-sm text-xs opacity-40">
+                                                        {t('search.noResultsHint')}
+                                                    </p>
+                                                )}
                                             </div>
                                         )}
                                     </>

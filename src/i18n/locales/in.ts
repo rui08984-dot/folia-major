@@ -924,6 +924,7 @@ export default {
   },
   "search": {
     "searching": "Mencari…",
+    "noResultsHint": "Coba tambahkan nama penyanyi, atau gunakan kata kunci lain",
     "placeholder": "Cari lagu...",
     "sourceNetease": "NetEase",
     "sourceLocal": "Lokal",

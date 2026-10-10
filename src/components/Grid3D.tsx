@@ -863,9 +863,11 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                 id: String(collection.id),
                 name: collection.name,
                 coverUrl: collection.coverUrl ?? "",
-                trackCount: undefined,
-                description: categorySelected.itemLabel,
-                summary: categorySelected.groupLabel,
+                trackCount: collection.trackCount,
+                // description 是卡片上排给用户的副标题，用它原生的描述；「这是从哪个分类筛出来的」
+                // 放到 summary 行——那行本来就是标注来源的（跟发现页各段一个语义）。
+                description: collection.description || collection.creator?.nickname || '',
+                summary: categorySelected.itemLabel,
                 type: "playlist" as const,
                 raw: collection,
             }));
@@ -1298,6 +1300,11 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
                                                 aria-label={tab.disabledReason || tab.label}
                                                 onClick={() => {
                                                     setHomeViewTab(tab.key as any);
+                                                    // 分类筛选只属于广场 tab：离开就重置。否则用户去别的 tab
+                                                    // 干完事回来，看到的还是筛过的那一批，而界面上没有任何
+                                                    // 提示说「你现在只看到睡前」，只会以为推荐坏了。
+                                                    setCategorySelected(null);
+                                                    setCategoryPanelOpen(false);
                                                     focusActiveSlider();
                                                 }}
                                                 className={`relative inline-flex items-center justify-center px-4 py-1.5 rounded-full text-xs md:text-sm font-medium transition-colors duration-300 whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-35 ${isActive ? activeTabBg : navPillInactiveText}`}

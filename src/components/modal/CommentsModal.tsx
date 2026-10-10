@@ -5,6 +5,7 @@ import { X, Loader2, ThumbsUp, MapPin, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { SongResult } from '../../types';
 import type { ProviderComment } from '../../types/onlineMusic';
+import type { MediaId } from '../../types/onlineMusic';
 import { omni } from '../../services/onlineMusic/omni';
 import { setStatusMessage } from '../../stores/useStatusMessageStore';
 
@@ -148,9 +149,14 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, song, is
         }
     }, [pendingLikes, song, t]);
 
-    // 只在打开时拉取：组件常驻在面板树里（供退出动画），不弹窗就不该为每首歌白拉评论。
+    // 组件常驻在面板树里（供退出动画），所以拉取必须由「打开」而不是挂载触发。
+    // 清缓存只跟歌走：关窗再打开同一首歌，评论与楼中楼照原样显示，不重新拉一遍
+    // （用户常见路径就是看一眼评论、关窗、再打开确认）。
+    const loadedSongIdRef = useRef<MediaId | null>(null);
     useEffect(() => {
         if (!isOpen) return;
+        if (loadedSongIdRef.current === song.id) return;
+        loadedSongIdRef.current = song.id;
         offsetRef.current = 0;
         setComments([]);
         setHasMore(false);
