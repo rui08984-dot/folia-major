@@ -5372,7 +5372,12 @@ app.whenReady().then(async () => {
   setupCorsBypassHandlers();
   localCoverAssetStore.registerProtocolHandler(protocol, electronNet);
   // Transcode fallback is an optional degradation path; a failure preparing it must never keep
-  // the rest of this handler, createWindow() included, from running.
+  // 窗口先于这些初始化出现：renderer 加载的是 dev server / 打包产物，与转码探测、各内嵌
+  // 服务的就绪没有强依赖（它自己会等端口、并按状态频道的消息降级）。把它们串在 createWindow
+  // 前面，用户看到的是一段黑屏——尤其 transcodeService.initialize() 要探测 ffmpeg 二进制。
+  // 代价是窗口刚出现时部分服务还没就绪，但那本来就有状态通道兜底。
+  createWindow();
+  focusMainWindow();
   try {
     await transcodeService.initialize();
   } catch (error) {
@@ -5430,8 +5435,6 @@ app.whenReady().then(async () => {
       void macController.recoverStrandedDock();
     }
   }
-  createWindow();
-  focusMainWindow();
   if (process.env.FOLIA_PENDING_DESKTOP_LYRIC === '1') {
     delete process.env.FOLIA_PENDING_DESKTOP_LYRIC;
     if (!isWallpaperModeEnabled()) {
