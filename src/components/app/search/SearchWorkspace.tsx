@@ -13,7 +13,7 @@ import {
 import { useCollectionNavigationStore } from '../../../stores/useCollectionNavigationStore';
 import { useOnlineProviderAccountStore } from '../../../stores/useOnlineProviderAccountStore';
 import { omni } from '../../../services/onlineMusic/omni';
-import { getSongCoverUrl } from '../../../services/onlineMusic/songMetadata';
+import SearchResultsList from './SearchResultsList';
 import { collectionKey, createOnlineGridViewCollection, type GridViewCollectionDescriptor } from '../home/gridViewCollectionAdapters';
 
 // src/components/app/search/SearchWorkspace.tsx
@@ -154,6 +154,12 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
         setActiveSuggestion(-1);
         return () => window.clearTimeout(timer);
     }, [isOnlineTab, isSearchOpen, searchQuery, searchSourceTab]);
+
+    // 歌曲长列表的滚动位置：搜索词变化时归零，否则新结果会停在旧偏移上看着像空列表。
+    const [songListScrollTop, setSongListScrollTop] = useState(0);
+    useEffect(() => {
+        setSongListScrollTop(0);
+    }, [searchQuery]);
 
     // 三个结果横条各要一个独立的拖拽状态：共用一个 anchor 时，从歌单条滑到专辑条还没松手，
     // 另一个条会被带着滚。
@@ -388,44 +394,24 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                         {songResults.length > 0 && (
                                             <section>
                                                 <h3 className="mb-2 text-sm font-medium opacity-60">{t('search.songs')}</h3>
-                                                <div
-                                                    className="flex gap-3 overflow-x-auto pb-2 select-none [touch-action:pan-x]"
-                                                    {...carouselDrag0}
-                                                >
-                                                    {songResults.map(song => (
-                                                        <button
-                                                            key={`song-${String(song.sourceRef?.mediaId ?? song.id)}`}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                // playSong 会把视图切到播放器页，但工作台是盖在视图上的
-                                                                // overlay——不关掉它，看到的还停在搜索页。播放+关层=落地歌词页。
-                                                                onPlayTrack(song);
-                                                                onClose();
-                                                            }}
-                                                            className={`w-32 shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
-                                                                isDaylight ? 'border-black/10 bg-black/[0.04] hover:bg-black/[0.08]' : 'border-white/10 bg-white/[0.05] hover:bg-white/[0.09]'
-                                                            }`}
-                                                        >
-                                                            {getSongCoverUrl(song, activeOnlineProviderId) ? (
-                                                                <img
-                                                                    src={getSongCoverUrl(song, activeOnlineProviderId)}
-                                                                    alt=""
-                                                                    loading="lazy"
-                                                                    className="aspect-square w-full rounded-xl object-cover"
-                                                                />
-                                                            ) : (
-                                                                <div className={`flex aspect-square w-full items-center justify-center rounded-xl ${
-                                                                    isDaylight ? 'bg-black/10' : 'bg-white/10'
-                                                                }`}>
-                                                                    <Music size={22} className="opacity-40" />
-                                                                </div>
-                                                            )}
-                                                            <p className="mt-2 truncate text-xs font-medium">{song.name}</p>
-                                                            <p className="truncate text-[11px] opacity-50">
-                                                                {song.artists?.map(a => a.name).join(', ') || ''}
-                                                            </p>
-                                                        </button>
-                                                    ))}
+                                                {/* 歌曲结果用虚拟长列表，不再是一条横着拖的小卡条：
+                                                    一屏放得下几十行、上下直接滚，行高固定不抖动。 */}
+                                                <div className="h-[26rem]">
+                                                    <SearchResultsList
+                                                        tracks={songResults}
+                                                        scrollTop={songListScrollTop}
+                                                        onScrollTopChange={setSongListScrollTop}
+                                                        isDaylight={isDaylight}
+                                                        onPlayTrack={(track) => {
+                                                            // playSong 会把视图切到播放器页，但工作台是盖在视图上的
+                                                            // overlay——不关掉它，看到的还停在搜索页。播放+关层=落地歌词页。
+                                                            onPlayTrack(track);
+                                                            onClose();
+                                                        }}
+                                                        onAddTrackToQueue={onAddTrackToQueue}
+                                                        onOpenArtist={onOpenArtist}
+                                                        onOpenAlbum={onOpenAlbum}
+                                                    />
                                                 </div>
                                                 {hasMore && (
                                                     <div className="flex justify-center pt-1">
