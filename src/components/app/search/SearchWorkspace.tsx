@@ -4,6 +4,7 @@ import { AlertCircle, Clock3, Loader2, Music, Search, User, X } from 'lucide-rea
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 import { useCarouselDragScroll } from '../../../hooks/useCarouselDragScroll';
+import { useReducedMotionFor } from '../../../hooks/useReducedMotionFor';
 import type { Theme, UnifiedSong } from '../../../types';
 import type { MediaId, OnlineSearchSuggestion } from '../../../types/onlineMusic';
 import {
@@ -47,6 +48,24 @@ const writeSearchHistory = (entries: string[]): void => {
     } catch {
         // localStorage 写不进去（隐私模式/配额）就只活在本组件 state 里，不解释。
     }
+};
+
+/**
+ * 为不透明色表示加上 alpha 通道。主题背景色通常是
+ * hex（#rgb / #rrggbb），也可能已经是 rgba()（那时原样返回）。
+ * 搞不定就返回原值：搞坏了背景色比不加透明更原话。
+ */
+const withAlpha = (color: string, alpha: number): string => {
+    const value = color.trim();
+    if (value.startsWith('rgba') || value.startsWith('hsla')) return value;
+    const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(value);
+    if (!match) return value;
+    const hex = match[1];
+    const full = hex.length === 3 ? hex.split('').map(ch => ch + ch).join('') : hex;
+    const r = parseInt(full.slice(0, 2), 16);
+    const g = parseInt(full.slice(2, 4), 16);
+    const b = parseInt(full.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
 type SearchWorkspaceProps = {
@@ -166,6 +185,9 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
     const carouselDrag0 = useCarouselDragScroll();
     const carouselDrag1 = useCarouselDragScroll();
     const carouselDrag2 = useCarouselDragScroll();
+    // 主题背景色可能是 #rgb / #rrggbb / rgb() / rgba()。给不透明色加透明通道用；
+    // 已经是 rgba 的按原样返回，避免二次包装成非法值。
+    const calm = useReducedMotionFor('transitionOverlay');
     const recordSearchHistory = useCallback((value: string) => {
         const trimmed = value.trim();
         if (!trimmed) return;
@@ -205,15 +227,24 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
         <AnimatePresence>
             {isSearchOpen && (
                 <motion.section
-                    initial={{ opacity: 0, y: 28 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 28 }}
+                    // 入场减速到达、退出比入场快：同一距离用同一时长会让人觉得「退出去真慢」。
+                    // 位移收小到 12px：28px 的滑移在满屏浮层上像抽屉而不是浮层。
+                    initial={calm ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.99 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={calm ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.995 }}
+                    transition={
+                        calm
+                            ? { duration: 0 }
+                            : { type: 'spring', stiffness: 420, damping: 34, mass: 0.8 }
+                    }
                     className={`fixed inset-0 flex flex-col overflow-hidden px-3 py-4 sm:px-6 sm:py-6 ${
                         hasCollection ? 'z-[5]' : 'z-50'
                     }`}
                     style={{
                         color: theme.primaryColor,
-                        backgroundColor: isDaylight ? 'rgba(250,250,250,0.96)' : 'rgba(8,8,10,0.94)',
+                        // 主题背景色 + 透明度：硬编码深灰会让搜索台在你换的任何主题里都像一块
+                        // 贴上去的补丁。 daylight 用更高不透明度压住后面的内容保证可读性。
+                        backgroundColor: withAlpha(theme.backgroundColor, isDaylight ? 0.96 : 0.92),
                         backdropFilter: 'blur(24px)',
                     }}
                 >
@@ -443,7 +474,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                                             key={collectionKey(collection)}
                                                             type="button"
                                                             onClick={() => onOpenCollection(collection)}
-                                                            className={`w-32 shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
+                                                            className={`w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
                                                                 isDaylight ? 'border-black/10 bg-black/[0.04] hover:bg-black/[0.08]' : 'border-white/10 bg-white/[0.05] hover:bg-white/[0.09]'
                                                             }`}
                                                         >
@@ -459,7 +490,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                                                     isDaylight ? 'bg-black/10' : 'bg-white/10'
                                                                 }`} />
                                                             )}
-                                                            <p className="mt-2 truncate text-xs font-medium">{collection.name}</p>
+                                                            <p className="mt-2 line-clamp-2 text-xs font-medium leading-snug">{collection.name}</p>
                                                             <p className="truncate text-[11px] opacity-50">
                                                                 {collection.trackCount ? `${collection.trackCount} ${t('playlist.tracks')}` : ''}
                                                             </p>
@@ -480,7 +511,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                                             key={collectionKey(collection)}
                                                             type="button"
                                                             onClick={() => onOpenCollection(collection)}
-                                                            className={`w-32 shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
+                                                            className={`w-[8.5rem] shrink-0 overflow-hidden rounded-2xl border p-2 text-left transition-colors ${
                                                                 isDaylight ? 'border-black/10 bg-black/[0.04] hover:bg-black/[0.08]' : 'border-white/10 bg-white/[0.05] hover:bg-white/[0.09]'
                                                             }`}
                                                         >
@@ -496,7 +527,7 @@ const SearchWorkspace: React.FC<SearchWorkspaceProps> = ({
                                                                     isDaylight ? 'bg-black/10' : 'bg-white/10'
                                                                 }`} />
                                                             )}
-                                                            <p className="mt-2 truncate text-xs font-medium">{collection.name}</p>
+                                                            <p className="mt-2 line-clamp-2 text-xs font-medium leading-snug">{collection.name}</p>
                                                             <p className="truncate text-[11px] opacity-50">
                                                                 {collection.description || collection.artists?.map(a => a.name).join(', ') || ''}
                                                             </p>
