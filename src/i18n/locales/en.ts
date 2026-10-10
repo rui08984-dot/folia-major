@@ -920,6 +920,7 @@ export default {
     "headerTime": "Time",
     "loading": "Loading",
     "loadFailed": "Failed to load: {{error}}",
+    "loadFailedHint": "Could not load albums, please try again",
     "loadNotPublic": "This playlist is not public, so the current music source cannot read its contents",
     "reload": "Reload",
     "syncProgress": "Loaded {{loaded}} / {{total}}",

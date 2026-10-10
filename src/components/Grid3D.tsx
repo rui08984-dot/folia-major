@@ -404,6 +404,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
     // Online provider collection details
     const [favoriteAlbums, setFavoriteAlbums] = useState<ProviderCollection[]>([]);
     const [loadingAlbums, setLoadingAlbums] = useState(false);
+    // 「这个账号已经拉过一次收藏专辑了」：结果为空时 length 恒为 0，没有这个标记的话
+    // 每次切到专辑 tab 都会再打一次请求，界面表现就是反复骨架闪一下又变空。
+    const albumsLoadedScopeRef = useRef<string | null>(null);
     const [radioItems, setRadioItems] = useState<any[]>([]);
     const [loadingRadio, setLoadingRadio] = useState(false);
     // 「换一批」的批次偏移：只在 radio tab 的 actions 里递增，回首页不重置（保持这一轮的进度）。
@@ -495,7 +498,14 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
 
     // Load favorite albums and recommendations
     useEffect(() => {
-        if (homeViewTab === 'albums' && canUseOnlineAlbums && favoriteAlbums.length === 0 && activeUser) {
+        if (
+            homeViewTab === 'albums'
+            && canUseOnlineAlbums
+            && favoriteAlbums.length === 0
+            && activeUser
+            // 同一账号拉过一次就不再拉：空结果不该让 tab 每次被点开都重打请求。
+            && albumsLoadedScopeRef.current !== `${activeProviderId}:${activeUser.id}`
+        ) {
             fetchFavoriteAlbums();
         }
         if (homeViewTab === 'radio' && canUseOnlineRadio && radioItems.length === 0 && activeUser) {
@@ -543,6 +553,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
         const loggedOut = prev.user !== null && current.user === null;
         if (!providerChanged && !accountSwitched && !loggedOut) return;
         setFavoriteAlbums([]);
+        albumsLoadedScopeRef.current = null;
         setRadioItems([]);
         setDiscoverSections([]);
         setDiscoverError(null);
@@ -554,6 +565,7 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             setFavoriteAlbums([]);
             return;
         }
+        albumsLoadedScopeRef.current = `${activeProviderId}:${activeUser?.id ?? 'anon'}`;
         setLoadingAlbums(true);
         try {
             let allAlbums: ProviderCollection[] = [];
@@ -574,6 +586,9 @@ export const Grid3D: React.FC<Grid3DProps> = (props) => {
             setFavoriteAlbums(allAlbums);
         } catch (e) {
             console.error('[Grid3D] Failed to fetch favorite albums', e);
+            // 失败要告诉用户：只写 console 的话，界面表现是「骨架闪一下、然后一片空白」，
+            // 用户既不知道发生了什么，也无从重试。走全局单通道提示 + tab 的空态文案兜底。
+            onStatusMessage?.({ type: 'error', text: t('home.loadFailedHint') });
         } finally {
             setLoadingAlbums(false);
         }

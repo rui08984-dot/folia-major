@@ -280,8 +280,11 @@ export const requestQq = async <T = unknown>(operation: QqOperation, params: QqP
 
     const requestUrl = `${base}${endpoint.path}?${query}`;
 
-    // 请求去重：相同 URL 的并发请求只发一次，其他调用方共享结果
-    return dedupedRequest(requestUrl, async () => {
+    // 请求去重：相同 URL 的并发请求只发一次，其他调用方共享结果。
+    // key 里**不能**带 timestamp —— 那是每次请求现生成的，带上它 key 就永远不同，
+    // 去重等于没做，还白付一次 Map 写入。timestamp 只进真正的请求 URL。
+    const dedupeKey = `${base}${endpoint.path}?${query.toString().replace(/[&?]timestamp=\d+/, '')}`;
+    return dedupedRequest(dedupeKey, async () => {
     for (let attempt = 0; attempt <= QQ_MAX_RETRIES; attempt++) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), QQ_REQUEST_TIMEOUT_MS);

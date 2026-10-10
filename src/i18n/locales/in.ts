@@ -915,6 +915,7 @@ export default {
     "headerTime": "Waktu",
     "loading": "Memuat",
     "loadFailed": "Gagal memuat: {{error}}",
+    "loadFailedHint": "Gagal memuat album, coba lagi nanti",
     "loadNotPublic": "Daftar putar ini tidak publik, sehingga sumber musik saat ini tidak dapat membaca isinya",
     "reload": "Muat ulang",
     "syncProgress": "Dimuat {{loaded}} / {{total}}",
