@@ -3432,7 +3432,12 @@ export default {
     "albumsSyncing": "Memuat album {{loaded}} / {{total}}",
     "albumsSyncingOpen": "Memuat album… {{loaded}}",
     "albumsInterrupted": "Album berhenti di {{loaded}}",
-    "panelTitle": "Lagu populer dan album"
+    "panelTitle": "Lagu populer dan album",
+    "posterLabel": "Poster artis",
+    "posterTopSongs": "Lagu populer"
+  },
+  "libraryBravaisAlbum": {
+    "posterLabel": "Poster album"
   },
   "artistGrid": {
     "localArtist": "Artis Lokal: {{artistName}}",
